@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="gs-app-id" content="labelkeeper">
-<meta name="version" content="1.0.0">
+<meta name="version" content="1.2.0">
 <title>LabelKeeper</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -1385,6 +1385,199 @@
     .tab-btn { padding: 10px 14px; font-size: 14px; }
   }
 
+  /* ===== BATCH JOB STYLES ===== */
+
+  /* Active Job Banner */
+  .job-banner {
+    margin-bottom: 16px; padding: 14px 16px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent-bg) 0%, var(--surface) 100%);
+    border: 2px solid var(--accent); box-shadow: var(--shadow);
+  }
+  .job-banner-header {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    margin-bottom: 10px;
+  }
+  .job-banner-title {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 15px; font-weight: 700; color: var(--heading);
+  }
+  .job-banner-title .job-icon { font-size: 18px; }
+  .job-banner-actions {
+    display: flex; gap: 8px;
+  }
+  .job-banner-progress {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .job-progress-bar {
+    flex: 1; height: 8px; background: var(--surface-alt); border-radius: 4px; overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .job-progress-fill {
+    height: 100%; background: var(--accent); border-radius: 4px;
+    transition: width 0.3s ease;
+  }
+  .job-progress-text {
+    font-size: 13px; font-weight: 600; color: var(--accent-text); font-family: var(--mono);
+    min-width: 100px; text-align: right;
+  }
+  .job-banner-info {
+    margin-top: 8px; font-size: 12px; color: var(--text-secondary);
+    display: flex; gap: 16px; flex-wrap: wrap;
+  }
+  .job-banner-info span { display: flex; align-items: center; gap: 4px; }
+
+  /* Job Sheet Card Styling */
+  .sheet-card.job-sheet {
+    border-color: var(--accent); background: var(--accent-bg);
+    position: relative;
+  }
+  .sheet-card.job-sheet::before {
+    content: '📦';
+    position: absolute; top: -8px; right: -8px;
+    background: var(--accent); color: #fff;
+    width: 24px; height: 24px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; box-shadow: var(--shadow-sm);
+  }
+  .job-sheet-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px; border-radius: 4px;
+    background: var(--accent); color: #fff;
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.5px; margin-left: 8px;
+  }
+  .job-sheet-range {
+    font-size: 11px; color: var(--accent-text); font-family: var(--mono);
+    margin-top: 4px;
+  }
+  .job-sheet-status {
+    display: flex; align-items: center; gap: 4px;
+    font-size: 11px; font-weight: 600; margin-top: 4px;
+  }
+  .job-sheet-status.pending { color: var(--warning-text); }
+  .job-sheet-status.complete { color: var(--success-text); }
+
+  /* Batch Import Modal */
+  .batch-import-modal { max-width: 560px; }
+  .batch-file-zone {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    border: 2px dashed var(--border); border-radius: 8px;
+    min-height: 100px; padding: 20px; margin-bottom: 16px;
+    background: var(--surface-alt); cursor: pointer; transition: all 0.15s;
+  }
+  .batch-file-zone:hover { border-color: var(--accent); background: var(--accent-bg); }
+  .batch-file-zone.has-file {
+    border-style: solid; border-color: var(--success-border);
+    background: var(--success-bg); cursor: default;
+  }
+  .batch-file-zone .file-icon { font-size: 28px; margin-bottom: 8px; }
+  .batch-file-zone .file-prompt { font-size: 13px; color: var(--text-muted); }
+  .batch-file-zone .file-name {
+    font-size: 14px; font-weight: 600; color: var(--heading);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .batch-file-zone .file-info { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+  .batch-col-mapping {
+    margin-bottom: 16px; max-height: 180px; overflow-y: auto;
+    border: 1px solid var(--border); border-radius: 6px; padding: 8px;
+  }
+  .batch-col-row {
+    display: flex; align-items: center; gap: 8px; padding: 4px 0;
+    border-bottom: 1px solid var(--border-light);
+  }
+  .batch-col-row:last-child { border-bottom: none; }
+  .batch-col-header {
+    flex: 1; font-size: 12px; font-weight: 600; color: var(--heading);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .batch-col-arrow { color: var(--text-muted); font-size: 12px; }
+  .batch-col-token {
+    min-width: 120px; padding: 4px 8px; border: 1px solid var(--input-border);
+    border-radius: 4px; font-size: 11px; font-family: inherit;
+    background: var(--input-bg); color: var(--text); cursor: pointer;
+  }
+  .batch-summary {
+    padding: 12px; border-radius: 8px; margin-bottom: 16px;
+    background: var(--accent-bg); border: 1px solid var(--accent-soft);
+    font-size: 13px; color: var(--accent-text);
+  }
+  .batch-summary-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 3px 0;
+  }
+  .batch-summary-row .label { color: var(--text-secondary); }
+  .batch-summary-row .value { font-weight: 700; font-family: var(--mono); }
+  .batch-job-name-row {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 16px;
+  }
+  .batch-job-name-row label { font-size: 13px; font-weight: 600; color: var(--text-secondary); white-space: nowrap; }
+  .batch-job-name-row input {
+    flex: 1; padding: 8px 12px; border: 2px solid var(--input-border); border-radius: 6px;
+    font-size: 14px; font-family: inherit; background: var(--input-bg); color: var(--text);
+  }
+  .batch-job-name-row input:focus { outline: none; border-color: var(--accent); }
+  .batch-preview-section {
+    margin-bottom: 16px;
+  }
+  .batch-preview-title {
+    font-size: 12px; font-weight: 700; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;
+  }
+  .batch-preview-cards {
+    display: flex; gap: 8px; overflow-x: auto; padding: 4px 0;
+  }
+  .batch-preview-card {
+    flex-shrink: 0; width: 150px; padding: 10px 12px;
+    border: 2px solid var(--border); border-radius: 8px;
+    background: var(--preview-bg); font-size: 10px; line-height: 1.4;
+    color: var(--preview-text); font-family: Arial, sans-serif;
+  }
+  .batch-preview-card .preview-line {
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    display: flex;
+  }
+  .batch-preview-card .preview-line.align-left { justify-content: flex-start; }
+  .batch-preview-card .preview-line.align-center { justify-content: center; }
+  .batch-preview-card .preview-line.align-right { justify-content: flex-end; }
+
+  /* Job Completion Modal */
+  .job-complete-modal { max-width: 440px; }
+  .job-complete-summary {
+    padding: 16px; border-radius: 8px; margin-bottom: 16px;
+    background: var(--success-bg); border: 2px solid var(--success-border);
+    text-align: center;
+  }
+  .job-complete-icon { font-size: 40px; margin-bottom: 8px; }
+  .job-complete-count { font-size: 24px; font-weight: 700; color: var(--success-text); }
+  .job-complete-label { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+  .job-remainder-section {
+    padding: 12px; border-radius: 8px; margin-bottom: 16px;
+    background: var(--warning-bg); border: 2px solid var(--warning-border);
+  }
+  .job-remainder-title {
+    font-size: 13px; font-weight: 700; color: var(--warning-text); margin-bottom: 8px;
+  }
+  .job-remainder-options { display: flex; flex-direction: column; gap: 8px; }
+  .job-remainder-option {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; color: var(--text); cursor: pointer;
+  }
+  .job-remainder-option input { margin: 0; }
+
+  /* Load CSV Button on Template Cards */
+  .template-csv-btn {
+    padding: 4px 10px; border: 1.5px solid var(--accent);
+    border-radius: 5px; background: var(--accent-bg);
+    color: var(--accent-text); font-size: 11px; font-weight: 600;
+    cursor: pointer; transition: all 0.15s;
+    display: inline-flex; align-items: center; gap: 4px;
+    margin-top: 8px;
+  }
+  .template-csv-btn:hover {
+    background: var(--accent); color: #fff;
+  }
+  .template-csv-btn .csv-icon { font-size: 12px; }
+
 </style>
 <style id="dynamicGridStyle"></style>
 </head>
@@ -1393,7 +1586,7 @@
 <div class="app-shell">
   <div class="app-topbar">
     <div class="app-title">
-      🏷️ LabelKeeper <span class="version">v1.0.0</span>
+      🏷️ LabelKeeper <span class="version">v1.2.0</span>
     </div>
     <div class="topbar-actions">
       <div class="hamburger-menu" id="hamburgerMenu">
@@ -1431,6 +1624,7 @@
 
   <!-- ==================== SHEETS TAB ==================== -->
   <div class="tab-panel active" id="panelSheets">
+    <div id="jobBannerArea"></div>
     <div class="sheets-layout">
       <div>
         <div class="sheets-col-header">
@@ -1777,13 +1971,87 @@
   <div class="modal" style="max-width:420px">
     <h3>🏷️ LabelKeeper</h3>
     <div style="font-size:14px;color:var(--text-secondary);line-height:1.7">
-      <div style="margin-bottom:12px"><strong style="color:var(--heading)">Version 1.0.0</strong></div>
+      <div style="margin-bottom:12px"><strong style="color:var(--heading)">Version 1.2.0</strong></div>
       <p>A tool for printing labels on Avery-compatible label sheets. Tracks partially-used sheets so no labels are wasted.</p>
-      <p style="margin-top:10px">Supports 9 Avery formats, multi-sheet pools, reusable text templates, label graphics, per-line formatting, column-based placement control, label inventory tracking, and data import/export.</p>
+      <p style="margin-top:10px">Supports 9 Avery formats, multi-sheet pools, reusable text templates, label graphics, per-line formatting, column-based placement control, batch CSV import, label inventory tracking, and data import/export.</p>
       <p style="margin-top:10px;font-size:13px;color:var(--text-muted)">All data is stored locally in your browser. Nothing is sent to any server.</p>
     </div>
     <div class="modal-btns" style="margin-top:16px">
       <button class="btn btn-primary" onclick="closeModal('aboutModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== BATCH IMPORT MODAL ==================== -->
+<div class="modal-overlay" id="batchImportModal">
+  <div class="modal batch-import-modal">
+    <h3>📦 Create Batch Print Job</h3>
+    <div style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">
+      Import a CSV file and print labels using template: <strong id="batchTemplateName"></strong>
+    </div>
+
+    <!-- File drop zone -->
+    <div class="batch-file-zone" id="batchFileZone" onclick="document.getElementById('batchFileInput').click()">
+      <span class="file-icon">📄</span>
+      <span class="file-prompt">Click to select a CSV file or drag & drop here</span>
+    </div>
+    <input type="file" id="batchFileInput" accept=".csv,.txt" style="display:none" onchange="handleBatchFile(event)">
+
+    <!-- Column mapping (shown after file loaded) -->
+    <div id="batchMappingSection" style="display:none">
+      <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">
+        Map CSV columns to template tokens:
+      </div>
+      <div class="batch-col-mapping" id="batchColMapping"></div>
+
+      <!-- Summary -->
+      <div class="batch-summary" id="batchSummary"></div>
+
+      <!-- Job name -->
+      <div class="batch-job-name-row">
+        <label for="batchJobName">Job name:</label>
+        <input type="text" id="batchJobName" placeholder="e.g., Holiday Mailing 2026">
+      </div>
+
+      <!-- Preview cards -->
+      <div class="batch-preview-section">
+        <div class="batch-preview-title">Preview (first 3 labels)</div>
+        <div class="batch-preview-cards" id="batchPreviewCards"></div>
+      </div>
+    </div>
+
+    <div class="modal-btns" style="margin-top:16px">
+      <button class="btn btn-secondary" onclick="closeBatchImportModal()">Cancel</button>
+      <button class="btn btn-primary" id="batchCreateBtn" style="display:none" onclick="createBatchJob()">📦 Create Print Job</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== JOB COMPLETION MODAL ==================== -->
+<div class="modal-overlay" id="jobCompleteModal">
+  <div class="modal job-complete-modal">
+    <div class="job-complete-summary">
+      <div class="job-complete-icon">✅</div>
+      <div class="job-complete-count" id="jobCompleteCount">0</div>
+      <div class="job-complete-label">labels printed successfully</div>
+    </div>
+
+    <div class="job-remainder-section" id="jobRemainderSection" style="display:none">
+      <div class="job-remainder-title">⚠️ The final sheet has unused positions</div>
+      <div class="job-remainder-options">
+        <label class="job-remainder-option">
+          <input type="radio" name="jobRemainder" value="keep" checked>
+          Keep as partial sheet for future use
+        </label>
+        <label class="job-remainder-option">
+          <input type="radio" name="jobRemainder" value="discard">
+          Discard (delete job sheets)
+        </label>
+      </div>
+    </div>
+
+    <div class="modal-btns" style="margin-top:16px">
+      <button class="btn btn-primary" onclick="completeJob()">Done</button>
     </div>
   </div>
 </div>
@@ -1840,12 +2108,21 @@ let graphicFileSide = null;        // Which side ('left'|'right') the file input
 
 const CUSTOM_TOKENS_KEY = 'avery5160_custom_tokens';
 const INVENTORY_KEY = 'avery_inventory';
+const ACTIVE_JOB_KEY = 'avery_active_job';
+const JOB_HISTORY_KEY = 'avery_job_history';
 
 const DEFAULT_LOW_THRESHOLD = 5;
 
 let inventory = {};            // Persisted inventory data keyed by Avery type
 let inventoryView = 'list';    // 'list' | 'history'
 let inventoryDetailType = null; // Avery type for history view
+
+// ========== BATCH JOB STATE ==========
+let activeJob = null;          // Current batch job object (persisted in localStorage)
+let jobHistory = [];           // Completed/cancelled jobs (metadata only, persisted)
+let batchTemplateId = null;    // Template ID for current batch import
+let batchCsvData = null;       // Parsed CSV data: { headers: [], rows: [] }
+let batchColTokenMap = [];     // Column-to-token mapping for batch import
 
 // ========== HELPERS ==========
 function getSpec(typeId) { return LABEL_TYPES[typeId || '5160']; }
@@ -3529,11 +3806,12 @@ function estimateFit(lines, labelType, graphics) {
   // Usable dimensions in inches (accounting for print padding 0.08in top/bottom, 0.12in left/right)
   const usableW = spec.labelW - 0.24;  // 2 × 0.12in horizontal padding
   const usableH = spec.labelH - 0.16;  // 2 × 0.08in vertical padding
-  // Reduce usable width for graphics
+  // Reduce usable width for graphics (percentage of usable content area, matching print rendering)
   const leftPct = (graphics && graphics.left) ? (graphics.left.widthPct || 0) : 0;
   const rightPct = (graphics && graphics.right) ? (graphics.right.widthPct || 0) : 0;
   const graphicsFraction = (leftPct + rightPct) / 100;
-  const textUsableW = usableW * (1 - graphicsFraction);
+  // Add small buffer for flexbox rendering variations (2% safety margin)
+  const textUsableW = usableW * (1 - graphicsFraction) * 0.98;
   // Convert to points (72pt per inch)
   const usableWPt = textUsableW * 72;
   const usableHPt = usableH * 72;
@@ -3548,15 +3826,21 @@ function estimateFit(lines, labelType, graphics) {
     totalHeightPt += lineHeightPt;
 
     // Average character width in Arial is roughly 0.5–0.6× the font size in points.
-    // Use 0.52 as a conservative average for mixed case text.
-    const avgCharWidth = fs * 0.52;
+    // Use 0.55 as a more conservative average (was 0.52) to prevent false "fits" results.
+    // Wide characters (W, M) are ~0.8×, narrow (i, l) are ~0.3×, typical mix averages ~0.55×
+    const avgCharWidth = fs * 0.55;
     const maxChars = Math.floor(usableWPt / avgCharWidth);
 
     const parsed = parseLine(l.text);
     let textLen = 0;
-    if (parsed.type === 'split') textLen = (parsed.left + '   ' + parsed.right).length;
-    else if (parsed.type === 'fill') textLen = parsed.label.length + 8; // fill line takes extra space
-    else textLen = parsed.text.length;
+    if (parsed.type === 'split') {
+      // Split lines need space for both sides plus the gap between them
+      textLen = parsed.left.length + parsed.right.length + 4; // +4 for justify-content gap
+    } else if (parsed.type === 'fill') {
+      textLen = parsed.label.length + 10; // fill line needs space for label + rule + gap
+    } else {
+      textLen = parsed.text.length;
+    }
 
     if (textLen > maxChars) {
       widthOverflows.push({ lineIdx: i, text: l.text, charCount: textLen, maxChars });
@@ -3769,6 +4053,7 @@ function renderSavedTexts() {
           '</div>' +
           '<div class="saved-text-card-preview">' + previewHtml + '</div>' +
           labelTypeHtml +
+          '<button class="template-csv-btn" onclick="event.stopPropagation();showBatchImportModal(\'' + stId + '\')"><span class="csv-icon">📦</span> Load CSV</button>' +
         '</div>';
       }
 
@@ -3784,6 +4069,7 @@ function renderSavedTexts() {
         '</div>' +
         '<div class="saved-text-card-preview">' + previewHtml + '</div>' +
         labelTypeHtml +
+        '<button class="template-csv-btn" onclick="event.stopPropagation();showBatchImportModal(\'' + stId + '\')"><span class="csv-icon">📦</span> Load CSV</button>' +
       '</div>';
     }).join('');
     list.innerHTML += '<button class="new-text-card" onclick="startNewTemplate()">+ New Template</button>';
@@ -5471,7 +5757,18 @@ function saveSheets() { try { localStorage.setItem(SHEETS_KEY, JSON.stringify(sh
 // ========== SHEETS TAB ==========
 function buildSheetCards() {
   const container = document.getElementById('sheetCardsList');
-  const ids = Object.keys(sheets).sort((a,b) => (sheets[a].createdAt||0) - (sheets[b].createdAt||0));
+  const ids = Object.keys(sheets).sort((a,b) => {
+    // Job sheets sort together at the top when active job exists
+    const aIsJob = sheets[a].jobId;
+    const bIsJob = sheets[b].jobId;
+    if (aIsJob && !bIsJob) return -1;
+    if (!aIsJob && bIsJob) return 1;
+    if (aIsJob && bIsJob) {
+      // Sort by job sheet index
+      return (sheets[a].jobSheetIndex || 0) - (sheets[b].jobSheetIndex || 0);
+    }
+    return (sheets[a].createdAt||0) - (sheets[b].createdAt||0);
+  });
 
   if (!ids.length) {
     container.innerHTML = '<div class="no-sheet-selected"><span class="icon">📄</span>No sheets yet. Create one to get started.</div>';
@@ -5492,6 +5789,9 @@ function buildSheetCards() {
     const color = pct === 0 ? 'var(--danger)' : pct <= 0.2 ? 'var(--warning-text)' : 'var(--success-text)';
     const textCount = s.texts ? Object.keys(s.texts).length : 0;
 
+    // Check if this is a job sheet
+    const isJobSheet = s.jobId && activeJob;
+
     // Build detail line: "5160" vs "5160 · 3 sheets · 90 labels"
     const detailParts = ['<strong>' + spec.name.split(' /')[0] + '</strong>'];
     if (count > 1) {
@@ -5502,12 +5802,34 @@ function buildSheetCards() {
       detailParts.push(spec.sizeDisplay);
     }
 
-    return '<div class="sheet-card' + (isActive ? ' active' : '') + '" onclick="selectSheet(\'' + id + '\')">' +
+    // Job sheet specific info
+    let jobSheetInfo = '';
+    if (isJobSheet) {
+      const rowStart = s.jobRowStart + 1;
+      const rowEnd = s.jobRowEnd;
+      const labelCount = s.jobRowEnd - s.jobRowStart;
+      const printedOnSheet = activeJob.printedRowIndices.filter(i => i >= s.jobRowStart && i < s.jobRowEnd).length;
+      const isComplete = printedOnSheet >= labelCount;
+      jobSheetInfo = '<div class="job-sheet-range">Rows ' + rowStart + '–' + rowEnd + ' (' + labelCount + ' labels)</div>' +
+        '<div class="job-sheet-status ' + (isComplete ? 'complete' : 'pending') + '">' +
+          (isComplete ? '✅ Printed' : '⏳ Pending') +
+        '</div>';
+    }
+
+    // Job sheets have restricted actions
+    const actionsHtml = isJobSheet ? '' : 
+      '<div class="sheet-card-actions">' +
+        '<button class="sheet-card-action" onclick="event.stopPropagation();renameSheet(\'' + id + '\')" title="Rename">✏️</button>' +
+        (printed > 0 ? '<button class="sheet-card-action" onclick="event.stopPropagation();resetSheet(\'' + id + '\')" title="Reset all labels">🔄</button>' : '') +
+        '<button class="sheet-card-action danger" onclick="event.stopPropagation();deleteSheet(\'' + id + '\')" title="Delete">🗑️</button>' +
+      '</div>';
+
+    return '<div class="sheet-card' + (isActive ? ' active' : '') + (isJobSheet ? ' job-sheet' : '') + '" onclick="selectSheet(\'' + id + '\')">' +
       '<div class="sheet-card-info">' +
         '<div class="sheet-card-name">' + escapeHtml(s.name) + '</div>' +
         '<div class="sheet-card-detail">' + detailParts.join(' · ') + '</div>' +
-        (textCount ? '<div class="sheet-card-detail">' + textCount + ' text' + (textCount!==1?'s':'') + (assigned ? ' · ' + assigned + ' queued' : '') + '</div>' : '') +
-        (function() { const inv = getInventoryForType(s.labelType); if (!inv) return ''; const sum = getInventorySummary(s.labelType); const isLow = sum.isLow && sum.stock > 0; const isEmpty = sum.stock === 0; return '<div class="sheet-stock-indicator' + (isLow || isEmpty ? ' low' : '') + '">' + (isEmpty ? '⚠ ' + LABEL_TYPES[s.labelType].name.split(' /')[0] + ': out of stock' : (isLow ? '⚠ ' : '') + LABEL_TYPES[s.labelType].name.split(' /')[0] + ': ' + sum.stock + ' in stock') + '</div>'; })() +
+        (isJobSheet ? jobSheetInfo : (textCount ? '<div class="sheet-card-detail">' + textCount + ' text' + (textCount!==1?'s':'') + (assigned ? ' · ' + assigned + ' queued' : '') + '</div>' : '')) +
+        (!isJobSheet ? (function() { const inv = getInventoryForType(s.labelType); if (!inv) return ''; const sum = getInventorySummary(s.labelType); const isLow = sum.isLow && sum.stock > 0; const isEmpty = sum.stock === 0; return '<div class="sheet-stock-indicator' + (isLow || isEmpty ? ' low' : '') + '">' + (isEmpty ? '⚠ ' + LABEL_TYPES[s.labelType].name.split(' /')[0] + ': out of stock' : (isLow ? '⚠ ' : '') + LABEL_TYPES[s.labelType].name.split(' /')[0] + ': ' + sum.stock + ' in stock') + '</div>'; })() : '') +
       '</div>' +
       '<div class="sheet-card-progress">' +
         '<svg width="48" height="48" viewBox="0 0 48 48">' +
@@ -5516,11 +5838,7 @@ function buildSheetCards() {
         '</svg>' +
         '<span class="progress-text">' + rem + '/' + total + '</span>' +
       '</div>' +
-      '<div class="sheet-card-actions">' +
-        '<button class="sheet-card-action" onclick="event.stopPropagation();renameSheet(\'' + id + '\')" title="Rename">✏️</button>' +
-        (printed > 0 ? '<button class="sheet-card-action" onclick="event.stopPropagation();resetSheet(\'' + id + '\')" title="Reset all labels">🔄</button>' : '') +
-        '<button class="sheet-card-action danger" onclick="event.stopPropagation();deleteSheet(\'' + id + '\')" title="Delete">🗑️</button>' +
-      '</div>' +
+      actionsHtml +
     '</div>';
   }).join('');
 
@@ -5548,8 +5866,12 @@ function buildSheetDetail() {
   const spec = getActiveSpec();
   const count = sh.sheetCount || 1;
   const lps = spec.cols * spec.rows;
+  
+  // Check if this is a job sheet
+  const isJobSheet = sh.jobId && activeJob && activeJob.id === sh.jobId;
+  
   const { assignments, errors } = buildAssignments(sh);
-  const totalLabels = Object.values(assignments).reduce((s, arr) => s + arr.length, 0);
+  const totalLabels = isJobSheet ? 0 : Object.values(assignments).reduce((s, arr) => s + arr.length, 0);
   const hasErrors = errors.length > 0;
 
   // Clamp currentMapPage
@@ -5559,51 +5881,69 @@ function buildSheetDetail() {
   // Build paginated map for the current page
   const mapHtml = buildSheetMapHtml(sh, assignments, currentMapPage);
 
-  // Build feed instructions for multi-sheet print
-  let feedHtml = '';
-  if (totalLabels > 0 && count > 1) {
-    const pages = buildPrintPages(assignments, sh);
-    if (pages.length > 0) {
-      feedHtml = '<div class="feed-instructions">';
-      pages.forEach((pg, pi) => {
-        feedHtml += '<div class="feed-page"><span class="feed-page-num">Page ' + (pi + 1) + ' →</span> Feed your <span class="feed-sheet-name">' + escapeHtml(sh.name) + ' #' + (pg.physicalSheet + 1) + '</span> <span class="feed-count">(' + pg.count + ' label' + (pg.count !== 1 ? 's' : '') + ')</span></div>';
-      });
-      feedHtml += '</div>';
-    }
-  }
-
-  // Print button
+  // For job sheets, show job-specific info instead of regular print button
   let printHtml = '';
-  if (totalLabels > 0) {
-    const pageCount = count > 1 ? buildPrintPages(assignments, sh).length : 1;
-    const pageLabel = pageCount > 1 ? ' (' + pageCount + ' pages)' : '';
+  if (isJobSheet) {
+    const labelsOnSheet = sh.jobRowEnd - sh.jobRowStart;
+    const printedOnSheet = activeJob.printedRowIndices.filter(i => i >= sh.jobRowStart && i < sh.jobRowEnd).length;
+    const pendingOnSheet = labelsOnSheet - printedOnSheet;
+    
     printHtml = '<div class="sheet-print-actions">' +
-      '<button class="btn btn-primary btn-full" onclick="printLabels()"' + (hasErrors ? ' disabled' : '') + '>🖨️ Print ' + totalLabels + ' Label' + (totalLabels !== 1 ? 's' : '') + pageLabel + '</button>' +
-      '<div style="margin-top:8px;font-size:12px;color:var(--text-faint);line-height:1.5">Set margins to <strong style="color:var(--text-muted)">None</strong> and uncheck <strong style="color:var(--text-muted)">Print headers and footers</strong></div>';
-    // Inventory stock note
-    const invPrint = getInventoryForType(sh.labelType);
-    if (invPrint) {
-      const sumPrint = getInventorySummary(sh.labelType);
-      if (sumPrint.isLow || sumPrint.stock === 0) {
-        const stockMsg = sumPrint.stock === 0 ? '⚠️ No ' + LABEL_TYPES[sh.labelType].name.split(' /')[0] + ' sheets in stock' : '⚠️ ' + LABEL_TYPES[sh.labelType].name.split(' /')[0] + ': ' + sumPrint.stock + ' sheet' + (sumPrint.stock !== 1 ? 's' : '') + ' remaining in stock';
-        printHtml += '<div style="margin-top:6px;font-size:12px;color:var(--warning-text);font-weight:500">' + stockMsg + '</div>';
+      '<div style="font-size:14px;font-weight:600;color:var(--heading);margin-bottom:8px">📦 Batch Job: ' + escapeHtml(activeJob.name) + '</div>' +
+      '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:8px">This sheet: ' + labelsOnSheet + ' labels (rows ' + (sh.jobRowStart + 1) + '–' + sh.jobRowEnd + ')</div>' +
+      '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">' +
+        (printedOnSheet > 0 ? '<span style="color:var(--success-text)">✅ ' + printedOnSheet + ' printed</span>' : '') +
+        (pendingOnSheet > 0 ? '<span style="color:var(--warning-text)">' + (printedOnSheet > 0 ? ' · ' : '') + '⏳ ' + pendingOnSheet + ' pending</span>' : '') +
+      '</div>' +
+      '<button class="btn btn-primary btn-full" onclick="printJobAll()">🖨️ Print All Job Sheets</button>' +
+      '<div style="margin-top:8px;font-size:12px;color:var(--text-faint);line-height:1.5">Set margins to <strong style="color:var(--text-muted)">None</strong> and uncheck <strong style="color:var(--text-muted)">Print headers and footers</strong></div>' +
+    '</div>';
+  } else {
+    // Regular sheet print button
+    // Build feed instructions for multi-sheet print
+    let feedHtml = '';
+    if (totalLabels > 0 && count > 1) {
+      const pages = buildPrintPages(assignments, sh);
+      if (pages.length > 0) {
+        feedHtml = '<div class="feed-instructions">';
+        pages.forEach((pg, pi) => {
+          feedHtml += '<div class="feed-page"><span class="feed-page-num">Page ' + (pi + 1) + ' →</span> Feed your <span class="feed-sheet-name">' + escapeHtml(sh.name) + ' #' + (pg.physicalSheet + 1) + '</span> <span class="feed-count">(' + pg.count + ' label' + (pg.count !== 1 ? 's' : '') + ')</span></div>';
+        });
+        feedHtml += '</div>';
       }
     }
-    if (hasErrors) {
-      printHtml += '<div class="sheet-print-error">⚠️ Cannot print — ';
-      printHtml += errors.map(e => {
-        const st = getSavedText(e.textId);
-        return '"' + escapeHtml(st ? st.name : '?') + '": ' + e.message;
-      }).join('; ');
+
+    if (totalLabels > 0) {
+      const pageCount = count > 1 ? buildPrintPages(assignments, sh).length : 1;
+      const pageLabel = pageCount > 1 ? ' (' + pageCount + ' pages)' : '';
+      printHtml = '<div class="sheet-print-actions">' +
+        '<button class="btn btn-primary btn-full" onclick="printLabels()"' + (hasErrors ? ' disabled' : '') + '>🖨️ Print ' + totalLabels + ' Label' + (totalLabels !== 1 ? 's' : '') + pageLabel + '</button>' +
+        '<div style="margin-top:8px;font-size:12px;color:var(--text-faint);line-height:1.5">Set margins to <strong style="color:var(--text-muted)">None</strong> and uncheck <strong style="color:var(--text-muted)">Print headers and footers</strong></div>';
+      // Inventory stock note
+      const invPrint = getInventoryForType(sh.labelType);
+      if (invPrint) {
+        const sumPrint = getInventorySummary(sh.labelType);
+        if (sumPrint.isLow || sumPrint.stock === 0) {
+          const stockMsg = sumPrint.stock === 0 ? '⚠️ No ' + LABEL_TYPES[sh.labelType].name.split(' /')[0] + ' sheets in stock' : '⚠️ ' + LABEL_TYPES[sh.labelType].name.split(' /')[0] + ': ' + sumPrint.stock + ' sheet' + (sumPrint.stock !== 1 ? 's' : '') + ' remaining in stock';
+          printHtml += '<div style="margin-top:6px;font-size:12px;color:var(--warning-text);font-weight:500">' + stockMsg + '</div>';
+        }
+      }
+      if (hasErrors) {
+        printHtml += '<div class="sheet-print-error">⚠️ Cannot print — ';
+        printHtml += errors.map(e => {
+          const st = getSavedText(e.textId);
+          return '"' + escapeHtml(st ? st.name : '?') + '": ' + e.message;
+        }).join('; ');
+        printHtml += '</div>';
+      }
+      printHtml += feedHtml;
       printHtml += '</div>';
     }
-    printHtml += feedHtml;
-    printHtml += '</div>';
   }
 
-  // Sheet count stepper (in detail view)
+  // Sheet count stepper (in detail view) - hide for job sheets
   let sheetCountHtml = '';
-  if (count > 1 || true) { // always show for adjustability
+  if (!isJobSheet && (count > 1 || true)) { // always show for adjustability (unless job sheet)
     sheetCountHtml = '<div style="display:flex;align-items:center;gap:6px;margin-top:6px">' +
       '<span style="font-size:12px;font-weight:600;color:var(--text-muted)">Sheets:</span>' +
       '<div class="detail-sheet-count">' +
@@ -5615,9 +5955,17 @@ function buildSheetDetail() {
     '</div>';
   }
 
-  // Pagination controls
+  // Pagination controls (for multi-sheet jobs too)
   let paginationHtml = '';
-  if (count > 1) {
+  if (activeJob && activeJob.sheetIds.length > 1 && isJobSheet) {
+    // For job sheets, show job-wide pagination
+    const jobSheetIdx = activeJob.sheetIds.indexOf(activeSheetId);
+    paginationHtml = '<div class="grid-pagination">' +
+      '<button class="grid-page-btn" onclick="selectJobSheet(' + (jobSheetIdx - 1) + ')"' + (jobSheetIdx <= 0 ? ' disabled' : '') + '>◀</button>' +
+      '<span class="grid-page-label">Job Sheet ' + (jobSheetIdx + 1) + ' of ' + activeJob.sheetIds.length + '</span>' +
+      '<button class="grid-page-btn" onclick="selectJobSheet(' + (jobSheetIdx + 1) + ')"' + (jobSheetIdx >= activeJob.sheetIds.length - 1 ? ' disabled' : '') + '>▶</button>' +
+    '</div>';
+  } else if (count > 1) {
     paginationHtml = '<div class="grid-pagination">' +
       '<button class="grid-page-btn" onclick="changeMapPage(-1)"' + (currentMapPage <= 0 ? ' disabled' : '') + '>◀</button>' +
       '<span class="grid-page-label">Sheet ' + (currentMapPage + 1) + ' of ' + count + '</span>' +
@@ -5625,12 +5973,12 @@ function buildSheetDetail() {
     '</div>';
   }
 
-  // Split remaining button
+  // Split remaining button - hide for job sheets
   const printed = (sh.printed || []).length;
   const poolSize = getPoolSize(sh);
   const remaining = poolSize - printed;
   let splitHtml = '';
-  if (printed > 0 && remaining > 0) {
+  if (!isJobSheet && printed > 0 && remaining > 0) {
     // Count physical sheets with open spots
     const sheetsWithOpen = [];
     for (let p = 0; p < count; p++) {
@@ -5657,9 +6005,9 @@ function buildSheetDetail() {
     sheetCountHtml +
     paginationHtml +
     mapHtml +
-    buildRemainingBar(sh) +
-    buildLegendHtml(true) +
-    (lastPrintJob && lastPrintJob.sheetId === activeSheetId ? '<button class="btn btn-secondary btn-sm" onclick="undoLastPrint()" style="margin-top:12px;font-size:13px">↩️ Undo Last Print (' + lastPrintJob.indices.length + ' label' + (lastPrintJob.indices.length !== 1 ? 's' : '') + ')</button>' : '') +
+    (isJobSheet ? '' : buildRemainingBar(sh)) +
+    buildLegendHtml(!isJobSheet) +
+    (!isJobSheet && lastPrintJob && lastPrintJob.sheetId === activeSheetId ? '<button class="btn btn-secondary btn-sm" onclick="undoLastPrint()" style="margin-top:12px;font-size:13px">↩️ Undo Last Print (' + lastPrintJob.indices.length + ' label' + (lastPrintJob.indices.length !== 1 ? 's' : '') + ')</button>' : '') +
     splitHtml +
   '</div>';
 }
@@ -5669,6 +6017,16 @@ function changeMapPage(delta) {
   const count = sh.sheetCount || 1;
   currentMapPage = Math.max(0, Math.min(count - 1, currentMapPage + delta));
   buildSheetDetail();
+}
+
+function selectJobSheet(idx) {
+  if (!activeJob || idx < 0 || idx >= activeJob.sheetIds.length) return;
+  activeSheetId = activeJob.sheetIds[idx];
+  currentMapPage = 0;
+  saveSheets();
+  buildSheetCards();
+  buildSheetDetail();
+  buildAssignedTexts();
 }
 
 function adjustDetailSheetCount(delta) {
@@ -5745,6 +6103,13 @@ function buildAssignedTexts() {
   const area = document.getElementById('sheetAssignedArea');
   if (!activeSheetId) { area.innerHTML = ''; return; }
   const sh = getActiveSheet();
+  
+  // Hide assigned texts area for job sheets
+  if (sh.jobId && activeJob) {
+    area.innerHTML = '';
+    return;
+  }
+  
   area.innerHTML = buildAssignedTextsHtml(sh);
 }
 
@@ -5926,13 +6291,18 @@ function buildSheetMapHtml(sh, assignmentsObj, page) {
   // If page is undefined, default to 0 (first physical sheet)
   if (page === undefined) page = 0;
 
-  // Build reverse map: index -> { textId, colorIdx }
+  // Check if this is a job sheet
+  const isJobSheet = sh.jobId && activeJob && activeJob.id === sh.jobId;
+
+  // Build reverse map: index -> { textId, colorIdx } (for regular sheets)
   const indexMap = {};
-  const textIds = sh.texts ? Object.keys(sh.texts) : [];
-  textIds.forEach((textId, colorIdx) => {
-    const indices = assignments[textId] || [];
-    indices.forEach(idx => { indexMap[idx] = { textId, colorIdx: colorIdx % TEXT_COLORS.length }; });
-  });
+  if (!isJobSheet) {
+    const textIds = sh.texts ? Object.keys(sh.texts) : [];
+    textIds.forEach((textId, colorIdx) => {
+      const indices = assignments[textId] || [];
+      indices.forEach(idx => { indexMap[idx] = { textId, colorIdx: colorIdx % TEXT_COLORS.length }; });
+    });
+  }
 
   // Calculate the range of pool indices for this page
   const pageStart = page * lps;
@@ -5943,30 +6313,61 @@ function buildSheetMapHtml(sh, assignmentsObj, page) {
   const numFont = poolSize > 40 ? 6 : 7;
   const showNum = lps <= 80;
 
-  let gridHtml = '<div class="label-grid" style="' + gridStyle + '">';
-  for (let i = pageStart; i < pageEnd; i++) {
-    const isPrinted = printed.has(i);
-    const assignment = indexMap[i];
-    let cls = 'label-cell';
-    if (isPrinted) cls += ' printed';
-    else if (assignment) cls += ' cell-color-' + assignment.colorIdx;
+  const ar = 'aspect-ratio: ' + spec.labelW + ' / ' + spec.labelH;
 
-    const ar = 'aspect-ratio: ' + spec.labelW + ' / ' + spec.labelH;
-    const clickAttr = isPrinted ? ' onclick="toggleCellPrinted(' + i + ')" title="Click to mark as available"' : '';
-    let inner = showNum ? '<span class="label-number" style="font-size:' + numFont + 'px">' + (i+1) + '</span>' : '';
-    if (isPrinted) {
-      inner += '<span class="printed-badge" style="font-size:' + numFont + 'px">✓</span>';
-    } else if (assignment) {
-      const st = getSavedText(assignment.textId);
-      if (st) {
-        const lines = deserializeLines(st.text);
-        inner += '<span class="label-text" style="font-size:' + cellFont + 'px">' + escapeHtml(getFlatText(lines).substring(0, 20)) + '</span>';
+  let gridHtml = '<div class="label-grid" style="' + gridStyle + '">';
+  
+  for (let localIdx = 0; localIdx < lps; localIdx++) {
+    const poolIdx = pageStart + localIdx;
+    let cls = 'label-cell';
+    let inner = showNum ? '<span class="label-number" style="font-size:' + numFont + 'px">' + (localIdx + 1) + '</span>' : '';
+    let clickAttr = '';
+
+    if (isJobSheet) {
+      // Job sheet rendering - use localIdx for printed set, list row for data
+      const listRowIdx = sh.jobRowStart + localIdx;
+      const isPrinted = printed.has(localIdx);
+      const isInJob = activeJob.printedRowIndices.includes(listRowIdx);
+      const hasData = listRowIdx < sh.jobRowEnd;
+
+      if (isPrinted || isInJob) {
+        cls += ' printed';
+        inner += '<span class="printed-badge" style="font-size:' + numFont + 'px">✓</span>';
+      } else if (hasData) {
+        cls += ' cell-color-0';
+        const tpl = getBuiltinTemplate(activeJob.templateId) || savedTexts.find(s => s.id === activeJob.templateId);
+        if (tpl && activeJob.list[listRowIdx]) {
+          const renderedText = applyTemplate(tpl, activeJob.list[listRowIdx]);
+          const lines = deserializeLines(renderedText);
+          inner += '<span class="label-text" style="font-size:' + cellFont + 'px">' + escapeHtml(getFlatText(lines).substring(0, 20)) + '</span>';
+        }
+      } else if (lps <= 30) {
+        inner += '<span class="empty-state">—</span>';
       }
-    } else if (lps <= 30) {
-      inner += '<span class="empty-state">avail</span>';
+    } else {
+      // Regular sheet rendering
+      const isPrinted = printed.has(poolIdx);
+      const assignment = indexMap[poolIdx];
+      
+      if (isPrinted) {
+        cls += ' printed';
+        clickAttr = ' onclick="toggleCellPrinted(' + poolIdx + ')" title="Click to mark as available"';
+        inner += '<span class="printed-badge" style="font-size:' + numFont + 'px">✓</span>';
+      } else if (assignment) {
+        cls += ' cell-color-' + assignment.colorIdx;
+        const st = getSavedText(assignment.textId);
+        if (st) {
+          const lines = deserializeLines(st.text);
+          inner += '<span class="label-text" style="font-size:' + cellFont + 'px">' + escapeHtml(getFlatText(lines).substring(0, 20)) + '</span>';
+        }
+      } else if (lps <= 30) {
+        inner += '<span class="empty-state">avail</span>';
+      }
     }
+
     gridHtml += '<div class="' + cls + '" style="font-size:' + cellFont + 'px;' + ar + '"' + clickAttr + '>' + inner + '</div>';
   }
+  
   gridHtml += '</div>';
   return gridHtml;
 }
@@ -6591,6 +6992,693 @@ function countSheetsConsumedByPrint(sh, newlyPrintedIndices) {
   return consumed - prevConsumed;
 }
 
+// ========== BATCH JOB FUNCTIONS ==========
+
+function loadActiveJob() {
+  try {
+    const stored = localStorage.getItem(ACTIVE_JOB_KEY);
+    activeJob = stored ? JSON.parse(stored) : null;
+  } catch(e) { activeJob = null; }
+}
+
+function saveActiveJob() {
+  try {
+    if (activeJob) {
+      localStorage.setItem(ACTIVE_JOB_KEY, JSON.stringify(activeJob));
+    } else {
+      localStorage.removeItem(ACTIVE_JOB_KEY);
+    }
+  } catch(e) {}
+}
+
+function loadJobHistory() {
+  try {
+    const stored = localStorage.getItem(JOB_HISTORY_KEY);
+    jobHistory = stored ? JSON.parse(stored) : [];
+  } catch(e) { jobHistory = []; }
+}
+
+function saveJobHistory() {
+  try {
+    localStorage.setItem(JOB_HISTORY_KEY, JSON.stringify(jobHistory));
+  } catch(e) {}
+}
+
+function getActiveJob() { return activeJob; }
+
+function hasActiveJob() { return activeJob !== null; }
+
+// Calculate sheets needed for a batch job
+function calculateSheetsNeeded(rowCount, labelType) {
+  const spec = getSpec(labelType);
+  const lps = spec.cols * spec.rows;
+  return Math.ceil(rowCount / lps);
+}
+
+// Show batch import modal for a template
+function showBatchImportModal(templateId) {
+  if (hasActiveJob()) {
+    showAlert('A batch job is already active. Complete or cancel it before starting a new one.', { title: '⚠️ Job In Progress' });
+    return;
+  }
+
+  const tpl = getBuiltinTemplate(templateId) || savedTexts.find(s => s.id === templateId);
+  if (!tpl || tpl.type !== 'template') {
+    showAlert('Template not found.', { title: '⚠️ Error' });
+    return;
+  }
+
+  batchTemplateId = templateId;
+  batchCsvData = null;
+  batchColTokenMap = [];
+
+  document.getElementById('batchTemplateName').textContent = tpl.name;
+  document.getElementById('batchFileZone').className = 'batch-file-zone';
+  document.getElementById('batchFileZone').innerHTML = '<span class="file-icon">📄</span><span class="file-prompt">Click to select a CSV file or drag & drop here</span>';
+  document.getElementById('batchMappingSection').style.display = 'none';
+  document.getElementById('batchCreateBtn').style.display = 'none';
+  document.getElementById('batchFileInput').value = '';
+
+  // Set default job name
+  const today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  document.getElementById('batchJobName').value = tpl.name + ' — ' + today;
+
+  document.getElementById('batchImportModal').classList.add('visible');
+}
+
+function closeBatchImportModal() {
+  document.getElementById('batchImportModal').classList.remove('visible');
+  batchTemplateId = null;
+  batchCsvData = null;
+  batchColTokenMap = [];
+}
+
+// Handle CSV file selection
+function handleBatchFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  processBatchFile(file);
+}
+
+function processBatchFile(file) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const text = e.target.result;
+    const parsed = parseCSV(text);
+    if (!parsed || !parsed.rows.length) {
+      showAlert('Could not parse CSV file. Please check the format.', { title: '⚠️ Parse Error' });
+      return;
+    }
+    batchCsvData = parsed;
+
+    // Update file zone
+    const zone = document.getElementById('batchFileZone');
+    zone.className = 'batch-file-zone has-file';
+    zone.innerHTML = '<span class="file-name">✅ ' + escapeHtml(file.name) + '</span>' +
+      '<span class="file-info">' + parsed.rows.length + ' rows × ' + parsed.headers.length + ' columns</span>';
+
+    // Build column mapping
+    buildBatchColMapping();
+    updateBatchSummary();
+    updateBatchPreview();
+
+    document.getElementById('batchMappingSection').style.display = '';
+    document.getElementById('batchCreateBtn').style.display = '';
+  };
+  reader.readAsText(file);
+}
+
+// Parse CSV text into { headers: [], rows: [[]] }
+function parseCSV(text) {
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  if (lines.length < 2) return null; // Need header + at least 1 row
+
+  // Simple CSV parse (handles quoted fields)
+  function parseLine(line) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') {
+        if (inQuotes && line[i + 1] === '"') {
+          current += '"';
+          i++;
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (ch === ',' && !inQuotes) {
+        result.push(current.trim());
+        current = '';
+      } else {
+        current += ch;
+      }
+    }
+    result.push(current.trim());
+    return result;
+  }
+
+  const headers = parseLine(lines[0]);
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const row = parseLine(lines[i]);
+    if (row.some(c => c)) rows.push(row); // Skip empty rows
+  }
+
+  return { headers, rows };
+}
+
+// Build column-to-token mapping UI
+function buildBatchColMapping() {
+  const tpl = getBuiltinTemplate(batchTemplateId) || savedTexts.find(s => s.id === batchTemplateId);
+  if (!tpl || !batchCsvData) return;
+
+  const tokens = tpl.tokens || [];
+  const headers = batchCsvData.headers;
+
+  // Auto-map using existing autoMapColumns
+  const autoMap = autoMapColumns(headers, tokens);
+  batchColTokenMap = autoMap.slice(); // Copy
+
+  let html = '';
+  headers.forEach((header, idx) => {
+    const autoToken = autoMap[idx] || '';
+    html += '<div class="batch-col-row">' +
+      '<span class="batch-col-header">' + escapeHtml(header || '(Column ' + (idx + 1) + ')') + '</span>' +
+      '<span class="batch-col-arrow">→</span>' +
+      '<select class="batch-col-token" onchange="updateBatchColMap(' + idx + ',this.value)">' +
+        '<option value="">— Skip —</option>' +
+        tokens.map(t => '<option value="' + escapeAttr(t) + '"' + (autoToken === t ? ' selected' : '') + '>{' + escapeHtml(t) + '}</option>').join('') +
+      '</select>' +
+    '</div>';
+  });
+
+  document.getElementById('batchColMapping').innerHTML = html;
+}
+
+function updateBatchColMap(colIdx, tokenName) {
+  batchColTokenMap[colIdx] = tokenName || null;
+  updateBatchSummary();
+  updateBatchPreview();
+}
+
+function updateBatchSummary() {
+  if (!batchCsvData) return;
+  const tpl = getBuiltinTemplate(batchTemplateId) || savedTexts.find(s => s.id === batchTemplateId);
+  const labelType = tpl?.labelType || '5160';
+  const spec = getSpec(labelType);
+  const lps = spec.cols * spec.rows;
+  const rowCount = batchCsvData.rows.length;
+  const sheetsNeeded = calculateSheetsNeeded(rowCount, labelType);
+  const remainder = rowCount % lps;
+  const unusedOnLast = remainder ? lps - remainder : 0;
+
+  let html = '<div class="batch-summary-row"><span class="label">Records:</span><span class="value">' + rowCount + '</span></div>' +
+    '<div class="batch-summary-row"><span class="label">Label type:</span><span class="value">Avery ' + labelType + ' (' + lps + '/sheet)</span></div>' +
+    '<div class="batch-summary-row"><span class="label">Sheets needed:</span><span class="value">' + sheetsNeeded + '</span></div>';
+  if (unusedOnLast > 0) {
+    html += '<div class="batch-summary-row"><span class="label">Unused on last sheet:</span><span class="value">' + unusedOnLast + '</span></div>';
+  }
+  document.getElementById('batchSummary').innerHTML = html;
+}
+
+function updateBatchPreview() {
+  if (!batchCsvData) return;
+  const tpl = getBuiltinTemplate(batchTemplateId) || savedTexts.find(s => s.id === batchTemplateId);
+  if (!tpl) return;
+
+  // Build preview for first 3 records
+  const previewRecords = batchCsvData.rows.slice(0, 3);
+  const headers = batchCsvData.headers;
+
+  let html = previewRecords.map((row, ridx) => {
+    // Build record object
+    const record = {};
+    headers.forEach((h, cidx) => {
+      const token = batchColTokenMap[cidx];
+      if (token && row[cidx]) {
+        record[token] = row[cidx];
+      }
+    });
+
+    // Apply template
+    const renderedText = applyTemplate(tpl, record);
+    const lines = deserializeLines(renderedText);
+
+    // Render as mini preview
+    let previewHtml = lines.map(l => {
+      if (!l.text) return '';
+      const alignClass = 'align-' + (l.align || 'left');
+      return '<div class="preview-line ' + alignClass + '">' + escapeHtml(l.text) + '</div>';
+    }).join('');
+
+    return '<div class="batch-preview-card">' + previewHtml + '</div>';
+  }).join('');
+
+  if (batchCsvData.rows.length > 3) {
+    html += '<div class="batch-preview-more">+' + (batchCsvData.rows.length - 3) + ' more</div>';
+  }
+
+  document.getElementById('batchPreviewCards').innerHTML = html;
+}
+
+// Create the batch job
+async function createBatchJob() {
+  if (!batchCsvData || !batchTemplateId) return;
+
+  const tpl = getBuiltinTemplate(batchTemplateId) || savedTexts.find(s => s.id === batchTemplateId);
+  if (!tpl) return;
+
+  const jobName = document.getElementById('batchJobName').value.trim() || 'Batch Job';
+  const labelType = tpl.labelType || '5160';
+  const spec = getSpec(labelType);
+  const lps = spec.cols * spec.rows;
+  const headers = batchCsvData.headers;
+
+  // Build list data
+  const list = batchCsvData.rows.map(row => {
+    const record = {};
+    headers.forEach((h, cidx) => {
+      const token = batchColTokenMap[cidx];
+      if (token && row[cidx] !== undefined) {
+        record[token] = row[cidx];
+      }
+    });
+    return record;
+  });
+
+  const sheetsNeeded = calculateSheetsNeeded(list.length, labelType);
+
+  // Create job object
+  const jobId = 'job_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+  activeJob = {
+    id: jobId,
+    templateId: batchTemplateId,
+    name: jobName,
+    list: list,
+    labelType: labelType,
+    sheetIds: [],
+    printedRowIndices: [],
+    status: 'active',
+    createdAt: Date.now()
+  };
+
+  // Create job sheets
+  for (let i = 0; i < sheetsNeeded; i++) {
+    const sheetId = 'sh_job_' + Date.now() + '_' + i + '_' + Math.random().toString(36).substr(2, 4);
+    const rowStart = i * lps;
+    const rowEnd = Math.min((i + 1) * lps, list.length);
+
+    sheets[sheetId] = {
+      name: jobName + ' #' + (i + 1),
+      labelType: labelType,
+      sheetCount: 1,
+      printed: [],
+      texts: {},
+      // Job-specific properties
+      jobId: jobId,
+      jobSheetIndex: i,
+      jobRowStart: rowStart,
+      jobRowEnd: rowEnd
+    };
+
+    activeJob.sheetIds.push(sheetId);
+
+    // Inventory: deduct from stock if tracked
+    if (inventory[labelType]) {
+      recordInventoryCreate(labelType, 1, sheetId, sheets[sheetId].name);
+    }
+  }
+
+  saveActiveJob();
+  saveSheets();
+  closeBatchImportModal();
+
+  // Switch to Sheets tab and select first job sheet
+  activeSheetId = activeJob.sheetIds[0];
+  currentMapPage = 0;
+  doSwitchTab('sheets');
+  buildSheetCards();
+  buildSheetDetail();
+  buildAssignedTexts();
+  updateTabMeta();
+
+  setStatus('Job created: ' + list.length + ' labels across ' + sheetsNeeded + ' sheet' + (sheetsNeeded !== 1 ? 's' : ''), 'success');
+}
+
+// Render active job banner
+function renderJobBanner() {
+  const container = document.getElementById('jobBannerArea');
+  if (!container) return;
+
+  if (!activeJob) {
+    container.innerHTML = '';
+    return;
+  }
+
+  const totalRows = activeJob.list.length;
+  const printedRows = activeJob.printedRowIndices.length;
+  const progressPct = totalRows > 0 ? Math.round((printedRows / totalRows) * 100) : 0;
+
+  // Count sheets complete vs pending
+  let sheetsComplete = 0;
+  let sheetsPending = 0;
+  activeJob.sheetIds.forEach(shId => {
+    const sh = sheets[shId];
+    if (!sh) return;
+    const rowsOnSheet = sh.jobRowEnd - sh.jobRowStart;
+    const printedOnSheet = activeJob.printedRowIndices.filter(i => i >= sh.jobRowStart && i < sh.jobRowEnd).length;
+    if (printedOnSheet >= rowsOnSheet) {
+      sheetsComplete++;
+    } else {
+      sheetsPending++;
+    }
+  });
+
+  const html = '<div class="job-banner">' +
+    '<div class="job-banner-header">' +
+      '<div class="job-banner-title"><span class="job-icon">📦</span>' + escapeHtml(activeJob.name) + '</div>' +
+      '<div class="job-banner-actions">' +
+        '<button class="btn btn-primary btn-sm" onclick="printJobAll()">🖨️ Print All</button>' +
+        '<button class="btn btn-secondary btn-sm" onclick="cancelJob()">Cancel Job</button>' +
+      '</div>' +
+    '</div>' +
+    '<div class="job-banner-progress">' +
+      '<div class="job-progress-bar"><div class="job-progress-fill" style="width:' + progressPct + '%"></div></div>' +
+      '<div class="job-progress-text">' + printedRows + ' / ' + totalRows + ' labels</div>' +
+    '</div>' +
+    '<div class="job-banner-info">' +
+      '<span>📋 ' + sheetsComplete + ' of ' + activeJob.sheetIds.length + ' sheets complete</span>' +
+      '<span>🏷️ Avery ' + activeJob.labelType + '</span>' +
+    '</div>' +
+  '</div>';
+
+  container.innerHTML = html;
+}
+
+// Print all job sheets
+async function printJobAll() {
+  if (!activeJob) return;
+
+  const tpl = getBuiltinTemplate(activeJob.templateId) || savedTexts.find(s => s.id === activeJob.templateId);
+  if (!tpl) {
+    showAlert('Template not found for this job.', { title: '⚠️ Error' });
+    return;
+  }
+
+  const labelType = activeJob.labelType;
+  const spec = getSpec(labelType);
+  const lps = spec.cols * spec.rows;
+
+  // Build print map across all job sheets
+  const pageSheets = [];
+
+  activeJob.sheetIds.forEach((shId, shIdx) => {
+    const sh = sheets[shId];
+    if (!sh) return;
+
+    const pageLabels = [];
+    for (let rowIdx = sh.jobRowStart; rowIdx < sh.jobRowEnd; rowIdx++) {
+      if (activeJob.printedRowIndices.includes(rowIdx)) continue; // Already printed
+
+      const record = activeJob.list[rowIdx];
+      const renderedText = applyTemplate(tpl, record);
+      const lines = deserializeLines(renderedText);
+      const localIdx = rowIdx - sh.jobRowStart;
+      const row = Math.floor(localIdx / spec.cols);
+      const col = localIdx % spec.cols;
+
+      pageLabels.push({
+        row, col,
+        data: { lines, alignV: tpl.alignV || 'center', graphics: tpl.graphics },
+        rowIdx: rowIdx
+      });
+    }
+
+    if (pageLabels.length > 0) {
+      pageSheets.push({ sheetId: shId, physicalSheet: shIdx, labels: pageLabels });
+    }
+  });
+
+  if (!pageSheets.length) {
+    showAlert('All labels have already been printed.', { title: '✅ Complete' });
+    return;
+  }
+
+  const totalLabels = pageSheets.reduce((sum, pg) => sum + pg.labels.length, 0);
+
+  // Build iframe content
+  let pagesHtml = '';
+  pageSheets.forEach((pg, pi) => {
+    let pageHtml = '';
+    pg.labels.forEach(lbl => {
+      const top = spec.topMargin + lbl.row * (spec.labelH + spec.vGutter);
+      const left = spec.leftMargin + lbl.col * (spec.labelW + spec.hGutter);
+      const linesHtml = lbl.data.lines.map(l => renderPrintLineHtml(l)).join('');
+      const gfx = lbl.data.graphics;
+      const hasGfx = gfx && (gfx.left || gfx.right);
+
+      if (hasGfx) {
+        const usableW = spec.labelW - 0.24;
+        let innerHtml = '';
+        if (gfx.left) {
+          const leftW = (usableW * gfx.left.widthPct / 100).toFixed(3);
+          innerHtml += '<div class="print-graphic" style="width:' + leftW + 'in;"><img src="' + gfx.left.data + '"></div>';
+        }
+        innerHtml += '<div class="print-text-zone" style="justify-content:' + getFlexAlign(lbl.data.alignV) + ';">' + linesHtml + '</div>';
+        if (gfx.right) {
+          const rightW = (usableW * gfx.right.widthPct / 100).toFixed(3);
+          innerHtml += '<div class="print-graphic" style="width:' + rightW + 'in;"><img src="' + gfx.right.data + '"></div>';
+        }
+        pageHtml += '<div class="print-label print-label-gfx" style="top:' + top + 'in;left:' + left + 'in;width:' + spec.labelW + 'in;height:' + spec.labelH + 'in;padding:0.08in 0.12in;">' + innerHtml + '</div>';
+      } else {
+        pageHtml += '<div class="print-label" style="top:' + top + 'in;left:' + left + 'in;width:' + spec.labelW + 'in;height:' + spec.labelH + 'in;padding:0.08in 0.12in;justify-content:' + getFlexAlign(lbl.data.alignV) + ';">' + linesHtml + '</div>';
+      }
+    });
+    const breakStyle = pi < pageSheets.length - 1 ? 'page-break-after:always;' : '';
+    pagesHtml += '<div class="print-sheet" style="' + breakStyle + '">' + pageHtml + '</div>';
+  });
+
+  // Create and print iframe
+  const iframe = document.createElement('iframe');
+  iframe.style.cssText = 'position:fixed;top:0;left:0;width:0;height:0;border:none;visibility:hidden;';
+  document.body.appendChild(iframe);
+
+  const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+  iframeDoc.open();
+  iframeDoc.write('<!DOCTYPE html><html><head><style>' +
+    '@page { size: letter; margin: 0; }' +
+    'html, body { margin:0; padding:0; }' +
+    '.print-sheet { width:8.5in; height:11in; margin:0; padding:0; position:relative; overflow:hidden; box-sizing:border-box; }' +
+    '.print-label { position:absolute; overflow:hidden; font-family:Arial,sans-serif; line-height:1.3; color:#000; display:flex; flex-direction:column; box-sizing:border-box; }' +
+    '.print-label-gfx { flex-direction:row; align-items:stretch; }' +
+    '.print-graphic { flex-shrink:0; display:flex; align-items:center; justify-content:center; overflow:hidden; }' +
+    '.print-graphic img { max-width:100%; max-height:100%; object-fit:contain; }' +
+    '.print-text-zone { flex:1; display:flex; flex-direction:column; min-width:0; overflow:hidden; }' +
+    '.print-line { width:100%; display:flex; white-space:nowrap; overflow:hidden; box-sizing:border-box; }' +
+    '.print-line.align-left { justify-content:flex-start; text-align:left; }' +
+    '.print-line.align-center { justify-content:center; text-align:center; }' +
+    '.print-line.align-right { justify-content:flex-end; text-align:right; }' +
+    '.print-line.align-split { justify-content:space-between; text-align:left; }' +
+    '.print-line.align-split > span { min-width:0; overflow:hidden; text-overflow:ellipsis; }' +
+    '.print-line.fill-line { display:flex; align-items:flex-end; gap:3px; }' +
+    '.print-line.fill-line .fill-label { white-space:nowrap; flex-shrink:0; }' +
+    '.print-line.fill-line .fill-rule { flex:1; border-bottom:1px solid #000; min-width:0.25in; margin-bottom:1px; }' +
+  '</style></head><body>' +
+    pagesHtml +
+  '</body></html>');
+  iframeDoc.close();
+
+  iframe.contentWindow.focus();
+  iframe.contentWindow.print();
+  setTimeout(() => { document.body.removeChild(iframe); }, 1000);
+
+  // Confirm print
+  const confirmed = await showConfirm(
+    totalLabels + ' label' + (totalLabels !== 1 ? 's' : '') + ' were sent to the printer (' + pageSheets.length + ' page' + (pageSheets.length !== 1 ? 's' : '') + '). Did the print complete successfully?',
+    { title: '🖨️ Confirm Print', okText: 'Yes, printed OK', cancelText: 'No, discard' }
+  );
+
+  if (confirmed) {
+    // Mark rows as printed
+    const printedRowIndices = [];
+    pageSheets.forEach(pg => {
+      pg.labels.forEach(lbl => {
+        printedRowIndices.push(lbl.rowIdx);
+        // Also mark position in sheet
+        const sh = sheets[pg.sheetId];
+        if (sh) {
+          const localIdx = lbl.rowIdx - sh.jobRowStart;
+          sh.printed = [...new Set([...(sh.printed || []), localIdx])];
+        }
+      });
+    });
+
+    activeJob.printedRowIndices = [...new Set([...activeJob.printedRowIndices, ...printedRowIndices])];
+    saveActiveJob();
+    saveSheets();
+
+    // Check if job is complete
+    if (activeJob.printedRowIndices.length >= activeJob.list.length) {
+      showJobCompleteModal();
+    } else {
+      buildSheetCards();
+      buildSheetDetail();
+      renderJobBanner();
+      setStatus('Printed ' + totalLabels + ' labels — job in progress', 'success');
+    }
+  } else {
+    setStatus('Print cancelled — no labels marked as printed', 'warning');
+  }
+}
+
+// Show job completion modal
+function showJobCompleteModal() {
+  if (!activeJob) return;
+
+  const totalPrinted = activeJob.printedRowIndices.length;
+  document.getElementById('jobCompleteCount').textContent = totalPrinted;
+
+  // Check for remainder
+  const labelType = activeJob.labelType;
+  const spec = getSpec(labelType);
+  const lps = spec.cols * spec.rows;
+  const lastSheetId = activeJob.sheetIds[activeJob.sheetIds.length - 1];
+  const lastSheet = sheets[lastSheetId];
+  const labelsOnLast = lastSheet ? (lastSheet.jobRowEnd - lastSheet.jobRowStart) : 0;
+  const unusedOnLast = labelsOnLast < lps ? lps - labelsOnLast : 0;
+
+  if (unusedOnLast > 0) {
+    document.getElementById('jobRemainderSection').style.display = '';
+  } else {
+    document.getElementById('jobRemainderSection').style.display = 'none';
+  }
+
+  document.getElementById('jobCompleteModal').classList.add('visible');
+}
+
+// Complete the job
+function completeJob() {
+  if (!activeJob) return;
+
+  const keepRemainder = document.querySelector('input[name="jobRemainder"]:checked')?.value === 'keep';
+  const lastSheetId = activeJob.sheetIds[activeJob.sheetIds.length - 1];
+  const lastSheet = sheets[lastSheetId];
+
+  // Save to history (without list data)
+  const historyEntry = {
+    id: activeJob.id,
+    name: activeJob.name,
+    templateId: activeJob.templateId,
+    labelType: activeJob.labelType,
+    rowCount: activeJob.list.length,
+    status: 'completed',
+    completedAt: Date.now(),
+    createdAt: activeJob.createdAt
+  };
+  jobHistory.unshift(historyEntry);
+  if (jobHistory.length > 50) jobHistory = jobHistory.slice(0, 50); // Keep last 50
+  saveJobHistory();
+
+  if (keepRemainder && lastSheet) {
+    // Convert last job sheet to regular sheet
+    delete lastSheet.jobId;
+    delete lastSheet.jobSheetIndex;
+    delete lastSheet.jobRowStart;
+    delete lastSheet.jobRowEnd;
+    lastSheet.name = lastSheet.name.replace(/ #\d+$/, ' (partial)');
+    // Delete other job sheets
+    activeJob.sheetIds.slice(0, -1).forEach(shId => {
+      delete sheets[shId];
+    });
+  } else {
+    // Delete all job sheets
+    activeJob.sheetIds.forEach(shId => {
+      delete sheets[shId];
+    });
+  }
+
+  // Clear active job
+  activeJob = null;
+  saveActiveJob();
+  saveSheets();
+
+  // Close modal and refresh UI
+  document.getElementById('jobCompleteModal').classList.remove('visible');
+
+  // Select a non-job sheet if available
+  const regularSheetIds = Object.keys(sheets).filter(id => !sheets[id].jobId);
+  activeSheetId = regularSheetIds[0] || null;
+  currentMapPage = 0;
+
+  buildSheetCards();
+  buildSheetDetail();
+  buildAssignedTexts();
+  renderJobBanner();
+  updateTabMeta();
+
+  setStatus('Batch job completed successfully!', 'success');
+}
+
+// Cancel the active job
+async function cancelJob() {
+  if (!activeJob) return;
+
+  const ok = await showConfirm(
+    'Cancel the batch job "' + activeJob.name + '"? This will delete all job sheets and discard the print data.',
+    { title: '⚠️ Cancel Job', okText: 'Yes, cancel job', cancelText: 'Keep job', danger: true }
+  );
+
+  if (!ok) return;
+
+  // Save to history as cancelled
+  const historyEntry = {
+    id: activeJob.id,
+    name: activeJob.name,
+    templateId: activeJob.templateId,
+    labelType: activeJob.labelType,
+    rowCount: activeJob.list.length,
+    status: 'cancelled',
+    cancelledAt: Date.now(),
+    createdAt: activeJob.createdAt
+  };
+  jobHistory.unshift(historyEntry);
+  saveJobHistory();
+
+  // Delete all job sheets
+  activeJob.sheetIds.forEach(shId => {
+    // Return inventory stock
+    const sh = sheets[shId];
+    if (sh && inventory[sh.labelType]) {
+      returnInventoryStock(sh.labelType, 1, 'Job cancelled: ' + activeJob.name);
+    }
+    delete sheets[shId];
+  });
+
+  activeJob = null;
+  saveActiveJob();
+  saveSheets();
+
+  // Select a non-job sheet
+  const regularSheetIds = Object.keys(sheets).filter(id => !sheets[id].jobId);
+  activeSheetId = regularSheetIds[0] || null;
+  currentMapPage = 0;
+
+  buildSheetCards();
+  buildSheetDetail();
+  buildAssignedTexts();
+  renderJobBanner();
+  updateTabMeta();
+
+  setStatus('Batch job cancelled', 'info');
+}
+
+// Check if a sheet is a job sheet
+function isJobSheet(sheetId) {
+  const sh = sheets[sheetId];
+  return sh && sh.jobId;
+}
+
 // ========== PRINTING ==========
 async function printLabels() {
   const sh = getActiveSheet();
@@ -6656,10 +7744,18 @@ async function printLabels() {
 
       if (hasGfx) {
         // Flex row layout with graphic(s) + text zone
+        // Calculate graphic widths in inches based on usable content area (label minus padding)
+        const usableW = spec.labelW - 0.24; // 2 × 0.12in horizontal padding
         let innerHtml = '';
-        if (gfx.left) innerHtml += '<div class="print-graphic" style="width:' + gfx.left.widthPct + '%;"><img src="' + gfx.left.data + '"></div>';
+        if (gfx.left) {
+          const leftW = (usableW * gfx.left.widthPct / 100).toFixed(3);
+          innerHtml += '<div class="print-graphic" style="width:' + leftW + 'in;"><img src="' + gfx.left.data + '"></div>';
+        }
         innerHtml += '<div class="print-text-zone" style="justify-content:' + getFlexAlign(lbl.data.alignV) + ';">' + linesHtml + '</div>';
-        if (gfx.right) innerHtml += '<div class="print-graphic" style="width:' + gfx.right.widthPct + '%;"><img src="' + gfx.right.data + '"></div>';
+        if (gfx.right) {
+          const rightW = (usableW * gfx.right.widthPct / 100).toFixed(3);
+          innerHtml += '<div class="print-graphic" style="width:' + rightW + 'in;"><img src="' + gfx.right.data + '"></div>';
+        }
         pageHtml += '<div class="print-label print-label-gfx" style="top:' + top + 'in;left:' + left + 'in;width:' + spec.labelW + 'in;height:' + spec.labelH + 'in;padding:0.08in 0.12in;">' + innerHtml + '</div>';
       } else {
         pageHtml += '<div class="print-label" style="top:' + top + 'in;left:' + left + 'in;width:' + spec.labelW + 'in;height:' + spec.labelH + 'in;padding:0.08in 0.12in;justify-content:' + getFlexAlign(lbl.data.alignV) + ';">' + linesHtml + '</div>';
@@ -6685,11 +7781,12 @@ async function printLabels() {
     '.print-graphic { flex-shrink:0; display:flex; align-items:center; justify-content:center; overflow:hidden; }' +
     '.print-graphic img { max-width:100%; max-height:100%; object-fit:contain; }' +
     '.print-text-zone { flex:1; display:flex; flex-direction:column; min-width:0; overflow:hidden; }' +
-    '.print-line { width:100%; display:flex; white-space:nowrap; overflow:hidden; }' +
+    '.print-line { width:100%; display:flex; white-space:nowrap; overflow:hidden; box-sizing:border-box; }' +
     '.print-line.align-left { justify-content:flex-start; text-align:left; }' +
     '.print-line.align-center { justify-content:center; text-align:center; }' +
     '.print-line.align-right { justify-content:flex-end; text-align:right; }' +
     '.print-line.align-split { justify-content:space-between; text-align:left; }' +
+    '.print-line.align-split > span { min-width:0; overflow:hidden; text-overflow:ellipsis; }' +
     '.print-line.fill-line { display:flex; align-items:flex-end; gap:3px; }' +
     '.print-line.fill-line .fill-label { white-space:nowrap; flex-shrink:0; }' +
     '.print-line.fill-line .fill-rule { flex:1; border-bottom:1px solid #000; min-width:0.25in; margin-bottom:1px; }' +
@@ -6928,13 +8025,31 @@ document.getElementById('newSheetName').addEventListener('keydown', e => { if (e
 document.getElementById('splitName').addEventListener('keydown', e => { if (e.key==='Enter') executeSplit(); if (e.key==='Escape') closeModal('splitModal'); });
 document.getElementById('importBaseName').addEventListener('keydown', e => { if (e.key==='Enter') executeImport(); if (e.key==='Escape') closeModal('importTextModal'); });
 document.getElementById('importBaseName').addEventListener('input', () => updateImportPreview());
+document.getElementById('batchJobName').addEventListener('keydown', e => { if (e.key==='Enter') createBatchJob(); if (e.key==='Escape') closeBatchImportModal(); });
 document.addEventListener('paste', handleOcrPaste);
 document.querySelectorAll('.modal-overlay').forEach(el => el.addEventListener('click', function(e) {
   if (e.target !== this) return;
   if (this.id === 'dialogModal') { dialogResolve(_dialogMode === 'alert'); }
   else if (this.id === 'ocrModal') { closeOcrModal(); }
+  else if (this.id === 'batchImportModal') { closeBatchImportModal(); }
+  else if (this.id === 'jobCompleteModal') { /* don't close on backdrop */ }
   else { closeModal(this.id); }
 }));
+
+// Batch file zone drag and drop
+const batchFileZone = document.getElementById('batchFileZone');
+if (batchFileZone) {
+  batchFileZone.addEventListener('dragover', e => { e.preventDefault(); batchFileZone.style.borderColor = 'var(--accent)'; });
+  batchFileZone.addEventListener('dragleave', e => { e.preventDefault(); batchFileZone.style.borderColor = ''; });
+  batchFileZone.addEventListener('drop', e => {
+    e.preventDefault();
+    batchFileZone.style.borderColor = '';
+    const file = e.dataTransfer.files[0];
+    if (file && (file.name.endsWith('.csv') || file.name.endsWith('.txt'))) {
+      processBatchFile(file);
+    }
+  });
+}
 
 // ========== INIT ==========
 initTheme();
@@ -6942,6 +8057,8 @@ loadSheets();
 loadSavedTexts();
 loadCustomTokens();
 loadInventory();
+loadActiveJob();
+loadJobHistory();
 
 if (!Object.keys(sheets).length) {
   firstRunRequired = true;
@@ -6953,6 +8070,7 @@ if (!Object.keys(sheets).length) {
   buildSheetDetail();
   buildAssignedTexts();
   renderSavedTexts();
+  renderJobBanner();
   updateTabMeta();
 }
 
