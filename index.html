@@ -1581,6 +1581,27 @@
   }
   .template-csv-btn .csv-icon { font-size: 12px; }
 
+  /* Template Job History */
+  .template-job-history {
+    margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border);
+  }
+  .template-job-history-title {
+    font-size: 10px; font-weight: 700; color: var(--text-faint);
+    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;
+  }
+  .template-job-entry {
+    font-size: 11px; color: var(--text-secondary); padding: 2px 0;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .template-job-entry .job-date { color: var(--text-muted); font-family: var(--mono); font-size: 10px; }
+  .template-job-entry .job-count { font-weight: 600; color: var(--accent-text); }
+  .template-job-entry .job-file { color: var(--text-faint); font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100px; }
+  .template-job-entry .job-status-cancelled { color: var(--warning-text); font-size: 10px; }
+  .template-job-more {
+    font-size: 10px; color: var(--text-faint); cursor: pointer; margin-top: 2px;
+  }
+  .template-job-more:hover { color: var(--accent); text-decoration: underline; }
+
 </style>
 <style id="dynamicGridStyle"></style>
 </head>
@@ -2125,6 +2146,7 @@ let activeJob = null;          // Current batch job object (persisted in localSt
 let jobHistory = [];           // Completed/cancelled jobs (metadata only, persisted)
 let batchTemplateId = null;    // Template ID for current batch import
 let batchCsvData = null;       // Parsed CSV data: { headers: [], rows: [] }
+let batchCsvFileName = null;   // Original CSV filename
 let batchColTokenMap = [];     // Column-to-token mapping for batch import
 
 // ========== HELPERS ==========
@@ -4045,6 +4067,10 @@ function renderSavedTexts() {
       const stId = st.id;
       const nameHtml = escapeHtml(st.name) + (isBuiltin ? '<span class="builtin-badge">Built-in</span>' : '');
       const labelTypeHtml = st.labelType ? '<div class="template-label-notice"><span class="notice-icon">🏷️</span>Avery ' + escapeHtml(st.labelType) + ' · ' + getSpec(st.labelType).desc + '</div>' : '';
+      
+      // Get job history for this template
+      const history = getTemplateJobHistory(stId);
+      const historyHtml = renderTemplateJobHistoryHtml(history);
 
       if (isBuiltin) {
         return '<div class="saved-text-card" onclick="loadTemplate(\'' + stId + '\')">' +
@@ -4057,6 +4083,7 @@ function renderSavedTexts() {
           '<div class="saved-text-card-preview">' + previewHtml + '</div>' +
           labelTypeHtml +
           '<button class="template-csv-btn" onclick="event.stopPropagation();showBatchImportModal(\'' + stId + '\')"><span class="csv-icon">📦</span> Load CSV</button>' +
+          historyHtml +
         '</div>';
       }
 
@@ -4073,6 +4100,7 @@ function renderSavedTexts() {
         '<div class="saved-text-card-preview">' + previewHtml + '</div>' +
         labelTypeHtml +
         '<button class="template-csv-btn" onclick="event.stopPropagation();showBatchImportModal(\'' + stId + '\')"><span class="csv-icon">📦</span> Load CSV</button>' +
+        historyHtml +
       '</div>';
     }).join('');
     list.innerHTML += '<button class="new-text-card" onclick="startNewTemplate()">+ New Template</button>';
@@ -7027,6 +7055,74 @@ function saveJobHistory() {
   } catch(e) {}
 }
 
+// Add job history to a template (stored on the template object)
+function addTemplateJobHistory(templateId, entry) {
+  // Only for user templates (not built-ins)
+  const tpl = savedTexts.find(s => s.id === templateId && s.type === 'template');
+  if (!tpl) return;
+  
+  if (!tpl.jobHistory) tpl.jobHistory = [];
+  tpl.jobHistory.unshift({
+    jobId: entry.id,
+    jobName: entry.name,
+    csvFileName: entry.csvFileName,
+    rowCount: entry.rowCount,
+    status: entry.status,
+    date: entry.completedAt || entry.cancelledAt || Date.now()
+  });
+  // Keep last 10 jobs per template
+  if (tpl.jobHistory.length > 10) tpl.jobHistory = tpl.jobHistory.slice(0, 10);
+  saveSavedTexts();
+}
+
+// Get job history for a template
+function getTemplateJobHistory(templateId) {
+  // Check user templates
+  const tpl = savedTexts.find(s => s.id === templateId && s.type === 'template');
+  if (tpl && tpl.jobHistory) return tpl.jobHistory;
+  
+  // For built-ins, filter global job history
+  return jobHistory.filter(j => j.templateId === templateId).slice(0, 10);
+}
+
+// Render job history HTML for a template card
+function renderTemplateJobHistoryHtml(history) {
+  if (!history || history.length === 0) return '';
+  
+  const formatDate = (ts) => {
+    const d = new Date(ts);
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+  
+  // Show only first 2 entries on card
+  const shown = history.slice(0, 2);
+  const more = history.length - 2;
+  
+  let html = '<div class="template-job-history">' +
+    '<div class="template-job-history-title">Recent Jobs</div>';
+  
+  shown.forEach(entry => {
+    const date = formatDate(entry.date);
+    const count = entry.rowCount;
+    const file = entry.csvFileName || 'CSV';
+    const cancelled = entry.status === 'cancelled';
+    
+    html += '<div class="template-job-entry">' +
+      '<span class="job-date">' + date + '</span>' +
+      '<span class="job-count">' + count + ' labels</span>' +
+      '<span class="job-file" title="' + escapeAttr(file) + '">' + escapeHtml(file) + '</span>' +
+      (cancelled ? '<span class="job-status-cancelled">(cancelled)</span>' : '') +
+    '</div>';
+  });
+  
+  if (more > 0) {
+    html += '<div class="template-job-more">+' + more + ' more job' + (more !== 1 ? 's' : '') + '</div>';
+  }
+  
+  html += '</div>';
+  return html;
+}
+
 function getActiveJob() { return activeJob; }
 
 function hasActiveJob() { return activeJob !== null; }
@@ -7093,6 +7189,7 @@ function processBatchFile(file) {
       return;
     }
     batchCsvData = parsed;
+    batchCsvFileName = file.name;
 
     // Update file zone
     const zone = document.getElementById('batchFileZone');
@@ -7278,6 +7375,7 @@ async function createBatchJob() {
     id: jobId,
     templateId: batchTemplateId,
     name: jobName,
+    csvFileName: batchCsvFileName || 'unknown.csv',
     list: list,
     labelType: labelType,
     sheetIds: [],
@@ -7568,13 +7666,14 @@ function completeJob() {
   const lastSheetId = activeJob.sheetIds[activeJob.sheetIds.length - 1];
   const lastSheet = sheets[lastSheetId];
 
-  // Save to history (without list data)
+  // Save to global history (without list data)
   const historyEntry = {
     id: activeJob.id,
     name: activeJob.name,
     templateId: activeJob.templateId,
     labelType: activeJob.labelType,
     rowCount: activeJob.list.length,
+    csvFileName: activeJob.csvFileName || 'unknown.csv',
     status: 'completed',
     completedAt: Date.now(),
     createdAt: activeJob.createdAt
@@ -7582,6 +7681,9 @@ function completeJob() {
   jobHistory.unshift(historyEntry);
   if (jobHistory.length > 50) jobHistory = jobHistory.slice(0, 50); // Keep last 50
   saveJobHistory();
+
+  // Also save to template-level history (for user templates)
+  addTemplateJobHistory(activeJob.templateId, historyEntry);
 
   if (keepRemainder && lastSheet) {
     // Convert last job sheet to regular sheet
@@ -7641,12 +7743,16 @@ async function cancelJob() {
     templateId: activeJob.templateId,
     labelType: activeJob.labelType,
     rowCount: activeJob.list.length,
+    csvFileName: activeJob.csvFileName || 'unknown.csv',
     status: 'cancelled',
     cancelledAt: Date.now(),
     createdAt: activeJob.createdAt
   };
   jobHistory.unshift(historyEntry);
   saveJobHistory();
+
+  // Also save to template-level history
+  addTemplateJobHistory(activeJob.templateId, historyEntry);
 
   // Delete all job sheets
   activeJob.sheetIds.forEach(shId => {
