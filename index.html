@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="gs-app-id" content="labelkeeper">
-<meta name="version" content="3.3.13">
+<meta name="version" content="3.3.14">
 
 <!-- App Meta Tags -->
 <meta name="description" content="Print labels without wasting a single position. Track which spots on your label sheets have been used.">
@@ -5674,7 +5674,7 @@ body {
   <header class="app-header">
     <div class="app-title">
       🏷️ LabelKeeper
-      <span class="version">v3.3.13</span>
+      <span class="version">v3.3.14</span>
     </div>
     <div class="header-actions">
       <button class="icon-btn" onclick="openSettings()" title="Settings">⚙️</button>
@@ -5803,24 +5803,35 @@ body {
       </div>
       
       <div class="settings-divider"></div>
-      <div class="settings-section-title">Print Calibration</div>
+      <div class="settings-section-title">Advanced</div>
       <div class="setting-desc" style="margin-bottom: 12px;">
-        Adjust if labels print offset from where they should be. Positive values shift down/right, negative shift up/left.
+        Print calibration settings. Safari requires an automatic offset correction due to a browser limitation.
+      </div>
+      
+      <div class="setting-row" style="margin-bottom: 12px;">
+        <div style="flex: 1;">
+          <div class="setting-label">Safari Print Offset</div>
+          <div class="setting-desc" style="font-size: 11px;">Auto-applied when printing from Safari</div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <input type="number" id="safariPrintOffset" step="0.05" style="width: 70px; padding: 8px; border: 2px solid var(--input-border); border-radius: 6px; background: var(--input-bg); color: var(--text); font-size: 14px;" onchange="updatePrintOffset()">
+          <span style="color: var(--text-muted); font-size: 13px;">in</span>
+        </div>
       </div>
       
       <div class="setting-row" style="gap: 16px;">
         <div style="flex: 1;">
-          <div class="setting-label">Vertical Offset</div>
+          <div class="setting-label">Manual Vertical Offset</div>
           <div style="display: flex; align-items: center; gap: 8px; margin-top: 6px;">
-            <input type="number" id="printOffsetTop" step="0.05" style="width: 80px; padding: 8px; border: 2px solid var(--input-border); border-radius: 6px; background: var(--input-bg); color: var(--text); font-size: 14px;" onchange="updatePrintOffset()">
-            <span style="color: var(--text-muted); font-size: 13px;">inches</span>
+            <input type="number" id="printOffsetTop" step="0.05" style="width: 70px; padding: 8px; border: 2px solid var(--input-border); border-radius: 6px; background: var(--input-bg); color: var(--text); font-size: 14px;" onchange="updatePrintOffset()">
+            <span style="color: var(--text-muted); font-size: 13px;">in</span>
           </div>
         </div>
         <div style="flex: 1;">
-          <div class="setting-label">Horizontal Offset</div>
+          <div class="setting-label">Manual Horizontal Offset</div>
           <div style="display: flex; align-items: center; gap: 8px; margin-top: 6px;">
-            <input type="number" id="printOffsetLeft" step="0.05" style="width: 80px; padding: 8px; border: 2px solid var(--input-border); border-radius: 6px; background: var(--input-bg); color: var(--text); font-size: 14px;" onchange="updatePrintOffset()">
-            <span style="color: var(--text-muted); font-size: 13px;">inches</span>
+            <input type="number" id="printOffsetLeft" step="0.05" style="width: 70px; padding: 8px; border: 2px solid var(--input-border); border-radius: 6px; background: var(--input-bg); color: var(--text); font-size: 14px;" onchange="updatePrintOffset()">
+            <span style="color: var(--text-muted); font-size: 13px;">in</span>
           </div>
         </div>
       </div>
@@ -7165,7 +7176,7 @@ Examples:
     <div class="welcome-header">
       <div class="welcome-icon">🏷️</div>
       <div class="welcome-title">Welcome to LabelKeeper</div>
-      <div class="welcome-version">v3.3.13</div>
+      <div class="welcome-version">v3.3.14</div>
     </div>
     <div class="welcome-body">
       <div class="welcome-tagline">
@@ -7273,8 +7284,9 @@ const FIRST_RUN_KEY = 'lk_first_run';
 let settings = {
   darkMode: false,
   lastLabelType: '5160',
-  printOffsetTop: 0,    // inches to shift print vertically (negative = up, positive = down)
-  printOffsetLeft: 0    // inches to shift print horizontally (negative = left, positive = right)
+  printOffsetTop: 0,       // Manual offset - inches to shift print vertically
+  printOffsetLeft: 0,      // Manual offset - inches to shift print horizontally  
+  safariPrintOffset: 0.5   // Safari auto-compensation (adjustable)
 };
 
 let sheets = {};
@@ -7290,7 +7302,11 @@ let lastPrintJob = null; // For undo last print (from v1.2)
 // Safari detection for print offset compensation
 // Safari doesn't properly respect @page { margin: 0 } in iframes
 const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-const SAFARI_PRINT_OFFSET = 0.5; // inches - Safari shifts print up by approximately this amount
+
+// Helper to get Safari offset (uses settings value, defaults to 0.5)
+function getSafariPrintOffset() {
+  return isSafari ? (settings.safariPrintOffset ?? 0.5) : 0;
+}
 
 // Batch job state (for CSV import)
 let batchTemplateId = null;
@@ -8352,6 +8368,7 @@ function openSettings() {
     '<div class="settings-data-stat">📜 <strong>' + stats.printHistory + '</strong> history item' + (stats.printHistory !== 1 ? 's' : '') + '</div>';
   
   // Populate print offset fields
+  document.getElementById('safariPrintOffset').value = settings.safariPrintOffset ?? 0.5;
   document.getElementById('printOffsetTop').value = settings.printOffsetTop || 0;
   document.getElementById('printOffsetLeft').value = settings.printOffsetLeft || 0;
   
@@ -8362,10 +8379,11 @@ function openSettings() {
 }
 
 function updatePrintOffset() {
+  settings.safariPrintOffset = parseFloat(document.getElementById('safariPrintOffset').value) ?? 0.5;
   settings.printOffsetTop = parseFloat(document.getElementById('printOffsetTop').value) || 0;
   settings.printOffsetLeft = parseFloat(document.getElementById('printOffsetLeft').value) || 0;
   saveSettings();
-  showToast('Print calibration saved', 'success');
+  showToast('Print settings saved', 'success');
 }
 
 function closeSettings() {
@@ -12955,7 +12973,7 @@ function buildSheetPrintHtml(sh, manifest) {
     html += '<div class="print-sheet" style="' + breakStyle + '">';
     
     // Get print offsets from settings (default to 0), plus Safari compensation
-    const offsetTop = (settings.printOffsetTop || 0) + (isSafari ? SAFARI_PRINT_OFFSET : 0);
+    const offsetTop = (settings.printOffsetTop || 0) + getSafariPrintOffset();
     const offsetLeft = settings.printOffsetLeft || 0;
     
     pages[pageNum].forEach(item => {
@@ -14111,7 +14129,7 @@ function buildPrintSheetHtml(sh, positions, lines) {
   let html = '';
   
   // Get print offsets from settings (default to 0), plus Safari compensation
-  const offsetTop = (settings.printOffsetTop || 0) + (isSafari ? SAFARI_PRINT_OFFSET : 0);
+  const offsetTop = (settings.printOffsetTop || 0) + getSafariPrintOffset();
   const offsetLeft = settings.printOffsetLeft || 0;
   
   for (const pos of positions) {
@@ -15315,7 +15333,7 @@ function buildBatchPrintHtml(labels, spec) {
   const sheetsNeeded = Math.ceil(labels.length / lps);
   
   // Get print offsets from settings (default to 0), plus Safari compensation
-  const offsetTop = (settings.printOffsetTop || 0) + (isSafari ? SAFARI_PRINT_OFFSET : 0);
+  const offsetTop = (settings.printOffsetTop || 0) + getSafariPrintOffset();
   const offsetLeft = settings.printOffsetLeft || 0;
   
   for (let s = 0; s < sheetsNeeded; s++) {
@@ -15795,7 +15813,7 @@ async function printJobAll() {
   const isTentCard = spec.category === 'tent';
   
   // Get print offsets from settings (default to 0), plus Safari compensation
-  const offsetTop = (settings.printOffsetTop || 0) + (isSafari ? SAFARI_PRINT_OFFSET : 0);
+  const offsetTop = (settings.printOffsetTop || 0) + getSafariPrintOffset();
   const offsetLeft = settings.printOffsetLeft || 0;
 
   // Build iframe content for multi-page print
@@ -16472,7 +16490,7 @@ function safeLoad(key, defaultValue) {
 
 function exportAllData() {
   const data = {
-    version: '3.3.13',
+    version: '3.3.14',
     exportedAt: new Date().toISOString(),
     settings: settings,
     sheets: sheets,
@@ -16624,7 +16642,7 @@ async function startSyncShare() {
   
   // Prepare data
   const data = {
-    version: '3.3.13',
+    version: '3.3.14',
     exportedAt: new Date().toISOString(),
     expiresAt: Date.now() + SYNC_EXPIRY_MS,
     sheets: sheets,
@@ -16962,7 +16980,7 @@ function init() {
   
   // Log stats for debugging
   const stats = getDataStats();
-  console.log('LabelKeeper v3.3.13 initialized', stats);
+  console.log('LabelKeeper v3.3.14 initialized', stats);
 }
 
 /**
