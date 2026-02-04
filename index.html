@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="gs-app-id" content="labelkeeper">
-<meta name="version" content="3.3.23">
+<meta name="version" content="3.3.24">
 
 <!-- App Meta Tags -->
 <meta name="description" content="Print labels without wasting a single position. Track which spots on your label sheets have been used.">
@@ -5674,7 +5674,7 @@ body {
   <header class="app-header">
     <div class="app-title">
       🏷️ LabelKeeper
-      <span class="version">v3.3.23</span>
+      <span class="version">v3.3.24</span>
     </div>
     <div class="header-actions">
       <button class="icon-btn" onclick="openSettings()" title="Settings">⚙️</button>
@@ -7176,7 +7176,7 @@ Examples:
     <div class="welcome-header">
       <div class="welcome-icon">🏷️</div>
       <div class="welcome-title">Welcome to LabelKeeper</div>
-      <div class="welcome-version">v3.3.23</div>
+      <div class="welcome-version">v3.3.24</div>
     </div>
     <div class="welcome-body">
       <div class="welcome-tagline">
@@ -12928,13 +12928,8 @@ function buildSheetPrintHtml(sh, manifest) {
   let html = '<!DOCTYPE html><html><head><style>';
   html += '@page { size: letter; margin: 0; }';
   html += 'html, body { margin: 0; padding: 0; }';
-  if (isSafari) {
-    // Wrapper takes up scaled space (10in), content inside is scaled
-    html += '.print-wrapper { width: 8.5in; height: 10.78in; overflow: hidden; }';
-    html += '.print-sheet { width: 8.5in; height: 11in; margin: 0; padding: 0; position: relative; box-sizing: border-box; transform: scale(' + safariScale + '); transform-origin: top left; }';
-  } else {
-    html += '.print-sheet { width: 8.5in; height: 11in; margin: 0; padding: 0; position: relative; box-sizing: border-box; }';
-  }
+  // Simple approach - same CSS for all browsers, no wrappers
+  html += '.print-sheet { width: 8.5in; height: 11in; margin: 0; padding: 0; position: relative; box-sizing: border-box; }';
   // Label boundary overlay for alignment debugging
   html += '.label-boundary { position:absolute; border: 1px solid #ccc; box-sizing: border-box; pointer-events: none; }';
   html += '.print-label { position:absolute; overflow:hidden; font-family:Arial,sans-serif; line-height:1.3; color:#000; display:flex; flex-direction:column; box-sizing:border-box; }';
@@ -12980,12 +12975,7 @@ function buildSheetPrintHtml(sh, manifest) {
   // Render each page
   Object.keys(pages).sort((a, b) => parseInt(a) - parseInt(b)).forEach((pageNum, pi, arr) => {
     const breakStyle = pi < arr.length - 1 ? 'page-break-after:always;' : '';
-    // Safari needs wrapper div to constrain the scaled content
-    if (isSafari) {
-      html += '<div class="print-wrapper" style="' + breakStyle + '"><div class="print-sheet">';
-    } else {
-      html += '<div class="print-sheet" style="' + breakStyle + '">';
-    }
+    html += '<div class="print-sheet" style="' + breakStyle + '">';
     
     // Get manual print offsets from settings only
     const offsetTop = settings.printOffsetTop || 0;
@@ -13042,9 +13032,6 @@ function buildSheetPrintHtml(sh, manifest) {
     
     // Close print-sheet (and wrapper for Safari)
     html += '</div>';
-    if (isSafari) {
-      html += '</div>';
-    }
   });
   
   html += '</body></html>';
@@ -13988,19 +13975,10 @@ function executePrint() {
   
   const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
   iframeDoc.open();
-  // Safari scale fix - use wrapper to constrain scaled content
-  const safariScale = 0.98;
+  // Simple CSS - same for all browsers
   let cssRules = '@page { size: letter; margin: 0 !important; }';
   cssRules += 'html, body { margin: 0 !important; padding: 0 !important; }';
-  if (isSafari) {
-    cssRules += '.print-wrapper { width: 8.5in; height: 10.78in; overflow: hidden; }';
-    cssRules += '.print-sheet { width: 8.5in; height: 11in; margin: 0; padding: 0; position: relative; box-sizing: border-box; transform: scale(' + safariScale + '); transform-origin: top left; }';
-  } else {
-    cssRules += '.print-sheet { width: 8.5in; height: 11in; margin: 0; padding: 0; position: relative; box-sizing: border-box; }';
-  }
-  
-  const wrapStart = isSafari ? '<div class="print-wrapper">' : '';
-  const wrapEnd = isSafari ? '</div>' : '';
+  cssRules += '.print-sheet { width: 8.5in; height: 11in; margin: 0; padding: 0; position: relative; box-sizing: border-box; }';
   
   iframeDoc.write('<!DOCTYPE html><html><head><style>' +
     cssRules +
@@ -14020,7 +13998,7 @@ function executePrint() {
     '.tent-top { top:0; height:50%; }' +
     '.tent-bottom { bottom:0; height:50%; transform:rotate(180deg); }' +
   '</style></head><body>' +
-    wrapStart + '<div class="print-sheet">' + printHtml + '</div>' + wrapEnd +
+    '<div class="print-sheet">' + printHtml + '</div>' +
   '</body></html>');
   iframeDoc.close();
   
@@ -15358,18 +15336,10 @@ function buildMailingLabelLines(record) {
 function buildBatchPrintHtml(labels, spec) {
   const lps = spec.cols * spec.rows;
   
-  // Safari scale fix
-  const safariScale = 0.98;
-  
   let html = '<!DOCTYPE html><html><head><style>';
   html += '@page { size: letter; margin: 0 !important; }';
   html += 'html, body { margin: 0 !important; padding: 0 !important; }';
-  if (isSafari) {
-    html += '.sheet-wrapper { width: 8.5in; height: 10.78in; overflow: hidden; page-break-after: always; }';
-    html += '.sheet { width: 8.5in; height: 11in; margin: 0; padding: 0; position: relative; overflow: hidden; transform: scale(' + safariScale + '); transform-origin: top left; }';
-  } else {
-    html += '.sheet { width: 8.5in; height: 11in; margin: 0; padding: 0; position: relative; overflow: hidden; page-break-after: always; }';
-  }
+  html += '.sheet { width: 8.5in; height: 11in; margin: 0; padding: 0; position: relative; overflow: hidden; page-break-after: always; }';
   html += '.label { position:absolute; overflow:hidden; font-family:Arial,sans-serif; line-height:1.3; color:#000; display:flex; flex-direction:column; justify-content:center; padding:0.08in 0.12in; box-sizing:border-box; }';
   html += '.label-line { line-height: 1.3; }';
   html += '</style></head><body>';
@@ -15381,11 +15351,7 @@ function buildBatchPrintHtml(labels, spec) {
   const offsetLeft = settings.printOffsetLeft || 0;
   
   for (let s = 0; s < sheetsNeeded; s++) {
-    if (isSafari) {
-      html += '<div class="sheet-wrapper"><div class="sheet">';
-    } else {
-      html += '<div class="sheet">';
-    }
+    html += '<div class="sheet">';
     
     for (let i = 0; i < lps; i++) {
       const labelIdx = s * lps + i;
@@ -15410,9 +15376,6 @@ function buildBatchPrintHtml(labels, spec) {
     }
     
     html += '</div>';
-    if (isSafari) {
-      html += '</div>';
-    }
   }
   
   html += '</body></html>';
@@ -15888,11 +15851,7 @@ async function printJobAll() {
       }
     });
     const breakStyle = pi < pageSheets.length - 1 ? 'page-break-after:always;' : '';
-    if (isSafari) {
-      pagesHtml += '<div class="print-wrapper" style="' + breakStyle + '"><div class="print-sheet">' + pageHtml + '</div></div>';
-    } else {
-      pagesHtml += '<div class="print-sheet" style="' + breakStyle + '">' + pageHtml + '</div>';
-    }
+    pagesHtml += '<div class="print-sheet" style="' + breakStyle + '">' + pageHtml + '</div>';
   });
 
   // Create and print iframe
@@ -15900,16 +15859,10 @@ async function printJobAll() {
   iframe.style.cssText = 'position:fixed;top:0;left:0;width:0;height:0;border:none;visibility:hidden;';
   document.body.appendChild(iframe);
 
-  // Safari scale fix - wrapper approach
-  const safariScale = 0.98;
+  // Simple CSS - same for all browsers
   let cssRules = '@page { size: letter; margin: 0 !important; }';
   cssRules += 'html, body { margin: 0 !important; padding: 0 !important; }';
-  if (isSafari) {
-    cssRules += '.print-wrapper { width: 8.5in; height: 10.78in; overflow: hidden; }';
-    cssRules += '.print-sheet { width: 8.5in; height: 11in; margin: 0; padding: 0; position: relative; overflow: hidden; transform: scale(' + safariScale + '); transform-origin: top left; }';
-  } else {
-    cssRules += '.print-sheet { width: 8.5in; height: 11in; margin: 0; padding: 0; position: relative; overflow: hidden; }';
-  }
+  cssRules += '.print-sheet { width: 8.5in; height: 11in; margin: 0; padding: 0; position: relative; overflow: hidden; }';
 
   const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
   iframeDoc.open();
@@ -16552,7 +16505,7 @@ function safeLoad(key, defaultValue) {
 
 function exportAllData() {
   const data = {
-    version: '3.3.23',
+    version: '3.3.24',
     exportedAt: new Date().toISOString(),
     settings: settings,
     sheets: sheets,
@@ -16704,7 +16657,7 @@ async function startSyncShare() {
   
   // Prepare data
   const data = {
-    version: '3.3.23',
+    version: '3.3.24',
     exportedAt: new Date().toISOString(),
     expiresAt: Date.now() + SYNC_EXPIRY_MS,
     sheets: sheets,
@@ -17042,7 +16995,7 @@ function init() {
   
   // Log stats for debugging
   const stats = getDataStats();
-  console.log('LabelKeeper v3.3.23 initialized', stats);
+  console.log('LabelKeeper v3.3.24 initialized', stats);
 }
 
 /**
