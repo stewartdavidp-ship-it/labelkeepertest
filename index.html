@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="gs-app-id" content="labelkeeper">
-<meta name="version" content="3.3.11">
+<meta name="version" content="3.3.13">
 
 <!-- App Meta Tags -->
 <meta name="description" content="Print labels without wasting a single position. Track which spots on your label sheets have been used.">
@@ -5674,7 +5674,7 @@ body {
   <header class="app-header">
     <div class="app-title">
       🏷️ LabelKeeper
-      <span class="version">v3.3.11</span>
+      <span class="version">v3.3.13</span>
     </div>
     <div class="header-actions">
       <button class="icon-btn" onclick="openSettings()" title="Settings">⚙️</button>
@@ -5799,6 +5799,29 @@ body {
         </div>
         <div class="toggle" id="darkModeToggle" onclick="toggleDarkMode()">
           <div class="toggle-thumb"></div>
+        </div>
+      </div>
+      
+      <div class="settings-divider"></div>
+      <div class="settings-section-title">Print Calibration</div>
+      <div class="setting-desc" style="margin-bottom: 12px;">
+        Adjust if labels print offset from where they should be. Positive values shift down/right, negative shift up/left.
+      </div>
+      
+      <div class="setting-row" style="gap: 16px;">
+        <div style="flex: 1;">
+          <div class="setting-label">Vertical Offset</div>
+          <div style="display: flex; align-items: center; gap: 8px; margin-top: 6px;">
+            <input type="number" id="printOffsetTop" step="0.05" style="width: 80px; padding: 8px; border: 2px solid var(--input-border); border-radius: 6px; background: var(--input-bg); color: var(--text); font-size: 14px;" onchange="updatePrintOffset()">
+            <span style="color: var(--text-muted); font-size: 13px;">inches</span>
+          </div>
+        </div>
+        <div style="flex: 1;">
+          <div class="setting-label">Horizontal Offset</div>
+          <div style="display: flex; align-items: center; gap: 8px; margin-top: 6px;">
+            <input type="number" id="printOffsetLeft" step="0.05" style="width: 80px; padding: 8px; border: 2px solid var(--input-border); border-radius: 6px; background: var(--input-bg); color: var(--text); font-size: 14px;" onchange="updatePrintOffset()">
+            <span style="color: var(--text-muted); font-size: 13px;">inches</span>
+          </div>
         </div>
       </div>
       
@@ -7142,7 +7165,7 @@ Examples:
     <div class="welcome-header">
       <div class="welcome-icon">🏷️</div>
       <div class="welcome-title">Welcome to LabelKeeper</div>
-      <div class="welcome-version">v3.3.11</div>
+      <div class="welcome-version">v3.3.13</div>
     </div>
     <div class="welcome-body">
       <div class="welcome-tagline">
@@ -7249,7 +7272,9 @@ const FIRST_RUN_KEY = 'lk_first_run';
 // ========== APP STATE ==========
 let settings = {
   darkMode: false,
-  lastLabelType: '5160'
+  lastLabelType: '5160',
+  printOffsetTop: 0,    // inches to shift print vertically (negative = up, positive = down)
+  printOffsetLeft: 0    // inches to shift print horizontally (negative = left, positive = right)
 };
 
 let sheets = {};
@@ -7261,6 +7286,11 @@ let jobHistory = [];
 let customTokens = [];
 let printHistory = [];
 let lastPrintJob = null; // For undo last print (from v1.2)
+
+// Safari detection for print offset compensation
+// Safari doesn't properly respect @page { margin: 0 } in iframes
+const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+const SAFARI_PRINT_OFFSET = 0.5; // inches - Safari shifts print up by approximately this amount
 
 // Batch job state (for CSV import)
 let batchTemplateId = null;
@@ -8321,10 +8351,21 @@ function openSettings() {
     '<div class="settings-data-stat">📦 <strong>' + stats.inventory + '</strong> inventory type' + (stats.inventory !== 1 ? 's' : '') + '</div>' +
     '<div class="settings-data-stat">📜 <strong>' + stats.printHistory + '</strong> history item' + (stats.printHistory !== 1 ? 's' : '') + '</div>';
   
+  // Populate print offset fields
+  document.getElementById('printOffsetTop').value = settings.printOffsetTop || 0;
+  document.getElementById('printOffsetLeft').value = settings.printOffsetLeft || 0;
+  
   // Update AI key status
   updateAIKeyStatusUI();
   
   document.getElementById('settingsModal').classList.add('visible');
+}
+
+function updatePrintOffset() {
+  settings.printOffsetTop = parseFloat(document.getElementById('printOffsetTop').value) || 0;
+  settings.printOffsetLeft = parseFloat(document.getElementById('printOffsetLeft').value) || 0;
+  saveSettings();
+  showToast('Print calibration saved', 'success');
 }
 
 function closeSettings() {
@@ -12863,12 +12904,11 @@ function buildSheetPrintHtml(sh, manifest) {
   const isTentCard = spec.category === 'tent';
   
   // Use exact v1.2 CSS for precise alignment
+  // Minimal CSS to avoid browser interference
   let html = '<!DOCTYPE html><html><head><style>';
-  html += '@page { size: letter; margin: 0 !important; }';
-  html += '@media print { @page { size: letter; margin: 0 !important; } html, body, .print-sheet { margin: 0 !important; padding: 0 !important; } }';
-  html += '* { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; box-sizing: border-box; }';
-  html += 'html, body { margin: 0 !important; padding: 0 !important; width: 8.5in; height: 11in; }';
-  html += '.print-sheet { width: 8.5in; height: 11in; margin: 0; padding: 0; position: absolute; top: 0; left: 0; overflow: hidden; }';
+  html += '@page { size: letter; margin: 0; }';
+  html += 'html, body { margin: 0; padding: 0; }';
+  html += '.print-sheet { width: 8.5in; height: 11in; margin: 0; padding: 0; position: relative; box-sizing: border-box; }';
   html += '.print-label { position:absolute; overflow:hidden; font-family:Arial,sans-serif; line-height:1.3; color:#000; display:flex; flex-direction:column; box-sizing:border-box; }';
   html += '.print-label-gfx { flex-direction:row; align-items:stretch; }';
   html += '.print-graphic { flex-shrink:0; display:flex; align-items:center; justify-content:center; overflow:hidden; }';
@@ -12914,13 +12954,17 @@ function buildSheetPrintHtml(sh, manifest) {
     const breakStyle = pi < arr.length - 1 ? 'page-break-after:always;' : '';
     html += '<div class="print-sheet" style="' + breakStyle + '">';
     
+    // Get print offsets from settings (default to 0), plus Safari compensation
+    const offsetTop = (settings.printOffsetTop || 0) + (isSafari ? SAFARI_PRINT_OFFSET : 0);
+    const offsetLeft = settings.printOffsetLeft || 0;
+    
     pages[pageNum].forEach(item => {
       const localIdx = item.idx % lps;
       const row = Math.floor(localIdx / spec.cols);
       const col = localIdx % spec.cols;
       
-      const top = spec.topMargin + row * (spec.labelH + spec.vGutter);
-      const left = spec.leftMargin + col * (spec.labelW + spec.hGutter);
+      const top = spec.topMargin + row * (spec.labelH + spec.vGutter) + offsetTop;
+      const left = spec.leftMargin + col * (spec.labelW + spec.hGutter) + offsetLeft;
       
       // Use renderPrintLineHtml for each line (same as v1.2)
       const linesHtml = item.lines.map(l => renderPrintLineHtml(l)).join('');
@@ -14066,12 +14110,16 @@ function buildPrintSheetHtml(sh, positions, lines) {
   const isTentCard = spec.category === 'tent';
   let html = '';
   
+  // Get print offsets from settings (default to 0), plus Safari compensation
+  const offsetTop = (settings.printOffsetTop || 0) + (isSafari ? SAFARI_PRINT_OFFSET : 0);
+  const offsetLeft = settings.printOffsetLeft || 0;
+  
   for (const pos of positions) {
     const row = Math.floor(pos / spec.cols);
     const col = pos % spec.cols;
     
-    const top = spec.topMargin + row * (spec.labelH + spec.vGutter);
-    const left = spec.leftMargin + col * (spec.labelW + spec.hGutter);
+    const top = spec.topMargin + row * (spec.labelH + spec.vGutter) + offsetTop;
+    const left = spec.leftMargin + col * (spec.labelW + spec.hGutter) + offsetLeft;
     
     const alignV = 'center'; // Default vertical alignment
     const justifyContent = alignV === 'top' ? 'flex-start' : alignV === 'bottom' ? 'flex-end' : 'center';
@@ -15266,6 +15314,10 @@ function buildBatchPrintHtml(labels, spec) {
   
   const sheetsNeeded = Math.ceil(labels.length / lps);
   
+  // Get print offsets from settings (default to 0), plus Safari compensation
+  const offsetTop = (settings.printOffsetTop || 0) + (isSafari ? SAFARI_PRINT_OFFSET : 0);
+  const offsetLeft = settings.printOffsetLeft || 0;
+  
   for (let s = 0; s < sheetsNeeded; s++) {
     html += '<div class="sheet">';
     
@@ -15277,8 +15329,8 @@ function buildBatchPrintHtml(labels, spec) {
       const row = Math.floor(i / spec.cols);
       const col = i % spec.cols;
       
-      const top = spec.topMargin + row * (spec.labelH + spec.vGutter);
-      const left = spec.leftMargin + col * (spec.labelW + spec.hGutter);
+      const top = spec.topMargin + row * (spec.labelH + spec.vGutter) + offsetTop;
+      const left = spec.leftMargin + col * (spec.labelW + spec.hGutter) + offsetLeft;
       
       html += '<div class="label" style="top:' + top + 'in;left:' + left + 'in;width:' + spec.labelW + 'in;height:' + spec.labelH + 'in;">';
       
@@ -15741,14 +15793,18 @@ async function printJobAll() {
 
   const totalLabels = pageSheets.reduce((sum, pg) => sum + pg.labels.length, 0);
   const isTentCard = spec.category === 'tent';
+  
+  // Get print offsets from settings (default to 0), plus Safari compensation
+  const offsetTop = (settings.printOffsetTop || 0) + (isSafari ? SAFARI_PRINT_OFFSET : 0);
+  const offsetLeft = settings.printOffsetLeft || 0;
 
   // Build iframe content for multi-page print
   let pagesHtml = '';
   pageSheets.forEach((pg, pi) => {
     let pageHtml = '';
     pg.labels.forEach(lbl => {
-      const top = spec.topMargin + lbl.row * (spec.labelH + spec.vGutter);
-      const left = spec.leftMargin + lbl.col * (spec.labelW + spec.hGutter);
+      const top = spec.topMargin + lbl.row * (spec.labelH + spec.vGutter) + offsetTop;
+      const left = spec.leftMargin + lbl.col * (spec.labelW + spec.hGutter) + offsetLeft;
       const linesHtml = lbl.data.lines.map(l => renderPrintLineHtml(l)).join('');
       
       if (isTentCard) {
@@ -16416,7 +16472,7 @@ function safeLoad(key, defaultValue) {
 
 function exportAllData() {
   const data = {
-    version: '3.3.11',
+    version: '3.3.13',
     exportedAt: new Date().toISOString(),
     settings: settings,
     sheets: sheets,
@@ -16568,7 +16624,7 @@ async function startSyncShare() {
   
   // Prepare data
   const data = {
-    version: '3.3.11',
+    version: '3.3.13',
     exportedAt: new Date().toISOString(),
     expiresAt: Date.now() + SYNC_EXPIRY_MS,
     sheets: sheets,
@@ -16906,7 +16962,7 @@ function init() {
   
   // Log stats for debugging
   const stats = getDataStats();
-  console.log('LabelKeeper v3.3.11 initialized', stats);
+  console.log('LabelKeeper v3.3.13 initialized', stats);
 }
 
 /**
