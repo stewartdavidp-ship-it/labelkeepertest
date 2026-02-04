@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="gs-app-id" content="labelkeeper">
-<meta name="version" content="3.3.16">
+<meta name="version" content="3.3.17">
 
 <!-- App Meta Tags -->
 <meta name="description" content="Print labels without wasting a single position. Track which spots on your label sheets have been used.">
@@ -5674,7 +5674,7 @@ body {
   <header class="app-header">
     <div class="app-title">
       🏷️ LabelKeeper
-      <span class="version">v3.3.16</span>
+      <span class="version">v3.3.17</span>
     </div>
     <div class="header-actions">
       <button class="icon-btn" onclick="openSettings()" title="Settings">⚙️</button>
@@ -7176,7 +7176,7 @@ Examples:
     <div class="welcome-header">
       <div class="welcome-icon">🏷️</div>
       <div class="welcome-title">Welcome to LabelKeeper</div>
-      <div class="welcome-version">v3.3.16</div>
+      <div class="welcome-version">v3.3.17</div>
     </div>
     <div class="welcome-body">
       <div class="welcome-tagline">
@@ -12921,16 +12921,16 @@ function buildSheetPrintHtml(sh, manifest) {
   const lps = spec.cols * spec.rows;
   const isTentCard = spec.category === 'tent';
   
-  // Get Safari offset from settings
-  const safariOffset = isSafari ? (settings.safariPrintOffset ?? 0.5) : 0;
+  // Safari adds ~0.5in margins top and bottom, squishing 11in to ~10in printable
+  // We scale content to fit and position it correctly
+  const safariScale = isSafari ? 0.91 : 1; // 10/11 ≈ 0.91
   
-  // Build CSS - Safari needs transform to shift content up
+  // Build CSS
   let html = '<!DOCTYPE html><html><head><style>';
   html += '@page { size: letter; margin: 0; }';
   html += 'html, body { margin: 0; padding: 0; }';
-  if (isSafari && safariOffset > 0) {
-    // Use transform to shift the print-sheet up
-    html += '.print-sheet { width: 8.5in; height: 11in; margin: 0; padding: 0; position: relative; box-sizing: border-box; transform: translateY(-' + safariOffset + 'in); }';
+  if (isSafari) {
+    html += '.print-sheet { width: 8.5in; height: 11in; margin: 0; padding: 0; position: relative; box-sizing: border-box; transform: scale(' + safariScale + '); transform-origin: top left; }';
   } else {
     html += '.print-sheet { width: 8.5in; height: 11in; margin: 0; padding: 0; position: relative; box-sizing: border-box; }';
   }
@@ -13967,10 +13967,10 @@ function executePrint() {
   
   const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
   iframeDoc.open();
-  // Build Safari-specific CSS if needed
-  const safariOffset = isSafari ? (settings.safariPrintOffset ?? 0.5) : 0;
-  const printSheetCSS = safariOffset > 0 
-    ? '.print-sheet { width: 8.5in; height: 11in; margin: 0; padding: 0; position: relative; box-sizing: border-box; transform: translateY(-' + safariOffset + 'in); }'
+  // Safari scale fix - scale to fit within Safari's forced margins
+  const safariScale = isSafari ? 0.91 : 1;
+  const printSheetCSS = isSafari 
+    ? '.print-sheet { width: 8.5in; height: 11in; margin: 0; padding: 0; position: relative; box-sizing: border-box; transform: scale(' + safariScale + '); transform-origin: top left; }'
     : '.print-sheet { width: 8.5in; height: 11in; margin: 0; padding: 0; position: relative; box-sizing: border-box; }';
   
   iframeDoc.write('<!DOCTYPE html><html><head><style>' +
@@ -15331,10 +15331,10 @@ function buildMailingLabelLines(record) {
 function buildBatchPrintHtml(labels, spec) {
   const lps = spec.cols * spec.rows;
   
-  // Get Safari offset for CSS
-  const safariOffset = isSafari ? (settings.safariPrintOffset ?? 0.5) : 0;
-  const sheetCSS = safariOffset > 0 
-    ? '.sheet { width: 8.5in; height: 11in; margin: 0; padding: 0; position: relative; overflow: hidden; page-break-after: always; transform: translateY(-' + safariOffset + 'in); }'
+  // Safari scale fix
+  const safariScale = isSafari ? 0.91 : 1;
+  const sheetCSS = isSafari 
+    ? '.sheet { width: 8.5in; height: 11in; margin: 0; padding: 0; position: relative; overflow: hidden; page-break-after: always; transform: scale(' + safariScale + '); transform-origin: top left; }'
     : '.sheet { width: 8.5in; height: 11in; margin: 0; padding: 0; position: relative; overflow: hidden; page-break-after: always; }';
   
   let html = '<!DOCTYPE html><html><head><style>';
@@ -15860,10 +15860,10 @@ async function printJobAll() {
   iframe.style.cssText = 'position:fixed;top:0;left:0;width:0;height:0;border:none;visibility:hidden;';
   document.body.appendChild(iframe);
 
-  // Build Safari-specific CSS if needed
-  const safariOffset = isSafari ? (settings.safariPrintOffset ?? 0.5) : 0;
-  const printSheetCSS = safariOffset > 0 
-    ? '.print-sheet { width: 8.5in; height: 11in; margin: 0; padding: 0; position: relative; overflow: hidden; transform: translateY(-' + safariOffset + 'in); }'
+  // Safari scale fix
+  const safariScale = isSafari ? 0.91 : 1;
+  const printSheetCSS = isSafari 
+    ? '.print-sheet { width: 8.5in; height: 11in; margin: 0; padding: 0; position: relative; overflow: hidden; transform: scale(' + safariScale + '); transform-origin: top left; }'
     : '.print-sheet { width: 8.5in; height: 11in; margin: 0; padding: 0; position: relative; overflow: hidden; }';
 
   const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
@@ -16509,7 +16509,7 @@ function safeLoad(key, defaultValue) {
 
 function exportAllData() {
   const data = {
-    version: '3.3.16',
+    version: '3.3.17',
     exportedAt: new Date().toISOString(),
     settings: settings,
     sheets: sheets,
@@ -16661,7 +16661,7 @@ async function startSyncShare() {
   
   // Prepare data
   const data = {
-    version: '3.3.16',
+    version: '3.3.17',
     exportedAt: new Date().toISOString(),
     expiresAt: Date.now() + SYNC_EXPIRY_MS,
     sheets: sheets,
@@ -16999,7 +16999,7 @@ function init() {
   
   // Log stats for debugging
   const stats = getDataStats();
-  console.log('LabelKeeper v3.3.16 initialized', stats);
+  console.log('LabelKeeper v3.3.17 initialized', stats);
 }
 
 /**
