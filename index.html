@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="gs-app-id" content="labelkeeper">
-<meta name="version" content="3.3.3">
+<meta name="version" content="3.3.4">
 
 <!-- PWA Meta Tags -->
 <meta name="description" content="Print labels without wasting a single position. Track which spots on your label sheets have been used.">
@@ -4992,6 +4992,253 @@ body {
   gap: 6px;
 }
 
+/* ===== AI Preview Modal ===== */
+.ai-preview-modal {
+  max-width: 540px;
+}
+
+.ai-preview-section {
+  margin-bottom: 16px;
+}
+
+.ai-preview-section-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ai-preview-understanding {
+  background: var(--surface-alt);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  font-size: 14px;
+  color: var(--text);
+  border-left: 3px solid var(--accent);
+}
+
+.ai-preview-labels {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.ai-preview-label-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.ai-preview-label-item:last-child {
+  border-bottom: none;
+}
+
+.ai-preview-label-item:hover {
+  background: var(--surface-alt);
+}
+
+.ai-preview-label-num {
+  min-width: 24px;
+  height: 24px;
+  background: var(--accent);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.ai-preview-label-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.ai-preview-label-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  word-break: break-word;
+}
+
+.ai-preview-label-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.ai-preview-label-edit {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.ai-preview-label-edit:hover {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.ai-preview-settings {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  color: var(--text-secondary);
+  padding: 12px;
+  background: var(--surface-alt);
+  border-radius: var(--radius-sm);
+}
+
+.ai-preview-setting {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ai-preview-setting strong {
+  color: var(--text);
+}
+
+.ai-preview-skip-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 8px 0;
+}
+
+.ai-preview-skip-label input {
+  cursor: pointer;
+}
+
+.ai-preview-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+/* AI Preview inline edit mode */
+.ai-preview-label-item.editing {
+  background: var(--accent-bg);
+}
+
+.ai-preview-label-item.editing .ai-preview-label-text {
+  display: none;
+}
+
+.ai-preview-edit-input {
+  width: 100%;
+  padding: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  border: 2px solid var(--accent);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.ai-preview-edit-input:focus {
+  outline: none;
+}
+
+.ai-preview-edit-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.ai-preview-edit-actions button {
+  padding: 4px 10px;
+  font-size: 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: none;
+}
+
+.ai-preview-edit-save {
+  background: var(--accent);
+  color: white;
+}
+
+.ai-preview-edit-cancel {
+  background: var(--surface-alt);
+  color: var(--text-secondary);
+  border: 1px solid var(--border) !important;
+}
+
+/* Refine panel */
+.ai-refine-panel {
+  display: none;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.ai-refine-panel.visible {
+  display: block;
+}
+
+.ai-refine-original {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.ai-refine-original strong {
+  color: var(--text-secondary);
+}
+
+.ai-refine-input {
+  width: 100%;
+  padding: 10px;
+  font-size: 14px;
+  font-family: inherit;
+  border: 2px solid var(--input-border);
+  border-radius: var(--radius-sm);
+  background: var(--input-bg);
+  color: var(--text);
+  resize: vertical;
+  min-height: 60px;
+}
+
+.ai-refine-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.ai-refine-input::placeholder {
+  color: var(--text-muted);
+}
+
+.ai-refine-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
 /* ===== EMOJI PICKER (Full Editor) ===== */
 .fe-emoji-toggle-row {
   display: flex;
@@ -5357,7 +5604,7 @@ body {
   <header class="app-header">
     <div class="app-title">
       🏷️ LabelKeeper
-      <span class="version">v3.3.3</span>
+      <span class="version">v3.3.4</span>
     </div>
     <div class="header-actions">
       <button class="icon-btn" onclick="openSettings()" title="Settings">⚙️</button>
@@ -5736,6 +5983,73 @@ Examples:
         <button class="btn btn-primary" id="aiGenerateBtn" onclick="generateWithAI()">
           ✨ Generate
         </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- AI Preview Modal -->
+<div class="modal-overlay" id="aiPreviewModal">
+  <div class="modal ai-preview-modal">
+    <div class="modal-header">
+      <div class="modal-title">✨ AI Preview</div>
+      <button class="modal-close" onclick="closeAIPreviewModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <!-- Understanding section -->
+      <div class="ai-preview-section">
+        <div class="ai-preview-section-title">📝 What I understood</div>
+        <div class="ai-preview-understanding" id="aiPreviewUnderstanding">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+      
+      <!-- Labels section -->
+      <div class="ai-preview-section">
+        <div class="ai-preview-section-title">🏷️ Labels I'll create (<span id="aiPreviewLabelCount">0</span>)</div>
+        <div class="ai-preview-labels" id="aiPreviewLabels">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+      
+      <!-- Settings section -->
+      <div class="ai-preview-section">
+        <div class="ai-preview-section-title">📋 Settings</div>
+        <div class="ai-preview-settings">
+          <div class="ai-preview-setting">
+            <span>Type:</span>
+            <strong id="aiPreviewType">5160 Address Labels</strong>
+          </div>
+          <div class="ai-preview-setting">
+            <span>Quantity:</span>
+            <strong id="aiPreviewQty">1</strong>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Skip preview checkbox -->
+      <label class="ai-preview-skip-label">
+        <input type="checkbox" id="aiPreviewSkip" onchange="toggleAIPreviewSkip()">
+        <span>Don't show preview (trust AI output)</span>
+      </label>
+      
+      <!-- Refine panel (hidden by default) -->
+      <div class="ai-refine-panel" id="aiRefinePanel">
+        <div class="ai-refine-original">
+          <strong>Original request:</strong> <span id="aiRefineOriginal"></span>
+        </div>
+        <textarea class="ai-refine-input" id="aiRefineInput" placeholder="Add more detail or corrections..."></textarea>
+        <div class="ai-refine-actions">
+          <button class="btn btn-secondary" onclick="hideRefinePanel()">Cancel</button>
+          <button class="btn btn-primary" onclick="regenerateWithRefinement()">✨ Regenerate</button>
+        </div>
+      </div>
+      
+      <!-- Action buttons -->
+      <div class="ai-preview-actions" id="aiPreviewActions">
+        <button class="btn btn-secondary" onclick="closeAIPreviewModal()">Cancel</button>
+        <button class="btn btn-secondary" onclick="showRefinePanel()">🔄 Refine</button>
+        <button class="btn btn-primary" onclick="acceptAIPreview()">✓ Accept</button>
       </div>
     </div>
   </div>
@@ -6705,7 +7019,7 @@ Examples:
     <div class="welcome-header">
       <div class="welcome-icon">🏷️</div>
       <div class="welcome-title">Welcome to LabelKeeper</div>
-      <div class="welcome-version">v3.3.3</div>
+      <div class="welcome-version">v3.3.4</div>
     </div>
     <div class="welcome-body">
       <div class="welcome-tagline">
@@ -8405,13 +8719,37 @@ async function generateFromCategory() {
   btn.disabled = true;
   
   try {
-    const labelContent = await callAIProvider(provider, key, prompt);
-    
-    // Parse and populate the wizard fields
-    populateWizardFromAI(labelContent);
+    // Use new preview system
+    const previewData = await callAIProviderForPreview(provider, key, prompt);
     
     closeAIFormModal();
-    showToast('Label generated! Review and edit as needed.', 'success');
+    
+    // Show preview or apply directly based on user preference
+    if (shouldSkipAIPreview()) {
+      aiPreviewState = {
+        originalPrompt: prompt,
+        category: currentAICategory,
+        understanding: previewData.understanding || 'Generated labels',
+        labels: previewData.labels || [],
+        suggestedType: previewData.suggestedType || '5160',
+        quantity: previewData.quantity || 1,
+        svgLeft: null,
+        svgRight: null
+      };
+      // Extract SVG if present
+      if (aiPreviewState.labels.length > 0 && aiPreviewState.labels[0].svg) {
+        const svg = aiPreviewState.labels[0].svg;
+        if (svg.startsWith('SVG_LEFT:')) {
+          aiPreviewState.svgLeft = svg.substring(9).trim();
+        } else if (svg.startsWith('SVG_RIGHT:')) {
+          aiPreviewState.svgRight = svg.substring(10).trim();
+        }
+      }
+      applyAIPreviewToWizard();
+      showToast('Label generated! Review and edit as needed.', 'success');
+    } else {
+      showAIPreviewModal(previewData, prompt, currentAICategory);
+    }
     
   } catch (error) {
     console.error('AI generation error:', error);
@@ -8477,13 +8815,37 @@ async function generateWithAI() {
   btn.disabled = true;
   
   try {
-    const labelContent = await callAIProvider(provider, key, userPrompt);
-    
-    // Parse and populate the wizard fields
-    populateWizardFromAI(labelContent);
+    // Use new preview system
+    const previewData = await callAIProviderForPreview(provider, key, userPrompt);
     
     closeAIGenerateModal();
-    showToast('Label generated! Review and edit as needed.', 'success');
+    
+    // Show preview or apply directly based on user preference
+    if (shouldSkipAIPreview()) {
+      aiPreviewState = {
+        originalPrompt: userPrompt,
+        category: 'custom',
+        understanding: previewData.understanding || 'Generated labels',
+        labels: previewData.labels || [],
+        suggestedType: previewData.suggestedType || '5160',
+        quantity: previewData.quantity || 1,
+        svgLeft: null,
+        svgRight: null
+      };
+      // Extract SVG if present
+      if (aiPreviewState.labels.length > 0 && aiPreviewState.labels[0].svg) {
+        const svg = aiPreviewState.labels[0].svg;
+        if (svg.startsWith('SVG_LEFT:')) {
+          aiPreviewState.svgLeft = svg.substring(9).trim();
+        } else if (svg.startsWith('SVG_RIGHT:')) {
+          aiPreviewState.svgRight = svg.substring(10).trim();
+        }
+      }
+      applyAIPreviewToWizard();
+      showToast('Label generated! Review and edit as needed.', 'success');
+    } else {
+      showAIPreviewModal(previewData, userPrompt, 'custom');
+    }
     
   } catch (error) {
     console.error('AI generation error:', error);
@@ -8753,6 +9115,602 @@ function populateWizardFromAI(content) {
       updateWizardPreview();
     }
   }
+}
+
+// ============================================================================
+// AI PREVIEW SYSTEM - Shows what AI understood before applying
+// ============================================================================
+
+const AI_SKIP_PREVIEW_KEY = 'lk_ai_skip_preview';
+
+// State for current AI preview
+let aiPreviewState = {
+  originalPrompt: '',
+  category: null,
+  understanding: '',
+  labels: [],
+  suggestedType: '5160',
+  quantity: 1,
+  svgLeft: null,
+  svgRight: null
+};
+
+// Check if user wants to skip preview
+function shouldSkipAIPreview() {
+  try {
+    return localStorage.getItem(AI_SKIP_PREVIEW_KEY) === 'true';
+  } catch (e) {
+    return false;
+  }
+}
+
+// Toggle skip preview preference
+function toggleAIPreviewSkip() {
+  const checkbox = document.getElementById('aiPreviewSkip');
+  try {
+    if (checkbox && checkbox.checked) {
+      localStorage.setItem(AI_SKIP_PREVIEW_KEY, 'true');
+    } else {
+      localStorage.removeItem(AI_SKIP_PREVIEW_KEY);
+    }
+  } catch (e) {}
+}
+
+// New system prompt that returns JSON with understanding
+function getAISystemPromptWithPreview() {
+  return `You are a label content generator for LabelKeeper. You MUST respond with valid JSON only.
+
+RESPONSE FORMAT (strict JSON, no markdown):
+{
+  "understanding": "Brief summary of what the user wants (1-2 sentences)",
+  "labels": [
+    {
+      "preview": "Human-readable preview text for this label",
+      "lines": ["alignment,size:text", ...],
+      "svg": null or "SVG_LEFT:..." or "SVG_RIGHT:..."
+    }
+  ],
+  "suggestedType": "5160",
+  "quantity": 1
+}
+
+LABEL LINE FORMAT:
+alignment,size:text
+- ALIGNMENT: left | center | right (default: left)
+- SIZE: 9 (small) | 11 (medium, default) | 14 (large)
+
+SPECIAL TEXT FEATURES:
+• SPLIT LINE: Use || to split a line into left and right parts
+  Example: "left,11:Teacher: Smith || Room: 101"
+• FILL-IN-THE-BLANK: Use __ (two underscores) for a blank line
+  Example: "left,11:Name: __"
+• DECORATIVE LINES: Use Unicode: ────────── (not dashes)
+
+LABEL TYPES:
+- "5160": Address labels (30/sheet) - most common
+- "5163": Shipping labels (10/sheet) - larger
+- "5167": Return address (80/sheet) - small
+- "5395": Name badges (8/sheet)
+
+GRAPHICS (optional):
+For icons/images, add svg field with "SVG_LEFT:<svg...>" or "SVG_RIGHT:<svg...>"
+SVG should use viewBox="0 0 64 64" with solid fills.
+
+MULTIPLE LABELS:
+If user wants multiple different labels (e.g., "labels for Flour, Sugar, Rice"), create separate label objects in the array.
+If user wants multiple copies of the SAME label, use quantity field instead.
+
+EXAMPLES:
+
+Request: "Address label for John Smith, 123 Main St, Boston MA"
+{
+  "understanding": "Creating an address label for John Smith in Boston",
+  "labels": [{"preview": "John Smith\\n123 Main St\\nBoston, MA", "lines": ["left,11:John Smith", "left,11:123 Main St", "left,11:Boston, MA"], "svg": null}],
+  "suggestedType": "5160",
+  "quantity": 1
+}
+
+Request: "Pantry labels for Flour, Sugar, and Rice"
+{
+  "understanding": "Creating 3 pantry organization labels",
+  "labels": [
+    {"preview": "FLOUR", "lines": ["center,14:FLOUR"], "svg": null},
+    {"preview": "SUGAR", "lines": ["center,14:SUGAR"], "svg": null},
+    {"preview": "RICE", "lines": ["center,14:RICE"], "svg": null}
+  ],
+  "suggestedType": "5160",
+  "quantity": 1
+}
+
+Request: "Warning label with exclamation icon"
+{
+  "understanding": "Creating a warning label with an icon",
+  "labels": [{"preview": "⚠️ WARNING\\nHot Surface", "lines": ["center,14:WARNING", "center,11:Hot Surface"], "svg": "SVG_LEFT:<svg viewBox=\\"0 0 64 64\\" xmlns=\\"http://www.w3.org/2000/svg\\"><path d=\\"M32 4L4 56h56L32 4z\\" fill=\\"#fbbf24\\"/><rect x=\\"29\\" y=\\"20\\" width=\\"6\\" height=\\"20\\" fill=\\"#1f2937\\"/><circle cx=\\"32\\" cy=\\"48\\" r=\\"4\\" fill=\\"#1f2937\\"/></svg>"}],
+  "suggestedType": "5163",
+  "quantity": 1
+}
+
+RESPOND WITH VALID JSON ONLY. NO MARKDOWN, NO EXPLANATION, NO CODE BLOCKS.`;
+}
+
+// Call AI provider and get structured preview data
+async function callAIProviderForPreview(provider, key, userPrompt) {
+  const systemPrompt = getAISystemPromptWithPreview();
+  
+  let responseText = '';
+  
+  if (provider === 'claude') {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [
+          { role: 'user', content: systemPrompt + '\n\nRequest: ' + userPrompt }
+        ]
+      })
+    });
+    
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error?.message || `Claude API error: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    responseText = data.content?.[0]?.text || '';
+    
+  } else if (provider === 'openai') {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${key}`
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        max_tokens: 1000,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ]
+      })
+    });
+    
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error?.message || `OpenAI API error: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    responseText = data.choices?.[0]?.message?.content || '';
+    
+  } else if (provider === 'gemini') {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{ text: systemPrompt + '\n\nRequest: ' + userPrompt }]
+        }],
+        generationConfig: {
+          maxOutputTokens: 1000
+        }
+      })
+    });
+    
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error?.message || `Gemini API error: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    
+  } else {
+    throw new Error('Unknown AI provider');
+  }
+  
+  // Parse JSON response
+  try {
+    // Clean up response - remove markdown code blocks if present
+    let cleanJson = responseText.trim();
+    if (cleanJson.startsWith('```json')) {
+      cleanJson = cleanJson.slice(7);
+    } else if (cleanJson.startsWith('```')) {
+      cleanJson = cleanJson.slice(3);
+    }
+    if (cleanJson.endsWith('```')) {
+      cleanJson = cleanJson.slice(0, -3);
+    }
+    cleanJson = cleanJson.trim();
+    
+    const parsed = JSON.parse(cleanJson);
+    return parsed;
+  } catch (e) {
+    console.error('Failed to parse AI response as JSON:', responseText);
+    // Fallback: try to create a basic response from raw text
+    return {
+      understanding: 'Generated label content',
+      labels: [{
+        preview: responseText.split('\n')[0] || 'Label',
+        lines: responseText.split('\n').filter(l => l.trim()).slice(0, 4),
+        svg: null
+      }],
+      suggestedType: '5160',
+      quantity: 1
+    };
+  }
+}
+
+// Show AI Preview modal with results
+function showAIPreviewModal(previewData, originalPrompt, category) {
+  // Store state
+  aiPreviewState = {
+    originalPrompt: originalPrompt,
+    category: category,
+    understanding: previewData.understanding || 'Generated labels',
+    labels: previewData.labels || [],
+    suggestedType: previewData.suggestedType || '5160',
+    quantity: previewData.quantity || 1,
+    svgLeft: null,
+    svgRight: null
+  };
+  
+  // Extract SVG from first label if present
+  if (aiPreviewState.labels.length > 0 && aiPreviewState.labels[0].svg) {
+    const svg = aiPreviewState.labels[0].svg;
+    if (svg.startsWith('SVG_LEFT:')) {
+      aiPreviewState.svgLeft = svg.substring(9).trim();
+    } else if (svg.startsWith('SVG_RIGHT:')) {
+      aiPreviewState.svgRight = svg.substring(10).trim();
+    }
+  }
+  
+  // Populate understanding
+  document.getElementById('aiPreviewUnderstanding').textContent = aiPreviewState.understanding;
+  
+  // Populate label count
+  document.getElementById('aiPreviewLabelCount').textContent = aiPreviewState.labels.length;
+  
+  // Populate labels list
+  const labelsContainer = document.getElementById('aiPreviewLabels');
+  labelsContainer.innerHTML = '';
+  
+  aiPreviewState.labels.forEach((label, index) => {
+    const item = document.createElement('div');
+    item.className = 'ai-preview-label-item';
+    item.dataset.index = index;
+    
+    // Format preview text for display
+    const previewText = label.preview || label.lines?.join(' / ') || 'Label ' + (index + 1);
+    const displayText = previewText.replace(/\\n/g, '\n');
+    
+    // Build meta info
+    let metaInfo = [];
+    if (label.lines && label.lines.length > 0) {
+      const firstLine = label.lines[0];
+      if (firstLine.includes(',')) {
+        const parts = firstLine.split(':')[0].split(',');
+        if (parts[0]) metaInfo.push(parts[0]);
+        if (parts[1]) metaInfo.push('size ' + parts[1]);
+      }
+    }
+    if (label.svg) metaInfo.push('has graphic');
+    
+    item.innerHTML = `
+      <div class="ai-preview-label-num">${index + 1}</div>
+      <div class="ai-preview-label-content">
+        <div class="ai-preview-label-text">${escapeHtml(displayText).replace(/\n/g, '<br>')}</div>
+        ${metaInfo.length ? `<div class="ai-preview-label-meta">${metaInfo.join(' • ')}</div>` : ''}
+      </div>
+      <button class="ai-preview-label-edit" onclick="editPreviewLabel(${index})" title="Edit this label">✏️</button>
+    `;
+    
+    labelsContainer.appendChild(item);
+  });
+  
+  // Populate settings
+  const typeSpec = LABEL_TYPES[aiPreviewState.suggestedType];
+  const typeDisplay = typeSpec ? `${aiPreviewState.suggestedType} ${typeSpec.desc}` : aiPreviewState.suggestedType;
+  document.getElementById('aiPreviewType').textContent = typeDisplay;
+  document.getElementById('aiPreviewQty').textContent = aiPreviewState.labels.length > 1 
+    ? aiPreviewState.labels.length + ' labels' 
+    : aiPreviewState.quantity;
+  
+  // Set skip checkbox state
+  const skipCheckbox = document.getElementById('aiPreviewSkip');
+  if (skipCheckbox) {
+    skipCheckbox.checked = shouldSkipAIPreview();
+  }
+  
+  // Hide refine panel
+  hideRefinePanel();
+  
+  // Show modal
+  document.getElementById('aiPreviewModal').classList.add('visible');
+}
+
+// Close AI Preview modal
+function closeAIPreviewModal() {
+  document.getElementById('aiPreviewModal').classList.remove('visible');
+  hideRefinePanel();
+}
+
+// Edit a specific label in preview
+function editPreviewLabel(index) {
+  const item = document.querySelector(`.ai-preview-label-item[data-index="${index}"]`);
+  if (!item || item.classList.contains('editing')) return;
+  
+  const label = aiPreviewState.labels[index];
+  const textEl = item.querySelector('.ai-preview-label-text');
+  const currentText = label.preview || label.lines?.join('\n') || '';
+  
+  // Switch to edit mode
+  item.classList.add('editing');
+  
+  const contentDiv = item.querySelector('.ai-preview-label-content');
+  const originalHTML = contentDiv.innerHTML;
+  
+  contentDiv.innerHTML = `
+    <textarea class="ai-preview-edit-input" rows="3">${escapeHtml(currentText.replace(/\\n/g, '\n'))}</textarea>
+    <div class="ai-preview-edit-actions">
+      <button class="ai-preview-edit-save" onclick="savePreviewLabelEdit(${index})">Save</button>
+      <button class="ai-preview-edit-cancel" onclick="cancelPreviewLabelEdit(${index})">Cancel</button>
+    </div>
+  `;
+  
+  // Store original HTML for cancel
+  item.dataset.originalHtml = originalHTML;
+  
+  // Focus input
+  const input = contentDiv.querySelector('.ai-preview-edit-input');
+  if (input) input.focus();
+}
+
+// Save edited label
+function savePreviewLabelEdit(index) {
+  const item = document.querySelector(`.ai-preview-label-item[data-index="${index}"]`);
+  if (!item) return;
+  
+  const input = item.querySelector('.ai-preview-edit-input');
+  const newText = input ? input.value.trim() : '';
+  
+  if (newText) {
+    // Update state
+    const lines = newText.split('\n').filter(l => l.trim()).slice(0, 4);
+    aiPreviewState.labels[index].preview = newText.replace(/\n/g, '\\n');
+    aiPreviewState.labels[index].lines = lines.map(l => 'left,11:' + l);
+    
+    // Rebuild item
+    rebuildPreviewLabelItem(index);
+  } else {
+    cancelPreviewLabelEdit(index);
+  }
+}
+
+// Cancel label edit
+function cancelPreviewLabelEdit(index) {
+  const item = document.querySelector(`.ai-preview-label-item[data-index="${index}"]`);
+  if (!item) return;
+  
+  item.classList.remove('editing');
+  const contentDiv = item.querySelector('.ai-preview-label-content');
+  if (contentDiv && item.dataset.originalHtml) {
+    contentDiv.innerHTML = item.dataset.originalHtml;
+  }
+}
+
+// Rebuild label item after edit
+function rebuildPreviewLabelItem(index) {
+  const item = document.querySelector(`.ai-preview-label-item[data-index="${index}"]`);
+  if (!item) return;
+  
+  const label = aiPreviewState.labels[index];
+  const previewText = label.preview || label.lines?.join(' / ') || 'Label ' + (index + 1);
+  const displayText = previewText.replace(/\\n/g, '\n');
+  
+  item.classList.remove('editing');
+  
+  const contentDiv = item.querySelector('.ai-preview-label-content');
+  contentDiv.innerHTML = `
+    <div class="ai-preview-label-text">${escapeHtml(displayText).replace(/\n/g, '<br>')}</div>
+  `;
+}
+
+// Show refine panel
+function showRefinePanel() {
+  document.getElementById('aiRefineOriginal').textContent = aiPreviewState.originalPrompt;
+  document.getElementById('aiRefineInput').value = '';
+  document.getElementById('aiRefinePanel').classList.add('visible');
+  document.getElementById('aiPreviewActions').style.display = 'none';
+  document.getElementById('aiRefineInput').focus();
+}
+
+// Hide refine panel
+function hideRefinePanel() {
+  document.getElementById('aiRefinePanel').classList.remove('visible');
+  document.getElementById('aiPreviewActions').style.display = 'flex';
+}
+
+// Regenerate with refinement
+async function regenerateWithRefinement() {
+  const refinement = document.getElementById('aiRefineInput').value.trim();
+  if (!refinement) {
+    showToast('Please add some refinement details', 'warning');
+    return;
+  }
+  
+  const key = getAIKey();
+  const provider = getAIProvider();
+  
+  if (!key || !provider) {
+    showAIKeyModal();
+    return;
+  }
+  
+  // Build combined prompt
+  const combinedPrompt = `Original request: ${aiPreviewState.originalPrompt}\n\nRefinement: ${refinement}`;
+  
+  // Close preview and show loading
+  closeAIPreviewModal();
+  
+  // Re-trigger the appropriate flow
+  try {
+    showToast('Regenerating with your refinements...', 'info');
+    
+    const previewData = await callAIProviderForPreview(provider, key, combinedPrompt);
+    
+    if (shouldSkipAIPreview()) {
+      applyAIPreviewToWizard();
+    } else {
+      showAIPreviewModal(previewData, combinedPrompt, aiPreviewState.category);
+    }
+  } catch (error) {
+    console.error('AI regeneration error:', error);
+    showToast(error.message || 'Failed to regenerate. Try again.', 'error');
+  }
+}
+
+// Accept and apply the AI preview
+function acceptAIPreview() {
+  applyAIPreviewToWizard();
+  closeAIPreviewModal();
+  showToast('Labels created! Review and print.', 'success');
+}
+
+// Apply AI preview state to the wizard
+function applyAIPreviewToWizard() {
+  if (aiPreviewState.labels.length === 0) return;
+  
+  // If multiple labels, create each as separate content
+  if (aiPreviewState.labels.length > 1) {
+    // Save each label as content
+    aiPreviewState.labels.forEach((label, i) => {
+      const lines = label.lines || [];
+      const parsedLines = lines.map(parseLabelLine);
+      
+      // Create content item
+      const id = 'text_' + Date.now() + '_' + i;
+      const textContent = parsedLines.map(l => l.text).join('\n');
+      
+      // Save to storage (simplified - just text for now)
+      const savedTexts = loadSavedTexts();
+      savedTexts[id] = {
+        text: textContent,
+        lines: parsedLines,
+        isTemplate: false,
+        createdAt: Date.now()
+      };
+      saveSavedTexts(savedTexts);
+    });
+    
+    showToast(`${aiPreviewState.labels.length} labels saved to Content!`, 'success');
+    showTab('content');
+    renderContentTab();
+    return;
+  }
+  
+  // Single label - populate wizard
+  const label = aiPreviewState.labels[0];
+  const lines = label.lines || [];
+  
+  // Start wizard at step 2a
+  currentWizard = 'print';
+  wizardStep = 2;
+  wizardSelectedTextId = null;
+  
+  resetWizardEditor();
+  showWizard('printWizard');
+  showWizardStep('printStep2a');
+  
+  // Parse and populate each line
+  for (let i = 0; i < 4; i++) {
+    const input = document.getElementById(`wizLine${i + 1}`);
+    if (!input) continue;
+    
+    const rawLine = lines[i] || '';
+    const parsed = parseLabelLine(rawLine);
+    
+    input.value = parsed.text;
+    wizardLines[i].text = parsed.text;
+    wizardLines[i].align = parsed.align;
+    wizardLines[i].fontSize = parsed.fontSize;
+    
+    // Update button states
+    document.querySelectorAll(`.editor-align-btn[data-line="${i + 1}"]`).forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.align === parsed.align);
+    });
+    document.querySelectorAll(`.editor-size-btn[data-line="${i + 1}"]`).forEach(btn => {
+      btn.classList.toggle('active', parseInt(btn.dataset.size) === parsed.fontSize);
+    });
+  }
+  
+  // Handle SVG graphics
+  if (aiPreviewState.svgLeft || aiPreviewState.svgRight) {
+    showToast('Opening Full Editor to apply graphics...', 'info');
+    
+    window._aiGeneratedSvgLeft = aiPreviewState.svgLeft;
+    window._aiGeneratedSvgRight = aiPreviewState.svgRight;
+    
+    setTimeout(() => {
+      openFullEditorFromWizard();
+      setTimeout(() => {
+        if (window._aiGeneratedSvgLeft) {
+          const svgDataUrl = 'data:image/svg+xml;base64,' + btoa(window._aiGeneratedSvgLeft);
+          feGraphics.left = { data: svgDataUrl, size: 'M' };
+        }
+        if (window._aiGeneratedSvgRight) {
+          const svgDataUrl = 'data:image/svg+xml;base64,' + btoa(window._aiGeneratedSvgRight);
+          feGraphics.right = { data: svgDataUrl, size: 'M' };
+        }
+        updateFullEditorPreview();
+        renderFeGraphics();
+        window._aiGeneratedSvgLeft = null;
+        window._aiGeneratedSvgRight = null;
+      }, 100);
+    }, 300);
+  } else {
+    if (typeof updateWizardPreview === 'function') {
+      updateWizardPreview();
+    }
+  }
+}
+
+// Parse a label line format "alignment,size:text"
+function parseLabelLine(rawLine) {
+  let text = rawLine;
+  let align = 'left';
+  let fontSize = 11;
+  
+  if (!rawLine) return { text: '', align, fontSize };
+  
+  const colonIndex = rawLine.indexOf(':');
+  if (colonIndex > 0 && colonIndex < 15) {
+    const prefix = rawLine.substring(0, colonIndex);
+    const parts = prefix.split(',');
+    
+    if (parts.length >= 1 && ['left', 'center', 'right'].includes(parts[0])) {
+      align = parts[0];
+      text = rawLine.substring(colonIndex + 1);
+      
+      if (parts.length >= 2) {
+        const size = parseInt(parts[1]);
+        if ([9, 11, 14].includes(size)) {
+          fontSize = size;
+        }
+      }
+    }
+  }
+  
+  return { text, align, fontSize };
 }
 
 // ============================================================================
@@ -15650,7 +16608,7 @@ function init() {
   
   // Log stats for debugging
   const stats = getDataStats();
-  console.log('LabelKeeper v3.3.3 initialized', stats);
+  console.log('LabelKeeper v3.3.4 initialized', stats);
 }
 
 /**
