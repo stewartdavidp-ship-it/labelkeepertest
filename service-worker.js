@@ -1,8 +1,9 @@
-// LabelKeeper Service Worker v3.3.2
-const CACHE_NAME = 'labelkeeper-v3.3.2';
+// LabelKeeper Service Worker v3.3.3
+const CACHE_NAME = 'labelkeeper-v3.3.3';
 const ASSETS_TO_CACHE = [
   './',
-  './labelkeeper-v3.3.2.html',
+  './index.html',
+  './labelkeeper-v3.3.3.html',
   './manifest.json',
   './icons/icon-72.png',
   './icons/icon-96.png',
@@ -21,109 +22,86 @@ const EXTERNAL_ASSETS = [
 
 // Install event - cache assets
 self.addEventListener('install', event => {
-  console.log('[SW] Installing service worker...');
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        console.log('[SW] Caching app assets');
+        console.log('[SW] Caching local assets');
         return cache.addAll(ASSETS_TO_CACHE);
       })
       .then(() => {
-        console.log('[SW] Assets cached successfully');
-        return self.skipWaiting();
+        // Cache external assets separately (don't fail install if these fail)
+        return caches.open(CACHE_NAME).then(cache => {
+          return Promise.allSettled(
+            EXTERNAL_ASSETS.map(url => 
+              fetch(url, { mode: 'cors' })
+                .then(response => {
+                  if (response.ok) {
+                    return cache.put(url, response);
+                  }
+                })
+                .catch(err => console.log('[SW] Could not cache:', url))
+            )
+          );
+        });
       })
-      .catch(err => {
-        console.error('[SW] Cache failed:', err);
-      })
+      .then(() => self.skipWaiting())
   );
 });
 
-// Activate event - clean up old caches
+// Activate event - clean old caches
 self.addEventListener('activate', event => {
-  console.log('[SW] Activating service worker...');
   event.waitUntil(
-    caches.keys()
-      .then(cacheNames => {
-        return Promise.all(
-          cacheNames.map(cacheName => {
-            if (cacheName !== CACHE_NAME) {
-              console.log('[SW] Deleting old cache:', cacheName);
-              return caches.delete(cacheName);
-            }
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames
+          .filter(name => name.startsWith('labelkeeper-') && name !== CACHE_NAME)
+          .map(name => {
+            console.log('[SW] Deleting old cache:', name);
+            return caches.delete(name);
           })
-        );
-      })
-      .then(() => {
-        console.log('[SW] Service worker activated');
-        return self.clients.claim();
-      })
+      );
+    }).then(() => self.clients.claim())
   );
 });
 
 // Fetch event - serve from cache, fallback to network
 self.addEventListener('fetch', event => {
-  const url = new URL(event.request.url);
-  
   // Skip non-GET requests
-  if (event.request.method !== 'GET') {
+  if (event.request.method !== 'GET') return;
+  
+  // Skip Firebase and external API requests
+  const url = new URL(event.request.url);
+  if (url.hostname.includes('firebase') || 
+      url.hostname.includes('googleapis.com') && !url.pathname.includes('css')) {
     return;
   }
   
-  // Skip Firebase sync requests (always need network)
-  if (url.hostname.includes('firebaseio.com') || url.hostname.includes('firebasedatabase.app')) {
-    return;
-  }
-  
-  // Skip CDN requests for external libraries (Tesseract, QR code, etc.)
-  if (url.hostname.includes('cdn.jsdelivr.net') || url.hostname.includes('unpkg.com')) {
-    event.respondWith(
-      fetch(event.request)
-        .catch(() => caches.match(event.request))
-    );
-    return;
-  }
-  
-  // For app assets: Cache first, then network
   event.respondWith(
     caches.match(event.request)
       .then(cachedResponse => {
         if (cachedResponse) {
-          // Return cached version, but also fetch update in background
-          event.waitUntil(
-            fetch(event.request)
-              .then(networkResponse => {
-                if (networkResponse && networkResponse.status === 200) {
-                  caches.open(CACHE_NAME)
-                    .then(cache => cache.put(event.request, networkResponse));
-                }
-              })
-              .catch(() => {})
-          );
           return cachedResponse;
         }
         
-        // Not in cache - fetch from network
-        return fetch(event.request)
-          .then(networkResponse => {
-            // Cache the response for future use
-            if (networkResponse && networkResponse.status === 200) {
-              const responseClone = networkResponse.clone();
-              caches.open(CACHE_NAME)
-                .then(cache => cache.put(event.request, responseClone));
-            }
-            return networkResponse;
-          })
-          .catch(() => {
-            // Offline and not in cache - return offline page for HTML requests
-            if (event.request.headers.get('accept').includes('text/html')) {
-              return caches.match('./labelkeeper-v3.3.2.html');
-            }
+        return fetch(event.request).then(response => {
+          // Don't cache non-successful responses
+          if (!response || response.status !== 200 || response.type !== 'basic') {
+            return response;
+          }
+          
+          // Clone and cache the response
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(event.request, responseToCache);
           });
+          
+          return response;
+        });
       })
   );
 });
 
-// Handle messages from the app
+// Listen for messages from the app
 self.addEventListener('message', event => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();

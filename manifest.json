@@ -2,7 +2,7 @@
   "name": "LabelKeeper",
   "short_name": "LabelKeeper",
   "description": "Print labels without wasting a single position. Track which spots on your label sheets have been used.",
-  "start_url": "./labelkeeper-v3.3.2.html",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#1a1a1a",
   "theme_color": "#2563eb",
