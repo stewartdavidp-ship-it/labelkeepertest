@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="gs-app-id" content="labelkeeper">
-<meta name="version" content="3.3.24">
+<meta name="version" content="3.3.25">
 
 <!-- App Meta Tags -->
 <meta name="description" content="Print labels without wasting a single position. Track which spots on your label sheets have been used.">
@@ -5674,7 +5674,7 @@ body {
   <header class="app-header">
     <div class="app-title">
       🏷️ LabelKeeper
-      <span class="version">v3.3.24</span>
+      <span class="version">v3.3.25</span>
     </div>
     <div class="header-actions">
       <button class="icon-btn" onclick="openSettings()" title="Settings">⚙️</button>
@@ -7176,7 +7176,7 @@ Examples:
     <div class="welcome-header">
       <div class="welcome-icon">🏷️</div>
       <div class="welcome-title">Welcome to LabelKeeper</div>
-      <div class="welcome-version">v3.3.24</div>
+      <div class="welcome-version">v3.3.25</div>
     </div>
     <div class="welcome-body">
       <div class="welcome-tagline">
@@ -12981,12 +12981,17 @@ function buildSheetPrintHtml(sh, manifest) {
     const offsetTop = settings.printOffsetTop || 0;
     const offsetLeft = settings.printOffsetLeft || 0;
     
+    // Safari vertical compression - reduce vertical positions by ~5% to fit in Safari's smaller printable area
+    // This compresses 11" of content into ~10.5" while maintaining horizontal accuracy
+    const safariVScale = isSafari ? 0.95 : 1.0;
+    
     // Add label boundary overlays for ALL positions (for alignment debugging)
     for (let r = 0; r < spec.rows; r++) {
       for (let c = 0; c < spec.cols; c++) {
-        const bTop = spec.topMargin + r * (spec.labelH + spec.vGutter) + offsetTop;
+        const bTop = (spec.topMargin + r * (spec.labelH + spec.vGutter)) * safariVScale + offsetTop;
+        const bHeight = spec.labelH * safariVScale;
         const bLeft = spec.leftMargin + c * (spec.labelW + spec.hGutter) + offsetLeft;
-        html += '<div class="label-boundary" style="top:' + bTop + 'in;left:' + bLeft + 'in;width:' + spec.labelW + 'in;height:' + spec.labelH + 'in;"></div>';
+        html += '<div class="label-boundary" style="top:' + bTop + 'in;left:' + bLeft + 'in;width:' + spec.labelW + 'in;height:' + bHeight + 'in;"></div>';
       }
     }
     
@@ -12995,7 +13000,8 @@ function buildSheetPrintHtml(sh, manifest) {
       const row = Math.floor(localIdx / spec.cols);
       const col = localIdx % spec.cols;
       
-      const top = spec.topMargin + row * (spec.labelH + spec.vGutter) + offsetTop;
+      const top = (spec.topMargin + row * (spec.labelH + spec.vGutter)) * safariVScale + offsetTop;
+      const labelH = spec.labelH * safariVScale;
       const left = spec.leftMargin + col * (spec.labelW + spec.hGutter) + offsetLeft;
       
       // Use renderPrintLineHtml for each line (same as v1.2)
@@ -13005,7 +13011,7 @@ function buildSheetPrintHtml(sh, manifest) {
       
       if (isTentCard) {
         // Tent card rendering
-        html += '<div class="print-label tent-card" style="top:' + top + 'in;left:' + left + 'in;width:' + spec.labelW + 'in;height:' + spec.labelH + 'in;">';
+        html += '<div class="print-label tent-card" style="top:' + top + 'in;left:' + left + 'in;width:' + spec.labelW + 'in;height:' + labelH + 'in;">';
         html += '<div class="fold-line"></div>';
         html += '<div class="tent-top"><div class="print-text-zone">' + linesHtml + '</div></div>';
         html += '<div class="tent-bottom"><div class="print-text-zone">' + linesHtml + '</div></div>';
@@ -13023,14 +13029,14 @@ function buildSheetPrintHtml(sh, manifest) {
           const rightW = (usableW * (gfx.right.widthPct || 20) / 100).toFixed(3);
           innerHtml += '<div class="print-graphic" style="width:' + rightW + 'in;"><img src="' + gfx.right.data + '"></div>';
         }
-        html += '<div class="print-label print-label-gfx" style="top:' + top + 'in;left:' + left + 'in;width:' + spec.labelW + 'in;height:' + spec.labelH + 'in;padding:0.08in 0.12in;">' + innerHtml + '</div>';
+        html += '<div class="print-label print-label-gfx" style="top:' + top + 'in;left:' + left + 'in;width:' + spec.labelW + 'in;height:' + labelH + 'in;padding:0.08in 0.12in;">' + innerHtml + '</div>';
       } else {
         // Standard label (same as v1.2)
-        html += '<div class="print-label" style="top:' + top + 'in;left:' + left + 'in;width:' + spec.labelW + 'in;height:' + spec.labelH + 'in;padding:0.08in 0.12in;justify-content:' + getFlexAlign(item.alignV) + ';">' + linesHtml + '</div>';
+        html += '<div class="print-label" style="top:' + top + 'in;left:' + left + 'in;width:' + spec.labelW + 'in;height:' + labelH + 'in;padding:0.08in 0.12in;justify-content:' + getFlexAlign(item.alignV) + ';">' + linesHtml + '</div>';
       }
     });
     
-    // Close print-sheet (and wrapper for Safari)
+    // Close print-sheet
     html += '</div>';
   });
   
@@ -16505,7 +16511,7 @@ function safeLoad(key, defaultValue) {
 
 function exportAllData() {
   const data = {
-    version: '3.3.24',
+    version: '3.3.25',
     exportedAt: new Date().toISOString(),
     settings: settings,
     sheets: sheets,
@@ -16657,7 +16663,7 @@ async function startSyncShare() {
   
   // Prepare data
   const data = {
-    version: '3.3.24',
+    version: '3.3.25',
     exportedAt: new Date().toISOString(),
     expiresAt: Date.now() + SYNC_EXPIRY_MS,
     sheets: sheets,
@@ -16995,7 +17001,7 @@ function init() {
   
   // Log stats for debugging
   const stats = getDataStats();
-  console.log('LabelKeeper v3.3.24 initialized', stats);
+  console.log('LabelKeeper v3.3.25 initialized', stats);
 }
 
 /**
