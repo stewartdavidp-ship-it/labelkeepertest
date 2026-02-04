@@ -7327,6 +7327,11 @@ function loadSettings() {
     const saved = localStorage.getItem(SETTINGS_KEY);
     if (saved) {
       settings = { ...settings, ...JSON.parse(saved) };
+    } else {
+      // No saved settings - check system preference for dark mode
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        settings.darkMode = true;
+      }
     }
     // Check legacy theme key
     const legacyTheme = localStorage.getItem(THEME_KEY);
@@ -15349,14 +15354,29 @@ function handleUrlDeepLink(params) {
   
   // Handle sheet deep link (from QR code)
   if (params.action === 'openSheet' && params.sheetId) {
+    console.log('Opening sheet:', params.sheetId);
     const sh = sheets[params.sheetId];
     if (sh) {
-      // Navigate to Sheets tab and select the sheet
-      switchTab('sheets');
+      // Set active sheet first
       activeSheetId = params.sheetId;
-      renderCurrentTab();
-      showToast('Opened "' + sh.name + '"', 'success');
+      // Switch to sheets tab (this will render the tab)
+      switchTab('sheets');
+      // Give DOM more time to render, then scroll to the sheet
+      setTimeout(() => {
+        const sheetCard = document.querySelector('.sheet-card[data-sheet-id="' + params.sheetId + '"]');
+        console.log('Found sheet card:', sheetCard);
+        if (sheetCard) {
+          sheetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // Add highlight animation
+          sheetCard.style.boxShadow = '0 0 0 3px var(--accent)';
+          setTimeout(() => {
+            sheetCard.style.boxShadow = '';
+          }, 2000);
+        }
+        showToast('Opened "' + sh.name + '"', 'success');
+      }, 300);
     } else {
+      console.log('Sheet not found in sheets object:', Object.keys(sheets));
       showToast('Sheet not found. It may have been deleted.', 'warning');
     }
     return;
