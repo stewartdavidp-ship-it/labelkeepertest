@@ -7,23 +7,11 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="gs-app-id" content="labelkeeper">
-<meta name="version" content="3.3.5">
+<meta name="version" content="3.3.6">
 
-<!-- PWA Meta Tags -->
+<!-- App Meta Tags -->
 <meta name="description" content="Print labels without wasting a single position. Track which spots on your label sheets have been used.">
 <meta name="theme-color" content="#1a1a1a">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="LabelKeeper">
-<link rel="manifest" href="manifest.json">
-
-<!-- Icons -->
-<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-96.png">
-<link rel="icon" type="image/png" sizes="16x16" href="icons/icon-72.png">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
-<link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152.png">
-<link rel="apple-touch-icon" sizes="180x180" href="icons/icon-192.png">
-<link rel="apple-touch-icon" sizes="167x167" href="icons/icon-192.png">
 
 <title>LabelKeeper</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -2470,6 +2458,54 @@ body {
 
 .ai-prompt-example {
   user-select: all;
+}
+
+/* Keyboard Shortcuts Modal */
+.shortcuts-section {
+  margin-bottom: 20px;
+}
+
+.shortcuts-section:last-child {
+  margin-bottom: 0;
+}
+
+.shortcuts-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+}
+
+.shortcut-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.shortcut-row:last-child {
+  border-bottom: none;
+}
+
+.shortcut-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text);
+}
+
+.shortcut-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
 }
 
 /* ===== FULL EDITOR MODAL (ported from v1.2.0) ===== */
@@ -5197,6 +5233,40 @@ body {
   border-top: 1px solid var(--border);
 }
 
+/* AI Preview error state */
+.ai-preview-error {
+  padding: 24px;
+  text-align: center;
+  background: var(--warning-bg);
+  border: 1px solid var(--warning-border);
+  border-radius: var(--radius-sm);
+}
+
+.ai-preview-error-icon {
+  font-size: 32px;
+  margin-bottom: 12px;
+}
+
+.ai-preview-error-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--warning-text);
+  margin-bottom: 8px;
+}
+
+.ai-preview-error-message {
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+.ai-preview-error-hint {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
 .ai-refine-panel.visible {
   display: block;
 }
@@ -5604,7 +5674,7 @@ body {
   <header class="app-header">
     <div class="app-title">
       🏷️ LabelKeeper
-      <span class="version">v3.3.5</span>
+      <span class="version">v3.3.6</span>
     </div>
     <div class="header-actions">
       <button class="icon-btn" onclick="openSettings()" title="Settings">⚙️</button>
@@ -5810,6 +5880,58 @@ body {
         <button class="settings-action-btn secondary" onclick="copyDeepLinkExample()">
           <span>🔗</span> Copy Link Format
         </button>
+      </div>
+      
+      <div class="settings-divider"></div>
+      <div class="settings-section-title">Help</div>
+      
+      <div class="settings-btn-row">
+        <button class="settings-action-btn" onclick="showShortcutsModal()">
+          <span>⌨️</span> Keyboard Shortcuts
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Keyboard Shortcuts Modal -->
+<div class="modal-overlay" id="shortcutsModal">
+  <div class="modal" style="max-width: 400px;">
+    <div class="modal-header">
+      <div class="modal-title">Keyboard Shortcuts</div>
+      <button class="modal-close" onclick="closeShortcutsModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="shortcuts-section">
+        <div class="shortcuts-title">Global</div>
+        <div class="shortcut-row">
+          <span class="shortcut-key">Esc</span>
+          <span class="shortcut-desc">Close modal or wizard</span>
+        </div>
+        <div class="shortcut-row">
+          <span class="shortcut-key">?</span>
+          <span class="shortcut-desc">Show this help (when not typing)</span>
+        </div>
+      </div>
+      
+      <div class="shortcuts-section">
+        <div class="shortcuts-title">Text Editor / OCR</div>
+        <div class="shortcut-row">
+          <span class="shortcut-key">Ctrl+V</span>
+          <span class="shortcut-desc">Paste text or image</span>
+        </div>
+        <div class="shortcut-row">
+          <span class="shortcut-key">Enter</span>
+          <span class="shortcut-desc">Confirm dialog / Submit form</span>
+        </div>
+      </div>
+      
+      <div class="shortcuts-section">
+        <div class="shortcuts-title">Navigation</div>
+        <div class="shortcut-row">
+          <span class="shortcut-key">Tab</span>
+          <span class="shortcut-desc">Move between fields</span>
+        </div>
       </div>
     </div>
   </div>
@@ -7020,7 +7142,7 @@ Examples:
     <div class="welcome-header">
       <div class="welcome-icon">🏷️</div>
       <div class="welcome-title">Welcome to LabelKeeper</div>
-      <div class="welcome-version">v3.3.5</div>
+      <div class="welcome-version">v3.3.6</div>
     </div>
     <div class="welcome-body">
       <div class="welcome-tagline">
@@ -9172,8 +9294,22 @@ RESPONSE FORMAT (strict JSON, no markdown):
     }
   ],
   "suggestedType": "5160",
-  "quantity": 1
+  "quantity": 1,
+  "error": null
 }
+
+HANDLING IMPOSSIBLE REQUESTS:
+If you cannot fulfill the request (e.g., user asks you to access files, browse the web, read emails, or do something outside label generation), respond with:
+{
+  "understanding": "What the user asked for",
+  "labels": [],
+  "suggestedType": "5160",
+  "quantity": 0,
+  "error": "Brief explanation of why this can't be done and what the user could do instead"
+}
+Example error: "I cannot access local files or Excel documents. To create labels from your contacts, please copy the contact information from Excel and paste it here, or use the CSV Import feature in the main menu."
+
+IMPORTANT: Always respond with JSON. Never write conversational text or instructions as label content.
 
 LABEL LINE FORMAT:
 alignment,size:text
@@ -9337,7 +9473,33 @@ async function callAIProviderForPreview(provider, key, userPrompt) {
     return parsed;
   } catch (e) {
     console.error('Failed to parse AI response as JSON:', responseText);
-    // Fallback: try to create a basic response from raw text
+    
+    // Detect if this looks like a conversational refusal/explanation rather than label content
+    const lowerResponse = responseText.toLowerCase();
+    const refusalPatterns = [
+      'i cannot', 'i can\'t', 'i\'m unable', 'i am unable',
+      'i don\'t have access', 'i do not have access',
+      'unfortunately', 'i\'m sorry', 'i apologize',
+      'not able to', 'unable to access', 'cannot access',
+      'please provide', 'you\'ll need to', 'you will need to',
+      'copy and paste', 'copy the', 'paste the',
+      'however,', 'instead,', 'alternatively,'
+    ];
+    
+    const looksLikeRefusal = refusalPatterns.some(pattern => lowerResponse.includes(pattern));
+    
+    if (looksLikeRefusal) {
+      // This is an explanation/refusal - return as error, not label content
+      return {
+        understanding: 'Unable to complete this request',
+        labels: [],
+        suggestedType: '5160',
+        quantity: 0,
+        error: responseText.split('\n').slice(0, 4).join(' ').substring(0, 300) + (responseText.length > 300 ? '...' : '')
+      };
+    }
+    
+    // Fallback: try to create a basic response from raw text (only if it looks like actual content)
     return {
       understanding: 'Generated label content',
       labels: [{
@@ -9346,7 +9508,8 @@ async function callAIProviderForPreview(provider, key, userPrompt) {
         svg: null
       }],
       suggestedType: '5160',
-      quantity: 1
+      quantity: 1,
+      error: null
     };
   }
 }
@@ -9361,6 +9524,7 @@ function showAIPreviewModal(previewData, originalPrompt, category) {
     labels: previewData.labels || [],
     suggestedType: previewData.suggestedType || '5160',
     quantity: previewData.quantity || 1,
+    error: previewData.error || null,
     svgLeft: null,
     svgRight: null
   };
@@ -9378,45 +9542,70 @@ function showAIPreviewModal(previewData, originalPrompt, category) {
   // Populate understanding
   document.getElementById('aiPreviewUnderstanding').textContent = aiPreviewState.understanding;
   
-  // Populate label count
-  document.getElementById('aiPreviewLabelCount').textContent = aiPreviewState.labels.length;
-  
-  // Populate labels list
+  // Handle error state
   const labelsContainer = document.getElementById('aiPreviewLabels');
-  labelsContainer.innerHTML = '';
+  const labelCountEl = document.getElementById('aiPreviewLabelCount');
+  const acceptBtn = document.getElementById('aiPreviewAcceptBtn');
   
-  aiPreviewState.labels.forEach((label, index) => {
-    const item = document.createElement('div');
-    item.className = 'ai-preview-label-item';
-    item.dataset.index = index;
-    
-    // Format preview text for display
-    const previewText = label.preview || label.lines?.join(' / ') || 'Label ' + (index + 1);
-    const displayText = previewText.replace(/\\n/g, '\n');
-    
-    // Build meta info
-    let metaInfo = [];
-    if (label.lines && label.lines.length > 0) {
-      const firstLine = label.lines[0];
-      if (firstLine.includes(',')) {
-        const parts = firstLine.split(':')[0].split(',');
-        if (parts[0]) metaInfo.push(parts[0]);
-        if (parts[1]) metaInfo.push('size ' + parts[1]);
-      }
-    }
-    if (label.svg) metaInfo.push('has graphic');
-    
-    item.innerHTML = `
-      <div class="ai-preview-label-num">${index + 1}</div>
-      <div class="ai-preview-label-content">
-        <div class="ai-preview-label-text">${escapeHtml(displayText).replace(/\n/g, '<br>')}</div>
-        ${metaInfo.length ? `<div class="ai-preview-label-meta">${metaInfo.join(' • ')}</div>` : ''}
+  if (aiPreviewState.error) {
+    // Show error message instead of labels
+    labelCountEl.textContent = '0';
+    labelsContainer.innerHTML = `
+      <div class="ai-preview-error">
+        <div class="ai-preview-error-icon">⚠️</div>
+        <div class="ai-preview-error-title">Unable to generate labels</div>
+        <div class="ai-preview-error-message">${escapeHtml(aiPreviewState.error)}</div>
+        <div class="ai-preview-error-hint">Use the "Refine" button below to provide different information or rephrase your request.</div>
       </div>
-      <button class="ai-preview-label-edit" onclick="editPreviewLabel(${index})" title="Edit this label">✏️</button>
     `;
+    // Disable accept button when there's an error
+    if (acceptBtn) {
+      acceptBtn.disabled = true;
+      acceptBtn.style.opacity = '0.5';
+    }
+  } else {
+    // Normal flow - populate labels list
+    labelCountEl.textContent = aiPreviewState.labels.length;
+    labelsContainer.innerHTML = '';
     
-    labelsContainer.appendChild(item);
-  });
+    if (acceptBtn) {
+      acceptBtn.disabled = false;
+      acceptBtn.style.opacity = '1';
+    }
+  
+    aiPreviewState.labels.forEach((label, index) => {
+      const item = document.createElement('div');
+      item.className = 'ai-preview-label-item';
+      item.dataset.index = index;
+      
+      // Format preview text for display
+      const previewText = label.preview || label.lines?.join(' / ') || 'Label ' + (index + 1);
+      const displayText = previewText.replace(/\\n/g, '\n');
+      
+      // Build meta info
+      let metaInfo = [];
+      if (label.lines && label.lines.length > 0) {
+        const firstLine = label.lines[0];
+        if (firstLine.includes(',')) {
+          const parts = firstLine.split(':')[0].split(',');
+          if (parts[0]) metaInfo.push(parts[0]);
+          if (parts[1]) metaInfo.push('size ' + parts[1]);
+        }
+      }
+      if (label.svg) metaInfo.push('has graphic');
+      
+      item.innerHTML = `
+        <div class="ai-preview-label-num">${index + 1}</div>
+        <div class="ai-preview-label-content">
+          <div class="ai-preview-label-text">${escapeHtml(displayText).replace(/\n/g, '<br>')}</div>
+          ${metaInfo.length ? `<div class="ai-preview-label-meta">${metaInfo.join(' • ')}</div>` : ''}
+        </div>
+        <button class="ai-preview-label-edit" onclick="editPreviewLabel(${index})" title="Edit this label">✏️</button>
+      `;
+      
+      labelsContainer.appendChild(item);
+    });
+  }
   
   // Populate settings
   const typeSpec = LABEL_TYPES[aiPreviewState.suggestedType];
@@ -16199,6 +16388,15 @@ function closeWelcome(markComplete) {
 function showSetupWizardFromWelcome() {
   closeWelcome(true);
   setTimeout(() => {
+
+// Keyboard Shortcuts Modal
+function showShortcutsModal() {
+  document.getElementById('shortcutsModal').classList.add('visible');
+}
+
+function closeShortcutsModal() {
+  document.getElementById('shortcutsModal').classList.remove('visible');
+}
     openSetupWizard();
   }, 100);
 }
@@ -16289,7 +16487,7 @@ function safeLoad(key, defaultValue) {
 
 function exportAllData() {
   const data = {
-    version: '3.3.5',
+    version: '3.3.6',
     exportedAt: new Date().toISOString(),
     settings: settings,
     sheets: sheets,
@@ -16441,7 +16639,7 @@ async function startSyncShare() {
   
   // Prepare data
   const data = {
-    version: '3.3.5',
+    version: '3.3.6',
     exportedAt: new Date().toISOString(),
     expiresAt: Date.now() + SYNC_EXPIRY_MS,
     sheets: sheets,
@@ -16703,8 +16901,12 @@ function clearAllData() {
 
 // ========== EVENT HANDLERS ==========
 document.addEventListener('keydown', e => {
+  // Don't trigger shortcuts when typing in input fields
+  const isTyping = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName);
+  
   if (e.key === 'Escape') {
     closeSettings();
+    closeShortcutsModal();
     if (currentWizard) {
       closeWizard(currentWizard + 'Wizard');
     }
@@ -16715,6 +16917,11 @@ document.addEventListener('keydown', e => {
     if (document.getElementById('importTextModal').classList.contains('visible')) {
       closeModal('importTextModal');
     }
+  }
+  
+  // ? key shows shortcuts help (when not typing)
+  if (e.key === '?' && !isTyping) {
+    showShortcutsModal();
   }
 });
 
@@ -16770,7 +16977,7 @@ function init() {
   
   // Log stats for debugging
   const stats = getDataStats();
-  console.log('LabelKeeper v3.3.5 initialized', stats);
+  console.log('LabelKeeper v3.3.6 initialized', stats);
 }
 
 /**
@@ -16871,33 +17078,6 @@ function handleUrlDeepLink(params) {
   }
 }
 
-// Register service worker for PWA
-function registerServiceWorker() {
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./service-worker.js')
-        .then(registration => {
-          console.log('ServiceWorker registered:', registration.scope);
-          
-          // Check for updates
-          registration.addEventListener('updatefound', () => {
-            const newWorker = registration.installing;
-            newWorker.addEventListener('statechange', () => {
-              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                // New version available
-                showToast('New version available! Refresh to update.', 'info', 8000);
-              }
-            });
-          });
-        })
-        .catch(err => {
-          console.log('ServiceWorker registration failed:', err);
-        });
-    });
-  }
-}
-
-registerServiceWorker();
 init();
 </script>
 </body>
