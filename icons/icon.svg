@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background -->
+  <rect width="512" height="512" rx="96" fill="#1a1a1a"/>
+  
+  <!-- Label sheet representation -->
+  <g transform="translate(80, 60)">
+    <!-- Sheet background -->
+    <rect x="0" y="0" width="352" height="392" rx="16" fill="#2a2a2a" stroke="#3a3a3a" stroke-width="4"/>
+    
+    <!-- Grid of labels (3x4) -->
+    <!-- Row 1 -->
+    <rect x="24" y="24" width="96" height="64" rx="8" fill="#3a3a3a"/>
+    <rect x="128" y="24" width="96" height="64" rx="8" fill="#3a3a3a"/>
+    <rect x="232" y="24" width="96" height="64" rx="8" fill="#2563eb"/>
+    
+    <!-- Row 2 -->
+    <rect x="24" y="104" width="96" height="64" rx="8" fill="#2563eb"/>
+    <rect x="128" y="104" width="96" height="64" rx="8" fill="#3a3a3a"/>
+    <rect x="232" y="104" width="96" height="64" rx="8" fill="#3a3a3a"/>
+    
+    <!-- Row 3 -->
+    <rect x="24" y="184" width="96" height="64" rx="8" fill="#3a3a3a"/>
+    <rect x="128" y="184" width="96" height="64" rx="8" fill="#2563eb"/>
+    <rect x="232" y="184" width="96" height="64" rx="8" fill="#3a3a3a"/>
+    
+    <!-- Row 4 -->
+    <rect x="24" y="264" width="96" height="64" rx="8" fill="#3a3a3a"/>
+    <rect x="128" y="264" width="96" height="64" rx="8" fill="#3a3a3a"/>
+    <rect x="232" y="264" width="96" height="64" rx="8" fill="#3a3a3a"/>
+    
+    <!-- Checkmarks on used labels -->
+    <path d="M260 50 L276 66 L300 42" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <path d="M52 130 L68 146 L92 122" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <path d="M156 210 L172 226 L196 202" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  </g>
+  
+  <!-- Yellow label tag accent -->
+  <g transform="translate(56, 380)">
+    <path d="M0 24 L0 8 C0 4 4 0 8 0 L64 0 L80 24 L64 48 L8 48 C4 48 0 44 0 40 Z" fill="#f59e0b"/>
+    <circle cx="16" cy="24" r="6" fill="#1a1a1a"/>
+  </g>
+</svg>
