@@ -12862,32 +12862,32 @@ function buildSheetPrintHtml(sh, manifest) {
   const lps = spec.cols * spec.rows;
   const isTentCard = spec.category === 'tent';
   
-  let html = '<!DOCTYPE html><html><head><title>Print Labels</title><style>';
+  // Use exact v1.2 CSS for precise alignment
+  let html = '<!DOCTYPE html><html><head><style>';
   html += '@page { size: letter; margin: 0; }';
-  html += 'html, body { margin: 0; padding: 0; font-family: Arial, sans-serif; }';
-  html += '.page { width: 8.5in; height: 11in; margin: 0; padding: 0; position: relative; overflow: hidden; box-sizing: border-box; page-break-after: always; }';
-  html += '.page:last-child { page-break-after: auto; }';
-  html += '.label { position: absolute; overflow: hidden; display: flex; flex-direction: column; padding: 0.08in 0.12in; box-sizing: border-box; }';
-  html += '.label-content { display: flex; align-items: center; width: 100%; height: 100%; }';
-  html += '.label-text { flex: 1; display: flex; flex-direction: column; min-width: 0; }';
-  html += '.label-graphic { flex-shrink: 0; }';
-  html += '.label-graphic img { max-width: 100%; max-height: 100%; object-fit: contain; }';
-  html += '.line { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }';
-  html += '.line.align-left { text-align: left; }';
-  html += '.line.align-center { text-align: center; }';
-  html += '.line.align-right { text-align: right; }';
-  html += '.split-line { display: flex; justify-content: space-between; }';
-  html += '.split-line span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }';
-  html += '.fill-line { display: flex; align-items: flex-end; gap: 3px; }';
-  html += '.fill-line .fill-label { white-space: nowrap; flex-shrink: 0; }';
-  html += '.fill-line .fill-rule { flex: 1; border-bottom: 1px solid #000; min-width: 0.25in; margin-bottom: 1px; }';
+  html += 'html, body { height: 11in !important; width: 8.5in !important; margin: 0 !important; padding: 0 !important; overflow: hidden !important; background: #fff !important; color: #000 !important; }';
+  html += '.print-sheet { width:8.5in; height:11in; margin:0; padding:0; position:relative; overflow:hidden; box-sizing:border-box; }';
+  html += '.print-label { position:absolute; overflow:hidden; font-family:Arial,sans-serif; line-height:1.3; color:#000; display:flex; flex-direction:column; box-sizing:border-box; }';
+  html += '.print-label-gfx { flex-direction:row; align-items:stretch; }';
+  html += '.print-graphic { flex-shrink:0; display:flex; align-items:center; justify-content:center; overflow:hidden; }';
+  html += '.print-graphic img { max-width:100%; max-height:100%; object-fit:contain; }';
+  html += '.print-text-zone { flex:1; display:flex; flex-direction:column; min-width:0; overflow:hidden; }';
+  html += '.print-line { width:100%; display:flex; white-space:nowrap; overflow:hidden; box-sizing:border-box; }';
+  html += '.print-line.align-left { justify-content:flex-start; text-align:left; }';
+  html += '.print-line.align-center { justify-content:center; text-align:center; }';
+  html += '.print-line.align-right { justify-content:flex-end; text-align:right; }';
+  html += '.print-line.align-split { justify-content:space-between; text-align:left; }';
+  html += '.print-line.align-split > span { min-width:0; overflow:hidden; text-overflow:ellipsis; }';
+  html += '.print-line.fill-line { display:flex; align-items:flex-end; gap:3px; }';
+  html += '.print-line.fill-line .fill-label { white-space:nowrap; flex-shrink:0; }';
+  html += '.print-line.fill-line .fill-rule { flex:1; border-bottom:1px solid #000; min-width:0.25in; margin-bottom:1px; }';
   // Tent card fold line styling
   if (isTentCard) {
-    html += '.tent-card { position: relative; }';
-    html += '.fold-line { position: absolute; left: 0; right: 0; top: 50%; border-top: 1px dashed #ccc; }';
-    html += '.tent-top, .tent-bottom { position: absolute; left: 0; right: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 0.1in; }';
-    html += '.tent-top { top: 0; height: 50%; }';
-    html += '.tent-bottom { bottom: 0; height: 50%; transform: rotate(180deg); }';
+    html += '.print-label.tent-card { position:relative; padding:0; }';
+    html += '.fold-line { position:absolute; left:0; right:0; top:50%; border-top:1px dashed #ccc; z-index:1; }';
+    html += '.tent-top, .tent-bottom { position:absolute; left:0; right:0; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:0.1in; box-sizing:border-box; }';
+    html += '.tent-top { top:0; height:50%; }';
+    html += '.tent-bottom { bottom:0; height:50%; transform:rotate(180deg); }';
   }
   html += '</style></head><body>';
   
@@ -12899,9 +12899,18 @@ function buildSheetPrintHtml(sh, manifest) {
     pages[pageNum].push(item);
   });
   
+  // Helper to get flex alignment string
+  function getFlexAlign(alignV) {
+    if (alignV === 'top') return 'flex-start';
+    if (alignV === 'bottom') return 'flex-end';
+    if (alignV === 'spread') return 'space-between';
+    return 'center';
+  }
+  
   // Render each page
-  Object.keys(pages).sort((a, b) => parseInt(a) - parseInt(b)).forEach(pageNum => {
-    html += '<div class="page">';
+  Object.keys(pages).sort((a, b) => parseInt(a) - parseInt(b)).forEach((pageNum, pi, arr) => {
+    const breakStyle = pi < arr.length - 1 ? 'page-break-after:always;' : '';
+    html += '<div class="print-sheet" style="' + breakStyle + '">';
     
     pages[pageNum].forEach(item => {
       const localIdx = item.idx % lps;
@@ -12911,123 +12920,35 @@ function buildSheetPrintHtml(sh, manifest) {
       const top = spec.topMargin + row * (spec.labelH + spec.vGutter);
       const left = spec.leftMargin + col * (spec.labelW + spec.hGutter);
       
-      html += '<div class="label" style="top:' + top + 'in; left:' + left + 'in; width:' + spec.labelW + 'in; height:' + spec.labelH + 'in;';
-      if (item.alignV === 'top') html += ' justify-content: flex-start;';
-      else if (item.alignV === 'bottom') html += ' justify-content: flex-end;';
-      else if (item.alignV === 'spread') html += ' justify-content: space-between;';
-      else html += ' justify-content: center;';
+      // Use renderPrintLineHtml for each line (same as v1.2)
+      const linesHtml = item.lines.map(l => renderPrintLineHtml(l)).join('');
+      const gfx = item.graphics;
+      const hasGfx = gfx && (gfx.left || gfx.right);
       
-      // Add border styles if present
-      if (item.border) {
-        const borderColor = item.border.color || '#000000';
-        if (item.border.top) html += ' border-top: 1pt solid ' + borderColor + ';';
-        if (item.border.bottom) html += ' border-bottom: 1pt solid ' + borderColor + ';';
-        if (item.border.left) html += ' border-left: 1pt solid ' + borderColor + ';';
-        if (item.border.right) html += ' border-right: 1pt solid ' + borderColor + ';';
-      }
-      
-      html += '">';
-      
-      // For tent cards, render content on both halves (top and bottom, bottom rotated 180°)
       if (isTentCard) {
+        // Tent card rendering
+        html += '<div class="print-label tent-card" style="top:' + top + 'in;left:' + left + 'in;width:' + spec.labelW + 'in;height:' + spec.labelH + 'in;">';
         html += '<div class="fold-line"></div>';
-        html += '<div class="tent-top">';
-        html += '<div class="label-text">';
-        item.lines.forEach(line => {
-          if (!line.text || !line.text.trim()) return;
-          const fontSize = (line.fontSize || 11) + 'pt';
-          let style = 'font-size:' + fontSize + ';';
-          if (line.bold) style += 'font-weight:bold;';
-          if (line.italic) style += 'font-style:italic;';
-          if (line.underline) style += 'text-decoration:underline;';
-          if (line.strikethrough) style += 'text-decoration:line-through;';
-          if (line.color) style += 'color:' + line.color + ';';
-          if (line.fillColor) style += 'background:' + line.fillColor + ';';
-          const align = line.align || 'left';
-          const parsed = parseLine(line.text);
-          if (parsed.type === 'split') {
-            html += '<div class="line split-line" style="' + style + '"><span>' + escapeHtml(parsed.left) + '</span><span>' + escapeHtml(parsed.right) + '</span></div>';
-          } else if (parsed.type === 'fill') {
-            html += '<div class="line fill-line" style="' + style + '"><span class="fill-label">' + escapeHtml(parsed.label) + '</span><span class="fill-rule"></span>' + (parsed.trailing ? '<span class="fill-label">' + escapeHtml(parsed.trailing) + '</span>' : '') + '</div>';
-          } else {
-            html += '<div class="line align-' + align + '" style="' + style + '">' + escapeHtml(parsed.text) + '</div>';
-          }
-        });
-        html += '</div></div>';
-        html += '<div class="tent-bottom">';
-        html += '<div class="label-text">';
-        item.lines.forEach(line => {
-          if (!line.text || !line.text.trim()) return;
-          const fontSize = (line.fontSize || 11) + 'pt';
-          let style = 'font-size:' + fontSize + ';';
-          if (line.bold) style += 'font-weight:bold;';
-          if (line.italic) style += 'font-style:italic;';
-          if (line.underline) style += 'text-decoration:underline;';
-          if (line.strikethrough) style += 'text-decoration:line-through;';
-          if (line.color) style += 'color:' + line.color + ';';
-          if (line.fillColor) style += 'background:' + line.fillColor + ';';
-          const align = line.align || 'left';
-          const parsed = parseLine(line.text);
-          if (parsed.type === 'split') {
-            html += '<div class="line split-line" style="' + style + '"><span>' + escapeHtml(parsed.left) + '</span><span>' + escapeHtml(parsed.right) + '</span></div>';
-          } else if (parsed.type === 'fill') {
-            html += '<div class="line fill-line" style="' + style + '"><span class="fill-label">' + escapeHtml(parsed.label) + '</span><span class="fill-rule"></span>' + (parsed.trailing ? '<span class="fill-label">' + escapeHtml(parsed.trailing) + '</span>' : '') + '</div>';
-          } else {
-            html += '<div class="line align-' + align + '" style="' + style + '">' + escapeHtml(parsed.text) + '</div>';
-          }
-        });
-        html += '</div></div></div>';
-      } else {
-        // Standard label rendering
-        html += '<div class="label-content">';
-      
-        // Left graphic
-        if (item.graphics && item.graphics.left && item.graphics.left.data) {
-          const size = item.graphics.left.size === 'S' ? 0.25 : item.graphics.left.size === 'L' ? 0.5 : 0.375;
-          html += '<div class="label-graphic" style="width:' + size + 'in; height:' + size + 'in; margin-right:0.05in;"><img src="' + item.graphics.left.data + '"></div>';
-        }
-      
-        html += '<div class="label-text">';
-      
-        // Render lines
-        item.lines.forEach(line => {
-          if (!line.text || !line.text.trim()) return;
-        
-          const fontSize = (line.fontSize || 11) + 'pt';
-          let style = 'font-size:' + fontSize + ';';
-          if (line.bold) style += 'font-weight:bold;';
-          if (line.italic) style += 'font-style:italic;';
-          if (line.underline) style += 'text-decoration:underline;';
-          if (line.strikethrough) style += 'text-decoration:line-through;';
-          if (line.color) style += 'color:' + line.color + ';';
-          if (line.fillColor) style += 'background:' + line.fillColor + ';';
-        
-          const align = line.align || 'left';
-          const parsed = parseLine(line.text);
-        
-          // Handle split lines (left || right)
-          if (parsed.type === 'split') {
-            html += '<div class="line split-line" style="' + style + '"><span>' + escapeHtml(parsed.left) + '</span><span>' + escapeHtml(parsed.right) + '</span></div>';
-          } 
-          // Handle fill lines (label __ trailing)
-          else if (parsed.type === 'fill') {
-            html += '<div class="line fill-line" style="' + style + '"><span class="fill-label">' + escapeHtml(parsed.label) + '</span><span class="fill-rule"></span>' + (parsed.trailing ? '<span class="fill-label">' + escapeHtml(parsed.trailing) + '</span>' : '') + '</div>';
-          } 
-          // Normal line
-          else {
-            html += '<div class="line align-' + align + '" style="' + style + '">' + escapeHtml(parsed.text) + '</div>';
-          }
-        });
-      
+        html += '<div class="tent-top"><div class="print-text-zone">' + linesHtml + '</div></div>';
+        html += '<div class="tent-bottom"><div class="print-text-zone">' + linesHtml + '</div></div>';
         html += '</div>';
-      
-        // Right graphic
-        if (item.graphics && item.graphics.right && item.graphics.right.data) {
-          const size = item.graphics.right.size === 'S' ? 0.25 : item.graphics.right.size === 'L' ? 0.5 : 0.375;
-          html += '<div class="label-graphic" style="width:' + size + 'in; height:' + size + 'in; margin-left:0.05in;"><img src="' + item.graphics.right.data + '"></div>';
+      } else if (hasGfx) {
+        // Graphics layout (same as v1.2)
+        const usableW = spec.labelW - 0.24;
+        let innerHtml = '';
+        if (gfx.left && gfx.left.data) {
+          const leftW = (usableW * (gfx.left.widthPct || 20) / 100).toFixed(3);
+          innerHtml += '<div class="print-graphic" style="width:' + leftW + 'in;"><img src="' + gfx.left.data + '"></div>';
         }
-      
-        html += '</div></div>';
+        innerHtml += '<div class="print-text-zone" style="justify-content:' + getFlexAlign(item.alignV) + ';">' + linesHtml + '</div>';
+        if (gfx.right && gfx.right.data) {
+          const rightW = (usableW * (gfx.right.widthPct || 20) / 100).toFixed(3);
+          innerHtml += '<div class="print-graphic" style="width:' + rightW + 'in;"><img src="' + gfx.right.data + '"></div>';
+        }
+        html += '<div class="print-label print-label-gfx" style="top:' + top + 'in;left:' + left + 'in;width:' + spec.labelW + 'in;height:' + spec.labelH + 'in;padding:0.08in 0.12in;">' + innerHtml + '</div>';
+      } else {
+        // Standard label (same as v1.2)
+        html += '<div class="print-label" style="top:' + top + 'in;left:' + left + 'in;width:' + spec.labelW + 'in;height:' + spec.labelH + 'in;padding:0.08in 0.12in;justify-content:' + getFlexAlign(item.alignV) + ';">' + linesHtml + '</div>';
       }
     });
     
@@ -13977,7 +13898,7 @@ function executePrint() {
   iframeDoc.open();
   iframeDoc.write('<!DOCTYPE html><html><head><style>' +
     '@page { size: letter; margin: 0; }' +
-    'html, body { margin:0; padding:0; }' +
+    'html, body { height: 11in !important; width: 8.5in !important; margin: 0 !important; padding: 0 !important; overflow: hidden !important; background: #fff !important; color: #000 !important; }' +
     '.print-sheet { width:8.5in; height:11in; margin:0; padding:0; position:relative; overflow:hidden; box-sizing:border-box; }' +
     '.print-label { position:absolute; overflow:hidden; font-family:Arial,sans-serif; line-height:1.3; color:#000; display:flex; flex-direction:column; box-sizing:border-box; }' +
     '.print-line { width:100%; display:flex; white-space:nowrap; overflow:hidden; box-sizing:border-box; }' +
@@ -15331,9 +15252,9 @@ function buildBatchPrintHtml(labels, spec) {
   
   let html = '<!DOCTYPE html><html><head><style>';
   html += '@page { size: letter; margin: 0; }';
-  html += 'html, body { font-family: Arial, sans-serif; margin: 0; padding: 0; }';
-  html += '.sheet { position: relative; width: 8.5in; height: 11in; margin: 0; padding: 0; overflow: hidden; box-sizing: border-box; page-break-after: always; }';
-  html += '.label { position: absolute; overflow: hidden; display: flex; flex-direction: column; justify-content: center; padding: 0.08in 0.12in; box-sizing: border-box; }';
+  html += 'html, body { height: 11in !important; width: 8.5in !important; margin: 0 !important; padding: 0 !important; overflow: hidden !important; background: #fff !important; color: #000 !important; }';
+  html += '.sheet { width:8.5in; height:11in; margin:0; padding:0; position:relative; overflow:hidden; box-sizing:border-box; page-break-after:always; }';
+  html += '.label { position:absolute; overflow:hidden; font-family:Arial,sans-serif; line-height:1.3; color:#000; display:flex; flex-direction:column; justify-content:center; padding:0.08in 0.12in; box-sizing:border-box; }';
   html += '.label-line { line-height: 1.3; }';
   html += '</style></head><body>';
   
@@ -15848,10 +15769,10 @@ async function printJobAll() {
   iframeDoc.open();
   iframeDoc.write('<!DOCTYPE html><html><head><style>' +
     '@page { size: letter; margin: 0; }' +
-    'html, body { margin: 0; padding: 0; background: #fff; }' +
-    '.print-sheet { position: relative; width: 8.5in; height: 11in; margin: 0; padding: 0; overflow: hidden; box-sizing: border-box; }' +
-    '.print-label { position: absolute; display: flex; flex-direction: column; overflow: hidden; font-family: Arial, sans-serif; box-sizing: border-box; }' +
-    '.print-line { white-space: nowrap; }' +
+    'html, body { height: 11in !important; width: 8.5in !important; margin: 0 !important; padding: 0 !important; overflow: hidden !important; background: #fff !important; color: #000 !important; }' +
+    '.print-sheet { width:8.5in; height:11in; margin:0; padding:0; position:relative; overflow:hidden; box-sizing:border-box; }' +
+    '.print-label { position:absolute; overflow:hidden; font-family:Arial,sans-serif; line-height:1.3; color:#000; display:flex; flex-direction:column; box-sizing:border-box; }' +
+    '.print-line { width:100%; display:flex; white-space:nowrap; overflow:hidden; box-sizing:border-box; }' +
     // Tent card styles
     '.print-label.tent-card { position: relative; }' +
     '.fold-line { position: absolute; left: 0; right: 0; top: 50%; border-top: 1px dashed #bbb; z-index: 1; }' +
