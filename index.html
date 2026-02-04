@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="gs-app-id" content="labelkeeper">
-<meta name="version" content="3.3.1">
+<meta name="version" content="3.3.2">
 <title>LabelKeeper</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -5340,7 +5340,7 @@ body {
   <header class="app-header">
     <div class="app-title">
       🏷️ LabelKeeper
-      <span class="version">v3.3.1</span>
+      <span class="version">v3.3.2</span>
     </div>
     <div class="header-actions">
       <button class="icon-btn" onclick="openSettings()" title="Settings">⚙️</button>
@@ -5474,6 +5474,24 @@ body {
       <div class="settings-data-stats" id="settingsDataStats">
         <!-- Populated by JS -->
       </div>
+      
+      <div class="settings-divider"></div>
+      <div class="settings-section-title">Device Sync</div>
+      <div class="setting-desc" style="margin-bottom: 12px;">
+        Sync your sheets and content between devices without signing in.
+      </div>
+      
+      <div class="settings-btn-row">
+        <button class="settings-action-btn" onclick="startSyncShare()">
+          <span>📤</span> Share to Another Device
+        </button>
+        <button class="settings-action-btn" onclick="startSyncReceive()">
+          <span>📥</span> Receive from Another Device
+        </button>
+      </div>
+      
+      <div class="settings-divider"></div>
+      <div class="settings-section-title">Backup &amp; Restore</div>
       
       <div class="settings-btn-row">
         <button class="settings-action-btn" onclick="exportAllData()">
@@ -6670,7 +6688,7 @@ Examples:
     <div class="welcome-header">
       <div class="welcome-icon">🏷️</div>
       <div class="welcome-title">Welcome to LabelKeeper</div>
-      <div class="welcome-version">v3.3.1</div>
+      <div class="welcome-version">v3.3.2</div>
     </div>
     <div class="welcome-body">
       <div class="welcome-tagline">
@@ -6720,6 +6738,19 @@ Examples:
 
 <!-- Toast Container -->
 <div class="toast-container" id="toastContainer"></div>
+
+<!-- Device Sync Modal -->
+<div class="simple-modal-overlay" id="syncModal">
+  <div class="simple-modal" style="max-width: 400px;">
+    <div class="simple-modal-header">
+      <div class="simple-modal-title" id="syncModalTitle">Device Sync</div>
+      <button class="modal-close" onclick="closeSyncModal()">×</button>
+    </div>
+    <div class="simple-modal-body" id="syncModalBody">
+      <!-- Content populated by JS -->
+    </div>
+  </div>
+</div>
 
 <div class="print-sheet" id="printSheet"></div>
 
@@ -15121,7 +15152,7 @@ function safeLoad(key, defaultValue) {
 
 function exportAllData() {
   const data = {
-    version: '3.0.0',
+    version: '3.3.2',
     exportedAt: new Date().toISOString(),
     settings: settings,
     sheets: sheets,
@@ -15231,6 +15262,271 @@ function performImport(data) {
 }
 
 // ============================================================================
+// DEVICE SYNC (Firebase-based, no auth required)
+// ============================================================================
+
+const FIREBASE_SYNC_URL = 'https://word-boxing-default-rtdb.firebaseio.com/labelkeeper_sync';
+const SYNC_CODE_LENGTH = 6;
+const SYNC_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes
+
+// Generate a random sync code
+function generateSyncCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Avoid confusing chars like 0/O, 1/I
+  let code = '';
+  for (let i = 0; i < SYNC_CODE_LENGTH; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+}
+
+// Show sync modal
+function showSyncModal(title, content) {
+  document.getElementById('syncModalTitle').textContent = title;
+  document.getElementById('syncModalBody').innerHTML = content;
+  document.getElementById('syncModal').classList.add('visible');
+}
+
+function closeSyncModal() {
+  document.getElementById('syncModal').classList.remove('visible');
+}
+
+// Start sharing data to another device
+async function startSyncShare() {
+  const code = generateSyncCode();
+  
+  // Show loading state
+  showSyncModal('Share to Another Device', `
+    <div style="text-align: center; padding: 20px;">
+      <div style="font-size: 24px; margin-bottom: 12px;">⏳</div>
+      <div>Preparing sync code...</div>
+    </div>
+  `);
+  
+  // Prepare data
+  const data = {
+    version: '3.3.2',
+    exportedAt: new Date().toISOString(),
+    expiresAt: Date.now() + SYNC_EXPIRY_MS,
+    sheets: sheets,
+    activeSheetId: activeSheetId,
+    savedTexts: savedTexts,
+    inventory: inventory,
+    customTokens: customTokens
+  };
+  
+  try {
+    // Upload to Firebase
+    const response = await fetch(FIREBASE_SYNC_URL + '/' + code + '.json', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to upload sync data');
+    }
+    
+    // Show the code
+    showSyncModal('Share to Another Device', `
+      <div style="text-align: center; padding: 20px;">
+        <div style="font-size: 16px; color: var(--text-muted); margin-bottom: 16px;">
+          Enter this code on your other device:
+        </div>
+        <div style="font-size: 36px; font-weight: bold; font-family: var(--mono); letter-spacing: 4px; color: var(--accent); margin-bottom: 16px;">
+          ${code}
+        </div>
+        <div style="font-size: 13px; color: var(--text-muted);">
+          Code expires in 5 minutes
+        </div>
+      </div>
+      <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border);">
+        <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
+          <strong>On your other device:</strong><br>
+          Settings → Receive from Another Device → Enter code
+        </div>
+      </div>
+      <div style="display: flex; justify-content: center; margin-top: 16px;">
+        <button class="wizard-btn wizard-btn-secondary" onclick="closeSyncModal()">Done</button>
+      </div>
+    `);
+    
+    // Schedule cleanup after expiry
+    setTimeout(() => cleanupSyncCode(code), SYNC_EXPIRY_MS);
+    
+  } catch (err) {
+    console.error('Sync share error:', err);
+    showSyncModal('Share to Another Device', `
+      <div style="text-align: center; padding: 20px;">
+        <div style="font-size: 24px; margin-bottom: 12px;">❌</div>
+        <div style="color: var(--error-text);">Failed to create sync code. Please try again.</div>
+        <div style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">${err.message}</div>
+      </div>
+      <div style="display: flex; justify-content: center; margin-top: 16px;">
+        <button class="wizard-btn wizard-btn-secondary" onclick="closeSyncModal()">Close</button>
+      </div>
+    `);
+  }
+}
+
+// Cleanup sync code from Firebase
+async function cleanupSyncCode(code) {
+  try {
+    await fetch(FIREBASE_SYNC_URL + '/' + code + '.json', {
+      method: 'DELETE'
+    });
+  } catch (err) {
+    console.log('Cleanup failed (may already be deleted):', err);
+  }
+}
+
+// Start receiving data from another device
+function startSyncReceive() {
+  showSyncModal('Receive from Another Device', `
+    <div style="text-align: center; padding: 20px;">
+      <div style="font-size: 16px; color: var(--text-muted); margin-bottom: 16px;">
+        Enter the code from your other device:
+      </div>
+      <input type="text" id="syncCodeInput" 
+        style="font-size: 28px; font-weight: bold; font-family: var(--mono); letter-spacing: 4px; 
+               text-align: center; width: 100%; max-width: 200px; padding: 12px; 
+               border: 2px solid var(--border); border-radius: var(--radius-sm);
+               background: var(--input-bg); color: var(--text); text-transform: uppercase;"
+        maxlength="${SYNC_CODE_LENGTH}" 
+        placeholder="${'•'.repeat(SYNC_CODE_LENGTH)}"
+        oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')"
+        onkeydown="if(event.key === 'Enter') receiveSyncData()">
+      <div id="syncReceiveError" style="color: var(--error-text); font-size: 13px; margin-top: 12px; display: none;"></div>
+    </div>
+    <div style="display: flex; justify-content: center; gap: 12px; margin-top: 16px;">
+      <button class="wizard-btn wizard-btn-secondary" onclick="closeSyncModal()">Cancel</button>
+      <button class="wizard-btn wizard-btn-primary" onclick="receiveSyncData()">Receive Data</button>
+    </div>
+  `);
+  
+  // Focus the input
+  setTimeout(() => {
+    const input = document.getElementById('syncCodeInput');
+    if (input) input.focus();
+  }, 100);
+}
+
+// Receive data using the entered code
+async function receiveSyncData() {
+  const input = document.getElementById('syncCodeInput');
+  const errorEl = document.getElementById('syncReceiveError');
+  const code = input.value.trim().toUpperCase();
+  
+  if (code.length !== SYNC_CODE_LENGTH) {
+    errorEl.textContent = 'Please enter a ' + SYNC_CODE_LENGTH + '-character code';
+    errorEl.style.display = 'block';
+    return;
+  }
+  
+  errorEl.style.display = 'none';
+  
+  // Show loading
+  showSyncModal('Receive from Another Device', `
+    <div style="text-align: center; padding: 20px;">
+      <div style="font-size: 24px; margin-bottom: 12px;">⏳</div>
+      <div>Fetching data...</div>
+    </div>
+  `);
+  
+  try {
+    // Fetch from Firebase
+    const response = await fetch(FIREBASE_SYNC_URL + '/' + code + '.json');
+    
+    if (!response.ok) {
+      throw new Error('Network error');
+    }
+    
+    const data = await response.json();
+    
+    if (!data) {
+      throw new Error('Invalid or expired code');
+    }
+    
+    // Check expiry
+    if (data.expiresAt && Date.now() > data.expiresAt) {
+      // Clean up expired data
+      cleanupSyncCode(code);
+      throw new Error('This code has expired');
+    }
+    
+    // Validate data structure
+    if (!data.version || !data.exportedAt) {
+      throw new Error('Invalid sync data');
+    }
+    
+    // Show confirmation with stats
+    const sheetCount = data.sheets ? Object.keys(data.sheets).length : 0;
+    const textCount = data.savedTexts ? data.savedTexts.length : 0;
+    
+    showSyncModal('Receive from Another Device', `
+      <div style="text-align: center; padding: 20px;">
+        <div style="font-size: 24px; margin-bottom: 12px;">📦</div>
+        <div style="font-size: 16px; margin-bottom: 16px;">Ready to import:</div>
+        <div style="background: var(--surface-alt); padding: 12px; border-radius: var(--radius-sm); margin-bottom: 16px;">
+          <div style="font-size: 14px;">📄 ${sheetCount} sheet${sheetCount !== 1 ? 's' : ''}</div>
+          <div style="font-size: 14px;">💾 ${textCount} saved text${textCount !== 1 ? 's' : ''}</div>
+        </div>
+        <div style="font-size: 13px; color: var(--text-muted);">
+          This will merge with your existing data.
+        </div>
+      </div>
+      <div style="display: flex; justify-content: center; gap: 12px; margin-top: 16px;">
+        <button class="wizard-btn wizard-btn-secondary" onclick="closeSyncModal()">Cancel</button>
+        <button class="wizard-btn wizard-btn-primary" onclick="confirmSyncImport()">Import Data</button>
+      </div>
+    `);
+    
+    // Store data temporarily for confirmation
+    window._pendingSyncData = data;
+    window._pendingSyncCode = code;
+    
+  } catch (err) {
+    console.error('Sync receive error:', err);
+    showSyncModal('Receive from Another Device', `
+      <div style="text-align: center; padding: 20px;">
+        <div style="font-size: 24px; margin-bottom: 12px;">❌</div>
+        <div style="color: var(--error-text);">${err.message || 'Failed to fetch data'}</div>
+        <div style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">
+          Make sure the code is correct and hasn't expired.
+        </div>
+      </div>
+      <div style="display: flex; justify-content: center; gap: 12px; margin-top: 16px;">
+        <button class="wizard-btn wizard-btn-secondary" onclick="closeSyncModal()">Close</button>
+        <button class="wizard-btn wizard-btn-primary" onclick="startSyncReceive()">Try Again</button>
+      </div>
+    `);
+  }
+}
+
+// Confirm and perform the sync import
+function confirmSyncImport() {
+  const data = window._pendingSyncData;
+  const code = window._pendingSyncCode;
+  
+  if (!data) {
+    closeSyncModal();
+    return;
+  }
+  
+  // Use existing import logic
+  performImport(data);
+  
+  // Clean up the sync code from Firebase
+  cleanupSyncCode(code);
+  
+  // Clear temp data
+  window._pendingSyncData = null;
+  window._pendingSyncCode = null;
+  
+  closeSyncModal();
+  showToast('Data synced successfully!', 'success');
+}
+
+// ============================================================================
 // CLEAR ALL DATA
 // ============================================================================
 
@@ -15337,7 +15633,7 @@ function init() {
   
   // Log stats for debugging
   const stats = getDataStats();
-  console.log('LabelKeeper v3.3.1 initialized', stats);
+  console.log('LabelKeeper v3.3.2 initialized', stats);
 }
 
 /**
