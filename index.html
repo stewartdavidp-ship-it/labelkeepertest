@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="gs-app-id" content="labelkeeper">
-<meta name="version" content="3.3.4">
+<meta name="version" content="3.3.5">
 
 <!-- PWA Meta Tags -->
 <meta name="description" content="Print labels without wasting a single position. Track which spots on your label sheets have been used.">
@@ -5604,7 +5604,7 @@ body {
   <header class="app-header">
     <div class="app-title">
       🏷️ LabelKeeper
-      <span class="version">v3.3.4</span>
+      <span class="version">v3.3.5</span>
     </div>
     <div class="header-actions">
       <button class="icon-btn" onclick="openSettings()" title="Settings">⚙️</button>
@@ -6231,6 +6231,7 @@ Examples:
       
       <!-- Emoji Panel -->
       <div class="fe-emoji-toggle-row">
+        <button class="fe-emoji-toggle" id="feClearToggle" onclick="clearEditorLines()" title="Clear text lines">🧹 Clear</button>
         <button class="fe-emoji-toggle" id="fePasteToggle" onclick="pasteToEditor()" title="Paste from clipboard">📋 Paste</button>
         <button class="fe-emoji-toggle" id="feEmojiToggle" onclick="toggleFeEmojiPanel()">😀 Emoji</button>
         <button class="fe-emoji-toggle" id="feOcrToggle" onclick="openOcrModal()">📷 Scan</button>
@@ -7019,7 +7020,7 @@ Examples:
     <div class="welcome-header">
       <div class="welcome-icon">🏷️</div>
       <div class="welcome-title">Welcome to LabelKeeper</div>
-      <div class="welcome-version">v3.3.4</div>
+      <div class="welcome-version">v3.3.5</div>
     </div>
     <div class="welcome-body">
       <div class="welcome-tagline">
@@ -9852,6 +9853,102 @@ const FE_GRAPHICS_LIBRARY = [
   {id:'bolt',cat:'symbol',name:'Lightning',svg:'<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><polygon points="36,4 16,32 28,32 24,60 48,28 36,28" fill="#fbbf24"/></svg>'}
 ];
 
+// Show a read-only preview modal for built-in templates
+function showBuiltinTemplatePreview(templateId) {
+  const tpl = getBuiltinTemplate(templateId);
+  if (!tpl) {
+    showToast('Template not found', 'error');
+    return;
+  }
+  
+  const lines = deserializeLines(tpl.text);
+  const tokens = tpl.tokens || [];
+  const labelType = tpl.labelType || '5160';
+  const spec = LABEL_TYPES[labelType];
+  
+  // Build preview lines with sample data
+  const sampleData = {
+    name: 'John Smith',
+    first_name: 'John',
+    last_name: 'Smith',
+    street: '123 Main St',
+    city: 'Anytown',
+    state: 'CA',
+    zip: '12345',
+    country: 'USA',
+    student_name: 'Emma Johnson',
+    room: '101',
+    teacher: 'Ms. Wilson',
+    level: 'Grade 3',
+    company: 'Acme Corp',
+    title: 'Software Engineer',
+    table_number: '5',
+    dish_name: 'Caesar Salad',
+    description: 'Contains dairy'
+  };
+  
+  // Replace tokens with sample values for preview
+  const previewLines = lines.map(line => {
+    let text = line.text;
+    tokens.forEach(token => {
+      const regex = new RegExp('\\{' + token + '\\}', 'gi');
+      text = text.replace(regex, sampleData[token] || '{' + token + '}');
+    });
+    return { ...line, text };
+  });
+  
+  // Build simple preview HTML
+  const previewLinesHtml = previewLines.filter(l => l.text.trim()).map(line => {
+    const align = line.align || 'left';
+    const fontSize = line.fontSize || 11;
+    return `<div style="text-align:${align};font-size:${fontSize}px;line-height:1.3;margin:2px 0;">${escapeHtml(line.text)}</div>`;
+  }).join('');
+  
+  // Calculate preview dimensions
+  const aspectRatio = spec.labelW / spec.labelH;
+  const previewWidth = Math.min(280, spec.labelW * 72);
+  const previewHeight = previewWidth / aspectRatio;
+  
+  // Build modal content
+  const modalContent = `
+    <div style="text-align: center; padding: 10px 0 20px;">
+      <div style="font-size: 18px; font-weight: 600; margin-bottom: 4px;">${escapeHtml(tpl.name)}</div>
+      <div style="font-size: 12px; color: var(--text-muted);">Built-in Template · ${spec?.name || labelType}</div>
+    </div>
+    
+    <div style="display: flex; justify-content: center; margin-bottom: 20px;">
+      <div style="width:${previewWidth}px;min-height:${previewHeight}px;background:#fff;border:2px solid #888;border-radius:4px;padding:8px 12px;display:flex;flex-direction:column;justify-content:center;color:#000;">
+        ${previewLinesHtml || '<div style="color:#888;font-style:italic;">Empty template</div>'}
+      </div>
+    </div>
+    
+    <div style="background: var(--surface-alt); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 16px;">
+      <div style="font-size: 13px; font-weight: 600; margin-bottom: 8px; color: var(--text-secondary);">Template Structure</div>
+      <div style="font-family: var(--mono); font-size: 12px; color: var(--text-muted); line-height: 1.6;">
+        ${lines.map((l, i) => `<div>Line ${i + 1}: ${escapeHtml(l.text) || '<em style="opacity:0.5">(empty)</em>'}</div>`).join('')}
+      </div>
+    </div>
+    
+    <div style="background: var(--surface-alt); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 20px;">
+      <div style="font-size: 13px; font-weight: 600; margin-bottom: 8px; color: var(--text-secondary);">Tokens (${tokens.length})</div>
+      <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+        ${tokens.map(tk => `<span style="background: var(--accent-bg); color: var(--accent-text); padding: 3px 8px; border-radius: 4px; font-size: 12px; font-family: var(--mono);">{${tk}}</span>`).join('')}
+      </div>
+    </div>
+    
+    <div style="display: flex; justify-content: center; gap: 12px;">
+      <button class="wizard-btn wizard-btn-secondary" onclick="closeBuiltinPreviewModal()">Close</button>
+      <button class="wizard-btn wizard-btn-primary" onclick="closeBuiltinPreviewModal(); showBatchImportModal('${templateId}')">📊 Use for Batch Print</button>
+    </div>
+  `;
+  
+  showGenericModal('Template Preview', modalContent, 'builtinPreviewModal');
+}
+
+function closeBuiltinPreviewModal() {
+  closeGenericModal('builtinPreviewModal');
+}
+
 function openFullEditor(textId, isTemplate = false) {
   feEditingId = textId;
   feIsTemplate = isTemplate;
@@ -10319,6 +10416,35 @@ async function pasteToEditor() {
   } else {
     showToast('Pasted ' + maxLines + ' line' + (maxLines !== 1 ? 's' : '') + ' from clipboard', 'success');
   }
+}
+
+// Clear text lines in the editor
+// If a specific line is focused, clear only that line
+// If no line is focused, clear all lines
+function clearEditorLines() {
+  const focusedLine = feLastFocusedLine;
+  
+  if (focusedLine && focusedLine >= 1 && focusedLine <= 4) {
+    // Clear only the focused line
+    const input = document.getElementById('feLine' + focusedLine);
+    if (input) {
+      input.value = '';
+      input.focus();
+      showToast('Line ' + focusedLine + ' cleared', 'info');
+    }
+  } else {
+    // Clear all lines
+    for (let i = 1; i <= 4; i++) {
+      const input = document.getElementById('feLine' + i);
+      if (input) {
+        input.value = '';
+      }
+    }
+    showToast('All lines cleared', 'info');
+  }
+  
+  updateFePreview();
+  markFeDirty();
 }
 
 function ocrImageAreaClick() {
@@ -11850,13 +11976,18 @@ function printFromSheet(sheetId) {
         };
         
         // Add to print history
-        addToPrintHistory({
+        // Build a name from the texts being printed
+        const textNames = textIds.map(tid => {
+          const t = getSavedText(tid);
+          return t ? t.name : 'Unknown';
+        }).join(', ');
+        addPrintHistoryEntry({
+          textName: textNames || 'Mixed labels',
           sheetId: sh.id,
           sheetName: sh.name,
           labelType: sh.labelType,
           count: totalLabels,
-          textIds: textIds,
-          timestamp: Date.now()
+          textIds: textIds
         });
         
         // Show success and refresh
@@ -12725,7 +12856,6 @@ function renderSavedTab(stats) {
   let html = '<div class="tab-header">' +
     '<div class="tab-title">Content (' + texts.length + ')</div>' +
     '<div class="tab-actions">' +
-      '<button class="tab-action-btn" onclick="pasteData()" title="Import from clipboard">📋 Paste</button>' +
       '<button class="tab-action-btn" onclick="openFullEditor(null, false)">+ New</button>' +
     '</div>' +
   '</div>';
@@ -12804,7 +12934,7 @@ function renderTemplatesTab(stats) {
   // Built-in templates
   for (const t of builtinTemplates) {
     const tokens = t.tokens || [];
-    html += '<div class="saved-card" style="opacity: 0.8;">' +
+    html += '<div class="saved-card" style="opacity: 0.85; cursor: pointer;" onclick="showBuiltinTemplatePreview(\'' + t.id + '\')">' +
       '<div class="saved-card-header">' +
         '<div>' +
           '<div class="saved-card-name">' + escapeHtml(t.name) + ' <span class="badge">Built-in</span></div>' +
@@ -15930,6 +16060,38 @@ function closeConfirmModal(result) {
   }
 }
 
+// Generic modal for custom content
+function showGenericModal(title, contentHtml, modalId) {
+  let modal = document.getElementById(modalId);
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = modalId;
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+      <div class="modal" style="max-width: 480px;">
+        <div class="modal-header">
+          <div class="modal-title" id="${modalId}Title">${escapeHtml(title)}</div>
+          <button class="modal-close" onclick="closeGenericModal('${modalId}')">×</button>
+        </div>
+        <div class="modal-body" id="${modalId}Body"></div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  } else {
+    document.getElementById(modalId + 'Title').textContent = title;
+  }
+  
+  document.getElementById(modalId + 'Body').innerHTML = contentHtml;
+  modal.classList.add('visible');
+}
+
+function closeGenericModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.classList.remove('visible');
+  }
+}
+
 // Prompt dialog for text input
 let promptCallback = null;
 function showPrompt(message, title, defaultValue, callback) {
@@ -16127,7 +16289,7 @@ function safeLoad(key, defaultValue) {
 
 function exportAllData() {
   const data = {
-    version: '3.3.3',
+    version: '3.3.5',
     exportedAt: new Date().toISOString(),
     settings: settings,
     sheets: sheets,
@@ -16279,7 +16441,7 @@ async function startSyncShare() {
   
   // Prepare data
   const data = {
-    version: '3.3.3',
+    version: '3.3.5',
     exportedAt: new Date().toISOString(),
     expiresAt: Date.now() + SYNC_EXPIRY_MS,
     sheets: sheets,
@@ -16608,7 +16770,7 @@ function init() {
   
   // Log stats for debugging
   const stats = getDataStats();
-  console.log('LabelKeeper v3.3.4 initialized', stats);
+  console.log('LabelKeeper v3.3.5 initialized', stats);
 }
 
 /**
