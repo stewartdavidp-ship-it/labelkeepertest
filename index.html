@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="gs-app-id" content="labelkeeper">
-<meta name="version" content="3.3.27">
+<meta name="version" content="3.3.28">
 
 <!-- App Meta Tags -->
 <meta name="description" content="Print labels without wasting a single position. Track which spots on your label sheets have been used.">
@@ -4845,6 +4845,10 @@ body {
   .print-label .print-line.align-center { justify-content: center; text-align: center; }
   .print-label .print-line.align-right { justify-content: flex-end; text-align: right; }
   .print-label .print-line.align-split { justify-content: space-between; text-align: left; }
+  .print-label .print-line.align-split-fill { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; }
+  .print-label .print-line.align-split-fill .split-fill-left,
+  .print-label .print-line.align-split-fill .split-fill-right { display: flex; align-items: flex-end; gap: 3px; flex: 1; }
+  .print-label .print-line.align-split-fill .split-fill-right { justify-content: flex-end; }
   .print-label .print-line.fill-line { display: flex; align-items: flex-end; gap: 3px; }
   .print-label .print-line.fill-line .fill-label { white-space: nowrap; flex-shrink: 0; }
   .print-label .print-line.fill-line .fill-rule { flex: 1; border-bottom: 1px solid #000; min-width: 0.25in; margin-bottom: 1px; }
@@ -5674,7 +5678,7 @@ body {
   <header class="app-header">
     <div class="app-title">
       🏷️ LabelKeeper
-      <span class="version">v3.3.27</span>
+      <span class="version">v3.3.28</span>
     </div>
     <div class="header-actions">
       <button class="icon-btn" onclick="openSettings()" title="Settings">⚙️</button>
@@ -7185,7 +7189,7 @@ Examples:
     <div class="welcome-header">
       <div class="welcome-icon">🏷️</div>
       <div class="welcome-title">Welcome to LabelKeeper</div>
-      <div class="welcome-version">v3.3.27</div>
+      <div class="welcome-version">v3.3.28</div>
     </div>
     <div class="welcome-body">
       <div class="welcome-tagline">
@@ -7590,6 +7594,10 @@ function getSavedText(id) {
   return BUILTIN_TEMPLATES.find(t => t.id === id) || null;
 }
 
+function getBuiltinTemplate(id) {
+  return BUILTIN_TEMPLATES.find(t => t.id === id) || null;
+}
+
 function getTexts() {
   return savedTexts.filter(t => t.type !== 'template');
 }
@@ -7651,7 +7659,31 @@ function getFlatText(lines) {
 function parseLine(text) {
   if (text.includes('||')) {
     const parts = text.split('||').map(s => s.trim());
-    return { type: 'split', left: parts[0], right: parts.slice(1).join(' ').trim() };
+    const left = parts[0];
+    const right = parts.slice(1).join(' ').trim();
+    
+    // Check if either side has fill-line syntax
+    const leftHasFill = left.includes('__');
+    const rightHasFill = right.includes('__');
+    
+    if (leftHasFill || rightHasFill) {
+      // Parse each side for fill-line
+      let leftParsed = { type: 'normal', text: left };
+      let rightParsed = { type: 'normal', text: right };
+      
+      if (leftHasFill) {
+        const idx = left.indexOf('__');
+        leftParsed = { type: 'fill', label: left.substring(0, idx), trailing: left.substring(idx + 2).trim() };
+      }
+      if (rightHasFill) {
+        const idx = right.indexOf('__');
+        rightParsed = { type: 'fill', label: right.substring(0, idx), trailing: right.substring(idx + 2).trim() };
+      }
+      
+      return { type: 'split-fill', left: leftParsed, right: rightParsed };
+    }
+    
+    return { type: 'split', left, right };
   }
   if (text.includes('__')) {
     const idx = text.indexOf('__');
@@ -8373,10 +8405,10 @@ function openSettings() {
   const stats = getDataStats();
   const statsEl = document.getElementById('settingsDataStats');
   statsEl.innerHTML = 
-    '<div class="settings-data-stat">📄 <strong>' + stats.sheets + '</strong> sheet' + (stats.sheets !== 1 ? 's' : '') + '</div>' +
-    '<div class="settings-data-stat">💾 <strong>' + stats.savedTexts + '</strong> saved text' + (stats.savedTexts !== 1 ? 's' : '') + '</div>' +
-    '<div class="settings-data-stat">📦 <strong>' + stats.inventory + '</strong> inventory type' + (stats.inventory !== 1 ? 's' : '') + '</div>' +
-    '<div class="settings-data-stat">📜 <strong>' + stats.printHistory + '</strong> history item' + (stats.printHistory !== 1 ? 's' : '') + '</div>';
+    '<div class="settings-data-stat">📄 <strong>' + stats.sheetCount + '</strong> sheet' + (stats.sheetCount !== 1 ? 's' : '') + '</div>' +
+    '<div class="settings-data-stat">💾 <strong>' + stats.textCount + '</strong> saved text' + (stats.textCount !== 1 ? 's' : '') + '</div>' +
+    '<div class="settings-data-stat">📦 <strong>' + stats.inventoryTypes + '</strong> inventory type' + (stats.inventoryTypes !== 1 ? 's' : '') + '</div>' +
+    '<div class="settings-data-stat">📜 <strong>' + stats.printHistoryCount + '</strong> history item' + (stats.printHistoryCount !== 1 ? 's' : '') + '</div>';
   
   // Populate print offset fields
   document.getElementById('safariVScale').value = settings.safariVScale ?? 0.95;
@@ -12969,6 +13001,11 @@ function buildSheetPrintHtml(sh, manifest) {
   html += '.print-line.align-right { justify-content:flex-end; text-align:right; }';
   html += '.print-line.align-split { justify-content:space-between; text-align:left; }';
   html += '.print-line.align-split > span { min-width:0; overflow:hidden; text-overflow:ellipsis; }';
+  html += '.print-line.align-split-fill { display:flex; justify-content:space-between; align-items:flex-end; gap:12px; }';
+  html += '.print-line.align-split-fill .split-fill-left, .print-line.align-split-fill .split-fill-right { display:flex; align-items:flex-end; gap:3px; flex:1; }';
+  html += '.print-line.align-split-fill .split-fill-right { justify-content:flex-end; }';
+  html += '.print-line.align-split-fill .fill-rule { flex:1; border-bottom:1px solid #000; min-width:0.25in; margin-bottom:1px; }';
+  html += '.print-line.align-split-fill .fill-label { white-space:nowrap; flex-shrink:0; }';
   html += '.print-line.fill-line { display:flex; align-items:flex-end; gap:3px; }';
   html += '.print-line.fill-line .fill-label { white-space:nowrap; flex-shrink:0; }';
   html += '.print-line.fill-line .fill-rule { flex:1; border-bottom:1px solid #000; min-width:0.25in; margin-bottom:1px; }';
@@ -13904,7 +13941,21 @@ function renderPrintPreview() {
   for (const line of wizardCurrentLines) {
     const style = buildLineStyleStr(line);
     const parsed = parseLine(line.text);
-    if (parsed.type === 'split') {
+    if (parsed.type === 'split-fill') {
+      // Render split layout with fill-lines
+      let leftHtml, rightHtml;
+      if (parsed.left.type === 'fill') {
+        leftHtml = '<span>' + escapeHtml(parsed.left.label) + '</span><span style="flex:1;border-bottom:1px solid #000;margin-bottom:2px;"></span>' + (parsed.left.trailing ? '<span>' + escapeHtml(parsed.left.trailing) + '</span>' : '');
+      } else {
+        leftHtml = '<span>' + escapeHtml(parsed.left.text) + '</span>';
+      }
+      if (parsed.right.type === 'fill') {
+        rightHtml = '<span>' + escapeHtml(parsed.right.label) + '</span><span style="flex:1;border-bottom:1px solid #000;margin-bottom:2px;"></span>' + (parsed.right.trailing ? '<span>' + escapeHtml(parsed.right.trailing) + '</span>' : '');
+      } else {
+        rightHtml = '<span>' + escapeHtml(parsed.right.text) + '</span>';
+      }
+      linesHtml += '<div class="preview-line" style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px;' + style + '"><div style="display:flex;align-items:flex-end;gap:3px;flex:1;">' + leftHtml + '</div><div style="display:flex;align-items:flex-end;gap:3px;flex:1;justify-content:flex-end;">' + rightHtml + '</div></div>';
+    } else if (parsed.type === 'split') {
       linesHtml += '<div class="preview-line" style="display:flex;justify-content:space-between;' + style + '"><span>' + escapeHtml(parsed.left) + '</span><span>' + escapeHtml(parsed.right) + '</span></div>';
     } else if (parsed.type === 'fill') {
       linesHtml += '<div class="preview-line" style="display:flex;align-items:flex-end;gap:3px;' + style + '"><span>' + escapeHtml(parsed.label) + '</span><span style="flex:1;border-bottom:1px solid #000;margin-bottom:2px;"></span></div>';
@@ -14025,6 +14076,11 @@ function executePrint() {
     '.print-line.align-center { justify-content:center; text-align:center; }' +
     '.print-line.align-right { justify-content:flex-end; text-align:right; }' +
     '.print-line.align-split { justify-content:space-between; text-align:left; }' +
+    '.print-line.align-split-fill { display:flex; justify-content:space-between; align-items:flex-end; gap:12px; }' +
+    '.print-line.align-split-fill .split-fill-left, .print-line.align-split-fill .split-fill-right { display:flex; align-items:flex-end; gap:3px; flex:1; }' +
+    '.print-line.align-split-fill .split-fill-right { justify-content:flex-end; }' +
+    '.print-line.align-split-fill .fill-rule { flex:1; border-bottom:1px solid #000; min-width:0.25in; margin-bottom:1px; }' +
+    '.print-line.align-split-fill .fill-label { white-space:nowrap; flex-shrink:0; }' +
     '.print-line.fill-line { display:flex; align-items:flex-end; gap:3px; }' +
     '.print-line.fill-line .fill-label { white-space:nowrap; flex-shrink:0; }' +
     '.print-line.fill-line .fill-rule { flex:1; border-bottom:1px solid #000; min-width:0.25in; margin-bottom:1px; }' +
@@ -14260,6 +14316,24 @@ function renderPrintLineHtml(lineObj) {
   const parsed = parseLine(lineObj.text);
   const style = buildLineStyleStr(lineObj);
   
+  if (parsed.type === 'split-fill') {
+    // Render split layout with fill-lines in each segment
+    let leftHtml, rightHtml;
+    
+    if (parsed.left.type === 'fill') {
+      leftHtml = '<span class="fill-label">' + escapeHtml(parsed.left.label) + '</span><span class="fill-rule"></span>' + (parsed.left.trailing ? '<span class="fill-label">' + escapeHtml(parsed.left.trailing) + '</span>' : '');
+    } else {
+      leftHtml = '<span>' + escapeHtml(parsed.left.text) + '</span>';
+    }
+    
+    if (parsed.right.type === 'fill') {
+      rightHtml = '<span class="fill-label">' + escapeHtml(parsed.right.label) + '</span><span class="fill-rule"></span>' + (parsed.right.trailing ? '<span class="fill-label">' + escapeHtml(parsed.right.trailing) + '</span>' : '');
+    } else {
+      rightHtml = '<span>' + escapeHtml(parsed.right.text) + '</span>';
+    }
+    
+    return '<div class="print-line align-split-fill" style="' + style + '"><div class="split-fill-left">' + leftHtml + '</div><div class="split-fill-right">' + rightHtml + '</div></div>';
+  }
   if (parsed.type === 'split') {
     return '<div class="print-line align-split" style="' + style + '"><span>' + escapeHtml(parsed.left) + '</span><span>' + escapeHtml(parsed.right) + '</span></div>';
   }
@@ -16565,7 +16639,7 @@ function safeLoad(key, defaultValue) {
 
 function exportAllData() {
   const data = {
-    version: '3.3.27',
+    version: '3.3.28',
     exportedAt: new Date().toISOString(),
     settings: settings,
     sheets: sheets,
@@ -16717,7 +16791,7 @@ async function startSyncShare() {
   
   // Prepare data
   const data = {
-    version: '3.3.27',
+    version: '3.3.28',
     exportedAt: new Date().toISOString(),
     expiresAt: Date.now() + SYNC_EXPIRY_MS,
     sheets: sheets,
@@ -17055,7 +17129,7 @@ function init() {
   
   // Log stats for debugging
   const stats = getDataStats();
-  console.log('LabelKeeper v3.3.27 initialized', stats);
+  console.log('LabelKeeper v3.3.28 initialized', stats);
 }
 
 /**
