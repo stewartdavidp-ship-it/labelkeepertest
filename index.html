@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="gs-app-id" content="labelkeeper">
-<meta name="version" content="3.3.31">
+<meta name="version" content="3.3.32">
 
 <!-- App Meta Tags -->
 <meta name="description" content="Print labels without wasting a single position. Track which spots on your label sheets have been used.">
@@ -5815,7 +5815,7 @@ body {
   <header class="app-header">
     <div class="app-title">
       🏷️ LabelKeeper
-      <span class="version">v3.3.31</span>
+      <span class="version">v3.3.32</span>
     </div>
     <div class="header-actions">
       <button class="icon-btn" onclick="openSettings()" title="Settings">⚙️</button>
@@ -7375,7 +7375,7 @@ Examples:
     <div class="welcome-header">
       <div class="welcome-icon">🏷️</div>
       <div class="welcome-title">Welcome to LabelKeeper</div>
-      <div class="welcome-version">v3.3.31</div>
+      <div class="welcome-version">v3.3.32</div>
     </div>
     <div class="welcome-body">
       <div class="welcome-tagline">
@@ -12487,6 +12487,10 @@ function openContentEditorFromSheet(textId, sheetId) {
 
 // Print from sheet - the main print flow
 function printFromSheet(sheetId) {
+  if (settings.deviceRole === 'satellite') {
+    showToast('Printing is only available on your primary device', 'info');
+    return;
+  }
   // Reload sheets from localStorage to ensure fresh data
   loadSheets();
   
@@ -12615,6 +12619,10 @@ function printFromSheet(sheetId) {
 
 // Undo the last print job - restores printed positions and quantities
 function undoLastPrint() {
+  if (settings.deviceRole === 'satellite') {
+    showToast('Sheet modifications only available on primary device', 'info');
+    return;
+  }
   if (!lastPrintJob) {
     showToast('Nothing to undo', 'warning');
     return;
@@ -12663,6 +12671,10 @@ function undoLastPrint() {
 
 // Reset all printed positions on a sheet
 function resetSheet(sheetId) {
+  if (settings.deviceRole === 'satellite') {
+    showToast('Sheet modifications only available on primary device', 'info');
+    return;
+  }
   const sh = sheets[sheetId];
   if (!sh) return;
   
@@ -12721,6 +12733,10 @@ function toggleCellPrinted(sheetId, idx) {
 
 // Show the split remaining labels dialog
 function showSplitDialog(sheetId) {
+  if (settings.deviceRole === 'satellite') {
+    showToast('Sheet modifications only available on primary device', 'info');
+    return;
+  }
   const sh = sheets[sheetId];
   if (!sh) return;
   
@@ -14796,6 +14812,10 @@ function offerPrintSheetLabel(sheetId) {
 
 // Print a label on the back of a sheet for identification
 async function printSheetLabel(sheetId) {
+  if (settings.deviceRole === 'satellite') {
+    showToast('Printing is only available on your primary device', 'info');
+    return;
+  }
   const sh = sheets[sheetId];
   if (!sh) return;
   
@@ -15099,6 +15119,10 @@ function printSavedText(textId) {
 // ============================================================================
 
 function reprintFromHistory(entryId) {
+  if (settings.deviceRole === 'satellite') {
+    showToast('Printing is only available on your primary device', 'info');
+    return;
+  }
   const entry = printHistory.find(e => e.id === entryId);
   if (!entry) return;
   
@@ -16219,6 +16243,10 @@ function renderJobBanner() {
 
 // Print all job sheets
 async function printJobAll() {
+  if (settings.deviceRole === 'satellite') {
+    showToast('Printing is only available on your primary device', 'info');
+    return;
+  }
   if (!activeJob) return;
 
   const tpl = getBuiltinTemplate(activeJob.templateId) || savedTexts.find(s => s.id === activeJob.templateId);
@@ -16952,7 +16980,7 @@ function safeLoad(key, defaultValue) {
 
 function exportAllData() {
   const data = {
-    version: '3.3.31',
+    version: '3.3.32',
     exportedAt: new Date().toISOString(),
     settings: settings,
     sheets: sheets,
@@ -17104,7 +17132,7 @@ async function startSyncShare() {
   
   // Prepare data
   const data = {
-    version: '3.3.31',
+    version: '3.3.32',
     exportedAt: new Date().toISOString(),
     expiresAt: Date.now() + SYNC_EXPIRY_MS,
     sheets: sheets,
@@ -17335,18 +17363,32 @@ function setDeviceRole(role) {
   if (role !== 'primary' && role !== 'satellite') return;
   
   const oldRole = settings.deviceRole;
-  settings.deviceRole = role;
-  saveSettings();
   
-  // Update UI
-  updateDeviceRoleUI();
-  updateWorkflowsForRole();
+  // Block switching from satellite to primary via toggle
+  // Primary role can only be acquired via transfer code
+  if (oldRole === 'satellite' && role === 'primary') {
+    showToast('Primary role can only be received via Transfer from the current primary device', 'info');
+    return;
+  }
   
-  // Show toast
-  if (role === 'satellite') {
-    showToast('Satellite mode: Content capture only, printing disabled', 'info');
-  } else if (oldRole === 'satellite') {
-    showToast('Primary mode: Full access restored', 'success');
+  // Switching from primary to satellite requires confirmation
+  if (oldRole === 'primary' && role === 'satellite') {
+    showConfirm(
+      'Switch this device to satellite mode?\n\nYou will no longer be able to print. To get primary back, you\'ll need a transfer from whatever device holds the primary role.',
+      'Switch to Satellite',
+      'Switch',
+      true,
+      (confirmed) => {
+        if (confirmed) {
+          settings.deviceRole = 'satellite';
+          saveSettings();
+          updateDeviceRoleUI();
+          updateWorkflowsForRole();
+          showToast('Satellite mode: Content capture only, printing disabled', 'info');
+        }
+      }
+    );
+    return;
   }
 }
 
@@ -17477,7 +17519,7 @@ async function satelliteShareToPrimary() {
   const pendingTexts = savedTexts.filter(t => pending.includes(t.id));
   
   const data = {
-    version: '3.3.31',
+    version: '3.3.32',
     type: 'satellite_contribution',
     storeId: getOrCreateStoreId(),
     exportedAt: new Date().toISOString(),
@@ -17623,6 +17665,11 @@ async function receivePrimaryData() {
     // Check if this is a primary transfer
     const isTransfer = data.type === 'primary_transfer';
     
+    // Check if this device has existing data that will be overwritten
+    const localSheetCount = Object.keys(sheets).length;
+    const localTextCount = savedTexts.length;
+    const hasLocalData = localSheetCount > 0 || localTextCount > 0;
+    
     // Show confirmation
     const sheetCount = data.sheets ? Object.keys(data.sheets).length : 0;
     const textCount = data.savedTexts ? data.savedTexts.length : 0;
@@ -17638,6 +17685,11 @@ async function receivePrimaryData() {
           <div style="font-size: 14px;">📄 ${sheetCount} sheet${sheetCount !== 1 ? 's' : ''}</div>
           <div style="font-size: 14px;">💾 ${textCount} saved text${textCount !== 1 ? 's' : ''}</div>
         </div>
+        ${hasLocalData ? `
+          <div style="font-size: 13px; color: var(--error-text); background: var(--error-bg); padding: 10px; border-radius: var(--radius-sm); margin-bottom: 12px;">
+            ⚠️ <strong>Warning:</strong> This device has ${localSheetCount} sheet${localSheetCount !== 1 ? 's' : ''} and ${localTextCount} saved text${localTextCount !== 1 ? 's' : ''} that will be <strong>replaced</strong> by the incoming data.
+          </div>
+        ` : ''}
         ${isTransfer ? `
           <div style="font-size: 13px; color: var(--success-text); background: var(--success-bg); padding: 8px; border-radius: var(--radius-sm);">
             ✅ This device will become the PRIMARY and can print labels
@@ -17652,7 +17704,7 @@ async function receivePrimaryData() {
       <div style="display: flex; justify-content: center; gap: 12px; margin-top: 16px;">
         <button class="wizard-btn wizard-btn-secondary" onclick="closeSyncModal()">Cancel</button>
         <button class="wizard-btn wizard-btn-primary" onclick="confirmSatelliteReceive()">
-          ${isTransfer ? 'Accept Primary Role' : 'Import Data'}
+          ${isTransfer ? 'Accept Primary Role' : (hasLocalData ? 'Replace My Data' : 'Import Data')}
         </button>
       </div>
     `);
@@ -17908,7 +17960,7 @@ async function primaryShareToSatellite() {
   
   // Prepare full state data
   const data = {
-    version: '3.3.31',
+    version: '3.3.32',
     type: 'primary_share',
     exportedAt: new Date().toISOString(),
     expiresAt: Date.now() + SYNC_EXPIRY_MS,
@@ -18001,7 +18053,7 @@ async function primaryTransferRole() {
       
       // Prepare transfer data - includes full state + transfer flag
       const data = {
-        version: '3.3.31',
+        version: '3.3.32',
         type: 'primary_transfer',
         exportedAt: new Date().toISOString(),
         expiresAt: Date.now() + SYNC_EXPIRY_MS,
@@ -18200,7 +18252,7 @@ function init() {
   
   // Log stats for debugging
   const stats = getDataStats();
-  console.log('LabelKeeper v3.3.31 initialized', stats);
+  console.log('LabelKeeper v3.3.32 initialized', stats);
 }
 
 /**
