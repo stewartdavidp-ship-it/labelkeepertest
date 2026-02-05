@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="gs-app-id" content="labelkeeper">
-<meta name="version" content="3.3.26">
+<meta name="version" content="3.3.27">
 
 <!-- App Meta Tags -->
 <meta name="description" content="Print labels without wasting a single position. Track which spots on your label sheets have been used.">
@@ -5674,7 +5674,7 @@ body {
   <header class="app-header">
     <div class="app-title">
       🏷️ LabelKeeper
-      <span class="version">v3.3.26</span>
+      <span class="version">v3.3.27</span>
     </div>
     <div class="header-actions">
       <button class="icon-btn" onclick="openSettings()" title="Settings">⚙️</button>
@@ -5832,6 +5832,16 @@ body {
             <input type="number" id="printOffsetLeft" step="0.05" style="width: 70px; padding: 8px; border: 2px solid var(--input-border); border-radius: 6px; background: var(--input-bg); color: var(--text); font-size: 14px;" onchange="updatePrintOffset()">
             <span style="color: var(--text-muted); font-size: 13px;">in</span>
           </div>
+        </div>
+      </div>
+      
+      <div class="setting-row" style="margin-top: 16px;">
+        <div>
+          <div class="setting-label">Show Label Boundaries</div>
+          <div class="setting-desc">Print light gray rectangles showing label positions for alignment testing</div>
+        </div>
+        <div class="toggle" id="labelBoundariesToggle" onclick="toggleLabelBoundaries()">
+          <div class="toggle-thumb"></div>
         </div>
       </div>
       
@@ -7175,7 +7185,7 @@ Examples:
     <div class="welcome-header">
       <div class="welcome-icon">🏷️</div>
       <div class="welcome-title">Welcome to LabelKeeper</div>
-      <div class="welcome-version">v3.3.26</div>
+      <div class="welcome-version">v3.3.27</div>
     </div>
     <div class="welcome-body">
       <div class="welcome-tagline">
@@ -7286,7 +7296,8 @@ let settings = {
   printOffsetTop: 0,       // Manual offset - inches to shift print vertically
   printOffsetLeft: 0,      // Manual offset - inches to shift print horizontally  
   safariPrintOffset: 0.5,  // Safari auto-compensation (adjustable) - DEPRECATED
-  safariVScale: 0.95       // Safari vertical compression ratio (0.90-1.0)
+  safariVScale: 0.95,      // Safari vertical compression ratio (0.90-1.0)
+  showLabelBoundaries: false // Debug: show label boundary rectangles on print
 };
 
 let sheets = {};
@@ -8372,10 +8383,26 @@ function openSettings() {
   document.getElementById('printOffsetTop').value = settings.printOffsetTop || 0;
   document.getElementById('printOffsetLeft').value = settings.printOffsetLeft || 0;
   
+  // Update label boundaries toggle
+  const boundariesToggle = document.getElementById('labelBoundariesToggle');
+  if (boundariesToggle) {
+    boundariesToggle.classList.toggle('active', settings.showLabelBoundaries);
+  }
+  
   // Update AI key status
   updateAIKeyStatusUI();
   
   document.getElementById('settingsModal').classList.add('visible');
+}
+
+function toggleLabelBoundaries() {
+  settings.showLabelBoundaries = !settings.showLabelBoundaries;
+  const toggle = document.getElementById('labelBoundariesToggle');
+  if (toggle) {
+    toggle.classList.toggle('active', settings.showLabelBoundaries);
+  }
+  saveSettings();
+  showToast(settings.showLabelBoundaries ? 'Label boundaries enabled' : 'Label boundaries disabled', 'success');
 }
 
 function updatePrintOffset() {
@@ -12953,6 +12980,10 @@ function buildSheetPrintHtml(sh, manifest) {
     html += '.tent-top { top:0; height:50%; }';
     html += '.tent-bottom { bottom:0; height:50%; transform:rotate(180deg); }';
   }
+  // Label boundary debugging rectangles
+  if (settings.showLabelBoundaries) {
+    html += '.label-boundary { position:absolute; border:1px solid #ccc; box-sizing:border-box; pointer-events:none; }';
+  }
   html += '</style></head><body>';
   
   // Group manifest by physical page
@@ -12982,6 +13013,18 @@ function buildSheetPrintHtml(sh, manifest) {
     
     // Safari vertical compression - reduces vertical positions to fit Safari's smaller printable area
     const safariVScale = isSafari ? (settings.safariVScale ?? 0.95) : 1.0;
+    
+    // Draw label boundaries for ALL positions if enabled (for alignment testing)
+    if (settings.showLabelBoundaries) {
+      for (let idx = 0; idx < lps; idx++) {
+        const row = Math.floor(idx / spec.cols);
+        const col = idx % spec.cols;
+        const bTop = (spec.topMargin + row * (spec.labelH + spec.vGutter)) * safariVScale + offsetTop;
+        const bHeight = spec.labelH * safariVScale;
+        const bLeft = spec.leftMargin + col * (spec.labelW + spec.hGutter) + offsetLeft;
+        html += '<div class="label-boundary" style="top:' + bTop + 'in;left:' + bLeft + 'in;width:' + spec.labelW + 'in;height:' + bHeight + 'in;"></div>';
+      }
+    }
     
     pages[pageNum].forEach(item => {
       const localIdx = item.idx % lps;
@@ -13991,8 +14034,10 @@ function executePrint() {
     '.tent-top, .tent-bottom { position:absolute; left:0; right:0; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:0.1in; box-sizing:border-box; }' +
     '.tent-top { top:0; height:50%; }' +
     '.tent-bottom { bottom:0; height:50%; transform:rotate(180deg); }' +
+    // Label boundary debugging
+    (settings.showLabelBoundaries ? '.label-boundary { position:absolute; border:1px solid #ccc; box-sizing:border-box; pointer-events:none; }' : '') +
   '</style></head><body>' +
-    '<div class="print-sheet">' + printHtml + '</div>' +
+    '<div class="print-sheet">' + buildLabelBoundariesHtml(spec, lps) + printHtml + '</div>' +
   '</body></html>');
   iframeDoc.close();
   
@@ -14131,6 +14176,24 @@ function linkContentToSheet(sheetId) {
   const remaining = getRemainingCount(sh);
   const st = getSavedText(textId);
   showToast('Linked! Find "' + (st?.name || 'content') + '" on "' + sh.name + '" in Sheets tab. ' + remaining + ' spots left.', 'success');
+}
+
+// Build HTML for label boundary rectangles (for alignment debugging)
+function buildLabelBoundariesHtml(spec, lps) {
+  if (!settings.showLabelBoundaries) return '';
+  
+  const offsetTop = settings.printOffsetTop || 0;
+  const offsetLeft = settings.printOffsetLeft || 0;
+  
+  let html = '';
+  for (let idx = 0; idx < lps; idx++) {
+    const row = Math.floor(idx / spec.cols);
+    const col = idx % spec.cols;
+    const top = spec.topMargin + row * (spec.labelH + spec.vGutter) + offsetTop;
+    const left = spec.leftMargin + col * (spec.labelW + spec.hGutter) + offsetLeft;
+    html += '<div class="label-boundary" style="top:' + top + 'in;left:' + left + 'in;width:' + spec.labelW + 'in;height:' + spec.labelH + 'in;"></div>';
+  }
+  return html;
 }
 
 function buildPrintSheetHtml(sh, positions, lines) {
@@ -15845,7 +15908,8 @@ async function printJobAll() {
       }
     });
     const breakStyle = pi < pageSheets.length - 1 ? 'page-break-after:always;' : '';
-    pagesHtml += '<div class="print-sheet" style="' + breakStyle + '">' + pageHtml + '</div>';
+    const boundariesHtml = buildLabelBoundariesHtml(spec, lps);
+    pagesHtml += '<div class="print-sheet" style="' + breakStyle + '">' + boundariesHtml + pageHtml + '</div>';
   });
 
   // Create and print iframe
@@ -15870,6 +15934,8 @@ async function printJobAll() {
     '.tent-top, .tent-bottom { position: absolute; left: 0; right: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 0.1in; box-sizing: border-box; }' +
     '.tent-top { top: 0; height: 50%; }' +
     '.tent-bottom { bottom: 0; height: 50%; transform: rotate(180deg); }' +
+    // Label boundary debugging
+    (settings.showLabelBoundaries ? '.label-boundary { position:absolute; border:1px solid #ccc; box-sizing:border-box; pointer-events:none; }' : '') +
     '</style></head><body>' + pagesHtml + '</body></html>');
   iframeDoc.close();
 
@@ -16499,7 +16565,7 @@ function safeLoad(key, defaultValue) {
 
 function exportAllData() {
   const data = {
-    version: '3.3.26',
+    version: '3.3.27',
     exportedAt: new Date().toISOString(),
     settings: settings,
     sheets: sheets,
@@ -16651,7 +16717,7 @@ async function startSyncShare() {
   
   // Prepare data
   const data = {
-    version: '3.3.26',
+    version: '3.3.27',
     exportedAt: new Date().toISOString(),
     expiresAt: Date.now() + SYNC_EXPIRY_MS,
     sheets: sheets,
@@ -16989,7 +17055,7 @@ function init() {
   
   // Log stats for debugging
   const stats = getDataStats();
-  console.log('LabelKeeper v3.3.26 initialized', stats);
+  console.log('LabelKeeper v3.3.27 initialized', stats);
 }
 
 /**
