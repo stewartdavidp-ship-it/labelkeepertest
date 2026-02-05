@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="gs-app-id" content="labelkeeper">
-<meta name="version" content="3.3.28">
+<meta name="version" content="3.3.31">
 
 <!-- App Meta Tags -->
 <meta name="description" content="Print labels without wasting a single position. Track which spots on your label sheets have been used.">
@@ -2393,6 +2393,143 @@ body {
   border-color: var(--error-border);
   background: var(--error-bg);
   color: var(--error-text);
+}
+
+/* ===== DEVICE ROLE SELECTOR ===== */
+.device-role-selector {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.device-role-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 12px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.device-role-btn:hover {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+}
+
+.device-role-btn.active {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+}
+
+.device-role-btn .role-icon {
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+
+.device-role-btn .role-name {
+  font-weight: 600;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.device-role-btn .role-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.device-role-btn.active .role-name {
+  color: var(--accent-text);
+}
+
+/* Satellite pending list */
+.satellite-pending-list {
+  background: var(--surface-alt);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: 8px;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.satellite-pending-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px;
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  margin-bottom: 4px;
+}
+
+.satellite-pending-item:last-child {
+  margin-bottom: 0;
+}
+
+.satellite-pending-name {
+  font-size: 13px;
+  color: var(--text);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.satellite-pending-delete {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px 8px;
+  font-size: 14px;
+  border-radius: 4px;
+}
+
+.satellite-pending-delete:hover {
+  background: var(--error-bg);
+  color: var(--error-text);
+}
+
+.satellite-pending-empty {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+  padding: 12px;
+}
+
+/* Satellite mode indicator */
+.satellite-mode-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: var(--warning-bg);
+  color: var(--warning-text);
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* Workflow card disabled state */
+.workflow-card.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+.workflow-card .primary-only-badge {
+  display: none;
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.workflow-card.disabled .primary-only-badge {
+  display: block;
 }
 
 /* ===== AI PROMPT MODAL ===== */
@@ -5678,7 +5815,7 @@ body {
   <header class="app-header">
     <div class="app-title">
       🏷️ LabelKeeper
-      <span class="version">v3.3.28</span>
+      <span class="version">v3.3.31</span>
     </div>
     <div class="header-actions">
       <button class="icon-btn" onclick="openSettings()" title="Settings">⚙️</button>
@@ -5858,17 +5995,66 @@ body {
       
       <div class="settings-divider"></div>
       <div class="settings-section-title">Device Sync</div>
-      <div class="setting-desc" style="margin-bottom: 12px;">
-        Sync your sheets and content between devices without signing in.
+      
+      <!-- Device Role Selector -->
+      <div class="setting-row" style="margin-bottom: 16px;">
+        <div class="setting-label">This device is:</div>
+        <div class="device-role-selector" id="deviceRoleSelector">
+          <button class="device-role-btn" data-role="primary" onclick="setDeviceRole('primary')">
+            <span class="role-icon">💻</span>
+            <span class="role-name">Primary</span>
+            <span class="role-desc">Full access, can print</span>
+          </button>
+          <button class="device-role-btn" data-role="satellite" onclick="setDeviceRole('satellite')">
+            <span class="role-icon">📱</span>
+            <span class="role-name">Satellite</span>
+            <span class="role-desc">Capture content only</span>
+          </button>
+        </div>
       </div>
       
-      <div class="settings-btn-row">
-        <button class="settings-action-btn" onclick="startSyncShare()">
-          <span>📤</span> Share to Another Device
-        </button>
-        <button class="settings-action-btn" onclick="startSyncReceive()">
-          <span>📥</span> Receive from Another Device
-        </button>
+      <!-- Primary mode buttons -->
+      <div id="syncPrimaryUI">
+        <div class="setting-desc" style="margin-bottom: 12px;">
+          Sync content between your primary and satellite devices.
+        </div>
+        <div class="settings-btn-row">
+          <button class="settings-action-btn" onclick="primaryReceiveFromSatellite()">
+            <span>📥</span> Receive from Satellite
+          </button>
+          <button class="settings-action-btn" onclick="primaryShareToSatellite()">
+            <span>📤</span> Share to Satellite
+          </button>
+        </div>
+        <div class="settings-btn-row" style="margin-top: 8px;">
+          <button class="settings-action-btn secondary" onclick="primaryTransferRole()">
+            <span>🔄</span> Transfer Primary to Another Device
+          </button>
+        </div>
+      </div>
+      
+      <!-- Satellite mode buttons -->
+      <div id="syncSatelliteUI" style="display: none;">
+        <div class="setting-desc" style="margin-bottom: 12px;">
+          Content you create here will sync to your primary device.
+        </div>
+        
+        <!-- Pending queue display -->
+        <div id="satellitePendingSection" style="margin-bottom: 16px;">
+          <div class="setting-label" style="margin-bottom: 8px;">Pending sync (<span id="satellitePendingCount">0</span> items):</div>
+          <div id="satellitePendingList" class="satellite-pending-list">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+        
+        <div class="settings-btn-row">
+          <button class="settings-action-btn" onclick="satelliteShareToPrimary()">
+            <span>📤</span> Share to Primary
+          </button>
+          <button class="settings-action-btn" onclick="satelliteReceiveFromPrimary()">
+            <span>📥</span> Receive from Primary
+          </button>
+        </div>
       </div>
       
       <div class="settings-divider"></div>
@@ -7189,7 +7375,7 @@ Examples:
     <div class="welcome-header">
       <div class="welcome-icon">🏷️</div>
       <div class="welcome-title">Welcome to LabelKeeper</div>
-      <div class="welcome-version">v3.3.28</div>
+      <div class="welcome-version">v3.3.31</div>
     </div>
     <div class="welcome-body">
       <div class="welcome-tagline">
@@ -7292,6 +7478,7 @@ const CUSTOM_TOKENS_KEY = 'avery5160_custom_tokens';
 const SETTINGS_KEY = 'lk_settings';
 const PRINT_HISTORY_KEY = 'lk_print_history';
 const FIRST_RUN_KEY = 'lk_first_run';
+const SATELLITE_PENDING_KEY = 'lk_satellite_pending';
 
 // ========== APP STATE ==========
 let settings = {
@@ -7301,7 +7488,9 @@ let settings = {
   printOffsetLeft: 0,      // Manual offset - inches to shift print horizontally  
   safariPrintOffset: 0.5,  // Safari auto-compensation (adjustable) - DEPRECATED
   safariVScale: 0.95,      // Safari vertical compression ratio (0.90-1.0)
-  showLabelBoundaries: false // Debug: show label boundary rectangles on print
+  showLabelBoundaries: false, // Debug: show label boundary rectangles on print
+  deviceRole: 'primary',   // 'primary' or 'satellite' - controls sync behavior
+  storeId: null            // Unique ID for this device/browser combo
 };
 
 let sheets = {};
@@ -7458,7 +7647,73 @@ function escapeAttr(t) {
 }
 
 function generateId(prefix) {
+  // If satellite mode, add sat_ prefix so we can track what was created here
+  if (settings.deviceRole === 'satellite') {
+    const storeId = getOrCreateStoreId();
+    return 'sat_' + (prefix || 'id') + '_' + storeId + '_' + Date.now();
+  }
   return (prefix || 'id') + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+}
+
+// Get or create a unique store ID for this device/browser
+function getOrCreateStoreId() {
+  if (settings.storeId) return settings.storeId;
+  
+  // Generate: platform-browser-random
+  const ua = navigator.userAgent;
+  const platform = /iPhone|iPad/.test(ua) ? 'ios' : 
+                   /Mac/.test(ua) ? 'mac' : 
+                   /Win/.test(ua) ? 'win' : 
+                   /Android/.test(ua) ? 'android' : 'other';
+  const browser = /Chrome/.test(ua) && !/Edg/.test(ua) ? 'chrome' :
+                  /Safari/.test(ua) && !/Chrome/.test(ua) ? 'safari' :
+                  /Firefox/.test(ua) ? 'firefox' : 
+                  /Edg/.test(ua) ? 'edge' : 'other';
+  const random = Math.random().toString(36).substring(2, 8);
+  
+  settings.storeId = `${platform}-${browser}-${random}`;
+  saveSettings();
+  return settings.storeId;
+}
+
+// Check if an ID was created on this satellite device
+function isLocalSatelliteItem(id) {
+  if (settings.deviceRole !== 'satellite') return false;
+  const storeId = getOrCreateStoreId();
+  return id && id.startsWith('sat_') && id.includes('_' + storeId + '_');
+}
+
+// Get satellite pending queue
+function getSatellitePending() {
+  try {
+    return JSON.parse(localStorage.getItem(SATELLITE_PENDING_KEY) || '[]');
+  } catch (e) {
+    return [];
+  }
+}
+
+// Save satellite pending queue
+function saveSatellitePending(pending) {
+  try {
+    localStorage.setItem(SATELLITE_PENDING_KEY, JSON.stringify(pending));
+  } catch (e) {}
+}
+
+// Add item to satellite pending queue
+function addToSatellitePending(id) {
+  if (settings.deviceRole !== 'satellite') return;
+  const pending = getSatellitePending();
+  if (!pending.includes(id)) {
+    pending.push(id);
+    saveSatellitePending(pending);
+  }
+}
+
+// Remove item from satellite pending queue
+function removeFromSatellitePending(id) {
+  const pending = getSatellitePending();
+  const filtered = pending.filter(p => p !== id);
+  saveSatellitePending(filtered);
 }
 
 // ========== LABEL TYPE HELPERS ==========
@@ -8209,6 +8464,10 @@ function createSavedText(name, lines, opts = {}) {
   }
   savedTexts.push(entry);
   saveSavedTexts();
+  
+  // Track in satellite pending queue if in satellite mode
+  addToSatellitePending(id);
+  
   return id;
 }
 
@@ -8226,6 +8485,18 @@ function updateSavedText(id, updates) {
 function deleteSavedText(id) {
   const idx = savedTexts.findIndex(t => t.id === id);
   if (idx === -1) return false;
+  
+  // In satellite mode, can only delete items that are still in pending queue
+  if (settings.deviceRole === 'satellite') {
+    const pending = getSatellitePending();
+    if (!pending.includes(id)) {
+      showToast("Can't delete - synced from primary device", 'error');
+      return false;
+    }
+    // Remove from pending queue
+    removeFromSatellitePending(id);
+  }
+  
   savedTexts.splice(idx, 1);
   // Remove from all sheets
   for (const sh of Object.values(sheets)) {
@@ -8256,6 +8527,10 @@ function cloneSavedText(id, newName) {
   }
   savedTexts.push(clone);
   saveSavedTexts();
+  
+  // Track in satellite pending queue if in satellite mode
+  addToSatellitePending(clone.id);
+  
   return clone.id;
 }
 
@@ -8420,6 +8695,9 @@ function openSettings() {
   if (boundariesToggle) {
     boundariesToggle.classList.toggle('active', settings.showLabelBoundaries);
   }
+  
+  // Update device role UI
+  updateDeviceRoleUI();
   
   // Update AI key status
   updateAIKeyStatusUI();
@@ -11562,7 +11840,21 @@ function updateFullEditorPreview() {
     const align = line.align === 'center' ? 'center' : line.align === 'right' ? 'right' : 'left';
     const parsed = parseLine(line.text);
     
-    if (parsed.type === 'split') {
+    if (parsed.type === 'split-fill') {
+      // Render split layout with fill-lines
+      let leftHtml, rightHtml;
+      if (parsed.left.type === 'fill') {
+        leftHtml = '<span>' + escapeHtml(parsed.left.label) + '</span><span style="flex:1;border-bottom:1px solid #000;margin-bottom:2px;"></span>' + (parsed.left.trailing ? '<span>' + escapeHtml(parsed.left.trailing) + '</span>' : '');
+      } else {
+        leftHtml = '<span>' + escapeHtml(parsed.left.text) + '</span>';
+      }
+      if (parsed.right.type === 'fill') {
+        rightHtml = '<span>' + escapeHtml(parsed.right.label) + '</span><span style="flex:1;border-bottom:1px solid #000;margin-bottom:2px;"></span>' + (parsed.right.trailing ? '<span>' + escapeHtml(parsed.right.trailing) + '</span>' : '');
+      } else {
+        rightHtml = '<span>' + escapeHtml(parsed.right.text) + '</span>';
+      }
+      html += `<div class="preview-line" style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px;${style}"><div style="display:flex;align-items:flex-end;gap:3px;flex:1;">${leftHtml}</div><div style="display:flex;align-items:flex-end;gap:3px;flex:1;justify-content:flex-end;">${rightHtml}</div></div>`;
+    } else if (parsed.type === 'split') {
       html += `<div class="preview-line" style="display:flex;justify-content:space-between;${style}"><span>${escapeHtml(parsed.left)}</span><span>${escapeHtml(parsed.right)}</span></div>`;
     } else if (parsed.type === 'fill') {
       html += `<div class="preview-line" style="display:flex;align-items:flex-end;gap:3px;${style}"><span>${escapeHtml(parsed.label)}</span><span style="flex:1;border-bottom:1px solid #000;margin-bottom:2px;"></span>${parsed.trailing ? '<span>' + escapeHtml(parsed.trailing) + '</span>' : ''}</div>`;
@@ -13465,6 +13757,14 @@ function bulkReprintHistory() {
 
 // ========== WORKFLOWS ==========
 function startWorkflow(type) {
+  // Block satellite from print-related workflows
+  if (settings.deviceRole === 'satellite') {
+    if (type === 'print' || type === 'mailing' || type === 'reprint' || type === 'setup') {
+      showToast('Printing is only available on your primary device', 'info');
+      return;
+    }
+  }
+  
   currentWizard = type;
   wizardStep = 1;
   
@@ -13636,7 +13936,20 @@ function updateWizardPreview() {
       const align = line.align || 'left';
       const parsed = parseLine(line.text);
       
-      if (parsed.type === 'split') {
+      if (parsed.type === 'split-fill') {
+        let leftHtml, rightHtml;
+        if (parsed.left.type === 'fill') {
+          leftHtml = '<span>' + escapeHtml(parsed.left.label) + '</span><span style="flex:1;border-bottom:1px solid #000;margin-bottom:2px;"></span>' + (parsed.left.trailing ? '<span>' + escapeHtml(parsed.left.trailing) + '</span>' : '');
+        } else {
+          leftHtml = '<span>' + escapeHtml(parsed.left.text) + '</span>';
+        }
+        if (parsed.right.type === 'fill') {
+          rightHtml = '<span>' + escapeHtml(parsed.right.label) + '</span><span style="flex:1;border-bottom:1px solid #000;margin-bottom:2px;"></span>' + (parsed.right.trailing ? '<span>' + escapeHtml(parsed.right.trailing) + '</span>' : '');
+        } else {
+          rightHtml = '<span>' + escapeHtml(parsed.right.text) + '</span>';
+        }
+        html += '<div class="preview-line" style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px;font-size:' + fontSize + 'px;"><div style="display:flex;align-items:flex-end;gap:3px;flex:1;">' + leftHtml + '</div><div style="display:flex;align-items:flex-end;gap:3px;flex:1;justify-content:flex-end;">' + rightHtml + '</div></div>';
+      } else if (parsed.type === 'split') {
         html += '<div class="preview-line" style="display:flex;justify-content:space-between;font-size:' + fontSize + 'px;"><span>' + escapeHtml(parsed.left) + '</span><span>' + escapeHtml(parsed.right) + '</span></div>';
       } else if (parsed.type === 'fill') {
         html += '<div class="preview-line" style="display:flex;align-items:flex-end;gap:3px;font-size:' + fontSize + 'px;"><span>' + escapeHtml(parsed.label) + '</span><span style="flex:1;border-bottom:1px solid #000;margin-bottom:2px;"></span>' + (parsed.trailing ? '<span>' + escapeHtml(parsed.trailing) + '</span>' : '') + '</div>';
@@ -16639,7 +16952,7 @@ function safeLoad(key, defaultValue) {
 
 function exportAllData() {
   const data = {
-    version: '3.3.28',
+    version: '3.3.31',
     exportedAt: new Date().toISOString(),
     settings: settings,
     sheets: sheets,
@@ -16791,7 +17104,7 @@ async function startSyncShare() {
   
   // Prepare data
   const data = {
-    version: '3.3.28',
+    version: '3.3.31',
     exportedAt: new Date().toISOString(),
     expiresAt: Date.now() + SYNC_EXPIRY_MS,
     sheets: sheets,
@@ -17014,6 +17327,761 @@ function confirmSyncImport() {
 }
 
 // ============================================================================
+// PRIMARY/SATELLITE SYNC SYSTEM
+// ============================================================================
+
+// Set device role (called from settings UI)
+function setDeviceRole(role) {
+  if (role !== 'primary' && role !== 'satellite') return;
+  
+  const oldRole = settings.deviceRole;
+  settings.deviceRole = role;
+  saveSettings();
+  
+  // Update UI
+  updateDeviceRoleUI();
+  updateWorkflowsForRole();
+  
+  // Show toast
+  if (role === 'satellite') {
+    showToast('Satellite mode: Content capture only, printing disabled', 'info');
+  } else if (oldRole === 'satellite') {
+    showToast('Primary mode: Full access restored', 'success');
+  }
+}
+
+// Update the device role selector UI
+function updateDeviceRoleUI() {
+  const role = settings.deviceRole || 'primary';
+  
+  // Update role selector buttons
+  document.querySelectorAll('.device-role-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.role === role);
+  });
+  
+  // Show/hide appropriate sync UI
+  const primaryUI = document.getElementById('syncPrimaryUI');
+  const satelliteUI = document.getElementById('syncSatelliteUI');
+  
+  if (primaryUI) primaryUI.style.display = role === 'primary' ? 'block' : 'none';
+  if (satelliteUI) satelliteUI.style.display = role === 'satellite' ? 'block' : 'none';
+  
+  // Update satellite pending list if in satellite mode
+  if (role === 'satellite') {
+    updateSatellitePendingUI();
+  }
+}
+
+// Update satellite pending list UI
+function updateSatellitePendingUI() {
+  const pending = getSatellitePending();
+  const countEl = document.getElementById('satellitePendingCount');
+  const listEl = document.getElementById('satellitePendingList');
+  
+  if (countEl) countEl.textContent = pending.length;
+  
+  if (listEl) {
+    if (pending.length === 0) {
+      listEl.innerHTML = '<div class="satellite-pending-empty">No pending items to sync</div>';
+    } else {
+      listEl.innerHTML = pending.map(id => {
+        const text = savedTexts.find(t => t.id === id);
+        const name = text ? (text.name || text.text.substring(0, 30) + '...') : id;
+        return `
+          <div class="satellite-pending-item">
+            <span class="satellite-pending-name">${escapeHtml(name)}</span>
+            <button class="satellite-pending-delete" onclick="deletePendingItem('${id}')" title="Delete">🗑️</button>
+          </div>
+        `;
+      }).join('');
+    }
+  }
+}
+
+// Delete a pending item (only in satellite mode, before sync)
+function deletePendingItem(id) {
+  if (settings.deviceRole !== 'satellite') return;
+  
+  const pending = getSatellitePending();
+  if (!pending.includes(id)) {
+    showToast("Can't delete - already synced", 'error');
+    return;
+  }
+  
+  showConfirm(
+    'Delete this item? It will be removed from the pending queue.',
+    'Delete Pending Item',
+    'Delete',
+    true,
+    (confirmed) => {
+      if (confirmed) {
+        deleteSavedText(id);
+        updateSatellitePendingUI();
+        renderCurrentTab();
+        showToast('Item deleted', 'success');
+      }
+    }
+  );
+}
+
+// Update workflows based on device role
+function updateWorkflowsForRole() {
+  const isSatellite = settings.deviceRole === 'satellite';
+  
+  // Find and update workflow cards
+  const workflowCards = document.querySelectorAll('.workflow-card');
+  workflowCards.forEach(card => {
+    const onclick = card.getAttribute('onclick') || '';
+    
+    // Disable print, mailing, reprint, setup in satellite mode
+    const isPrimaryOnly = onclick.includes("'print'") || 
+                          onclick.includes("'mailing'") || 
+                          onclick.includes("'reprint'") ||
+                          onclick.includes("'setup'");
+    
+    if (isPrimaryOnly) {
+      card.classList.toggle('disabled', isSatellite);
+      
+      // Add or update primary-only badge
+      let badge = card.querySelector('.primary-only-badge');
+      if (!badge && isSatellite) {
+        badge = document.createElement('div');
+        badge.className = 'primary-only-badge';
+        badge.textContent = 'Primary device only';
+        card.querySelector('.workflow-content').appendChild(badge);
+      }
+    }
+  });
+}
+
+// SATELLITE: Share pending content to primary
+async function satelliteShareToPrimary() {
+  const pending = getSatellitePending();
+  
+  if (pending.length === 0) {
+    showToast('No pending items to share', 'info');
+    return;
+  }
+  
+  const code = generateSyncCode();
+  
+  // Show loading state
+  showSyncModal('Share to Primary', `
+    <div style="text-align: center; padding: 20px;">
+      <div style="font-size: 24px; margin-bottom: 12px;">⏳</div>
+      <div>Preparing sync code...</div>
+    </div>
+  `);
+  
+  // Prepare data - only pending items
+  const pendingTexts = savedTexts.filter(t => pending.includes(t.id));
+  
+  const data = {
+    version: '3.3.31',
+    type: 'satellite_contribution',
+    storeId: getOrCreateStoreId(),
+    exportedAt: new Date().toISOString(),
+    expiresAt: Date.now() + SYNC_EXPIRY_MS,
+    savedTexts: pendingTexts,
+    pendingIds: pending
+  };
+  
+  try {
+    // Upload to Firebase
+    const response = await fetch(FIREBASE_SYNC_URL + '/' + code + '.json', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to upload sync data');
+    }
+    
+    // Show the code
+    showSyncModal('Share to Primary', `
+      <div style="text-align: center; padding: 20px;">
+        <div style="font-size: 16px; color: var(--text-muted); margin-bottom: 16px;">
+          Enter this code on your primary device:
+        </div>
+        <div style="font-size: 36px; font-weight: bold; font-family: var(--mono); letter-spacing: 4px; color: var(--accent); margin-bottom: 16px;">
+          ${code}
+        </div>
+        <div style="font-size: 13px; color: var(--text-muted);">
+          Sharing ${pendingTexts.length} item${pendingTexts.length !== 1 ? 's' : ''} • Code expires in 5 minutes
+        </div>
+      </div>
+      <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border);">
+        <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
+          <strong>On your primary device:</strong><br>
+          Settings → Receive from Satellite → Enter code
+        </div>
+      </div>
+      <div style="display: flex; justify-content: center; margin-top: 16px;">
+        <button class="wizard-btn wizard-btn-secondary" onclick="closeSyncModal()">Done</button>
+      </div>
+    `);
+    
+    // Store code for potential clear after confirmed sync
+    window._lastSatelliteShareCode = code;
+    
+    // Schedule cleanup after expiry
+    setTimeout(() => cleanupSyncCode(code), SYNC_EXPIRY_MS);
+    
+  } catch (err) {
+    console.error('Satellite share error:', err);
+    showSyncModal('Share to Primary', `
+      <div style="text-align: center; padding: 20px;">
+        <div style="font-size: 24px; margin-bottom: 12px;">❌</div>
+        <div style="color: var(--error-text);">Failed to create sync code. Please try again.</div>
+        <div style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">${err.message}</div>
+      </div>
+      <div style="display: flex; justify-content: center; margin-top: 16px;">
+        <button class="wizard-btn wizard-btn-secondary" onclick="closeSyncModal()">Close</button>
+      </div>
+    `);
+  }
+}
+
+// SATELLITE: Receive full state from primary
+function satelliteReceiveFromPrimary() {
+  showSyncModal('Receive from Primary', `
+    <div style="text-align: center; padding: 20px;">
+      <div style="font-size: 16px; color: var(--text-muted); margin-bottom: 16px;">
+        Enter the code from your primary device:
+      </div>
+      <input type="text" id="syncCodeInput" 
+        style="font-size: 28px; font-weight: bold; font-family: var(--mono); letter-spacing: 4px; 
+               text-align: center; width: 100%; max-width: 200px; padding: 12px; 
+               border: 2px solid var(--border); border-radius: var(--radius-sm);
+               background: var(--input-bg); color: var(--text); text-transform: uppercase;"
+        maxlength="${SYNC_CODE_LENGTH}" 
+        placeholder="${'•'.repeat(SYNC_CODE_LENGTH)}"
+        oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')"
+        onkeydown="if(event.key === 'Enter') receivePrimaryData()">
+      <div id="syncReceiveError" style="color: var(--error-text); font-size: 13px; margin-top: 12px; display: none;"></div>
+    </div>
+    <div style="display: flex; justify-content: center; gap: 12px; margin-top: 16px;">
+      <button class="wizard-btn wizard-btn-secondary" onclick="closeSyncModal()">Cancel</button>
+      <button class="wizard-btn wizard-btn-primary" onclick="receivePrimaryData()">Receive Data</button>
+    </div>
+  `);
+  
+  // Focus the input
+  setTimeout(() => {
+    const input = document.getElementById('syncCodeInput');
+    if (input) input.focus();
+  }, 100);
+}
+
+// Satellite receives data from primary
+async function receivePrimaryData() {
+  const input = document.getElementById('syncCodeInput');
+  const errorEl = document.getElementById('syncReceiveError');
+  const code = input.value.trim().toUpperCase();
+  
+  if (code.length !== SYNC_CODE_LENGTH) {
+    errorEl.textContent = 'Please enter a ' + SYNC_CODE_LENGTH + '-character code';
+    errorEl.style.display = 'block';
+    return;
+  }
+  
+  errorEl.style.display = 'none';
+  
+  // Show loading
+  showSyncModal('Receive from Primary', `
+    <div style="text-align: center; padding: 20px;">
+      <div style="font-size: 24px; margin-bottom: 12px;">⏳</div>
+      <div>Fetching data from primary...</div>
+    </div>
+  `);
+  
+  try {
+    const response = await fetch(FIREBASE_SYNC_URL + '/' + code + '.json');
+    
+    if (!response.ok) {
+      throw new Error('Network error');
+    }
+    
+    const data = await response.json();
+    
+    if (!data) {
+      throw new Error('Invalid or expired code');
+    }
+    
+    // Check expiry
+    if (data.expiresAt && Date.now() > data.expiresAt) {
+      cleanupSyncCode(code);
+      throw new Error('This code has expired');
+    }
+    
+    // Validate - should be primary share or transfer data
+    if (data.type === 'satellite_contribution') {
+      throw new Error('This is satellite data. Use "Receive from Satellite" on your primary device.');
+    }
+    
+    // Check if this is a primary transfer
+    const isTransfer = data.type === 'primary_transfer';
+    
+    // Show confirmation
+    const sheetCount = data.sheets ? Object.keys(data.sheets).length : 0;
+    const textCount = data.savedTexts ? data.savedTexts.length : 0;
+    const pending = getSatellitePending();
+    
+    showSyncModal(isTransfer ? 'Receive Primary Transfer' : 'Receive from Primary', `
+      <div style="text-align: center; padding: 20px;">
+        <div style="font-size: 24px; margin-bottom: 12px;">${isTransfer ? '👑' : '📦'}</div>
+        <div style="font-size: 16px; margin-bottom: 16px;">
+          ${isTransfer ? 'Ready to become the new primary device:' : 'Ready to import from primary:'}
+        </div>
+        <div style="background: var(--surface-alt); padding: 12px; border-radius: var(--radius-sm); margin-bottom: 16px;">
+          <div style="font-size: 14px;">📄 ${sheetCount} sheet${sheetCount !== 1 ? 's' : ''}</div>
+          <div style="font-size: 14px;">💾 ${textCount} saved text${textCount !== 1 ? 's' : ''}</div>
+        </div>
+        ${isTransfer ? `
+          <div style="font-size: 13px; color: var(--success-text); background: var(--success-bg); padding: 8px; border-radius: var(--radius-sm);">
+            ✅ This device will become the PRIMARY and can print labels
+          </div>
+        ` : ''}
+        ${pending.length > 0 && !isTransfer ? `
+          <div style="font-size: 13px; color: var(--warning-text); background: var(--warning-bg); padding: 8px; border-radius: var(--radius-sm);">
+            ⚠️ Your ${pending.length} pending item${pending.length !== 1 ? 's' : ''} will be preserved
+          </div>
+        ` : ''}
+      </div>
+      <div style="display: flex; justify-content: center; gap: 12px; margin-top: 16px;">
+        <button class="wizard-btn wizard-btn-secondary" onclick="closeSyncModal()">Cancel</button>
+        <button class="wizard-btn wizard-btn-primary" onclick="confirmSatelliteReceive()">
+          ${isTransfer ? 'Accept Primary Role' : 'Import Data'}
+        </button>
+      </div>
+    `);
+    
+    window._pendingSyncData = data;
+    window._pendingSyncCode = code;
+    
+  } catch (err) {
+    console.error('Satellite receive error:', err);
+    showSyncModal('Receive from Primary', `
+      <div style="text-align: center; padding: 20px;">
+        <div style="font-size: 24px; margin-bottom: 12px;">❌</div>
+        <div style="color: var(--error-text);">${err.message || 'Failed to fetch data'}</div>
+      </div>
+      <div style="display: flex; justify-content: center; gap: 12px; margin-top: 16px;">
+        <button class="wizard-btn wizard-btn-secondary" onclick="closeSyncModal()">Close</button>
+        <button class="wizard-btn wizard-btn-primary" onclick="satelliteReceiveFromPrimary()">Try Again</button>
+      </div>
+    `);
+  }
+}
+
+// Confirm satellite receive - merge primary data while preserving pending
+function confirmSatelliteReceive() {
+  const data = window._pendingSyncData;
+  const code = window._pendingSyncCode;
+  
+  if (!data) {
+    closeSyncModal();
+    return;
+  }
+  
+  const isTransfer = data.type === 'primary_transfer';
+  const pending = getSatellitePending();
+  
+  // Get pending items BEFORE we overwrite (only relevant if NOT a transfer)
+  const pendingItems = isTransfer ? [] : savedTexts.filter(t => pending.includes(t.id));
+  
+  // Replace with primary data (full state)
+  if (data.sheets) {
+    sheets = data.sheets;
+    saveSheets();
+  }
+  
+  if (data.savedTexts) {
+    savedTexts = [...data.savedTexts];
+    // Add back pending items that aren't in primary yet (only if not a transfer)
+    if (!isTransfer) {
+      for (const item of pendingItems) {
+        if (!savedTexts.find(t => t.id === item.id)) {
+          savedTexts.push(item);
+        }
+      }
+    }
+    saveSavedTexts();
+  }
+  
+  if (data.inventory) {
+    inventory = data.inventory;
+    saveInventory();
+  }
+  
+  if (data.printHistory) {
+    printHistory = data.printHistory;
+    savePrintHistory();
+  }
+  
+  if (data.activeSheetId) {
+    activeSheetId = data.activeSheetId;
+    localStorage.setItem(ACTIVE_KEY, activeSheetId);
+  }
+  
+  // If this is a transfer, become primary and clear pending queue
+  if (isTransfer) {
+    settings.deviceRole = 'primary';
+    saveSettings();
+    saveSatellitePending([]); // Clear any pending items
+  }
+  
+  // Cleanup
+  cleanupSyncCode(code);
+  window._pendingSyncData = null;
+  window._pendingSyncCode = null;
+  
+  closeSyncModal();
+  updateDeviceRoleUI();
+  updateWorkflowsForRole();
+  updateSatellitePendingUI();
+  renderCurrentTab();
+  
+  if (isTransfer) {
+    showToast('🎉 This device is now the primary! You can print labels.', 'success');
+  } else {
+    showToast('Data synced from primary!', 'success');
+  }
+}
+
+// PRIMARY: Receive contributions from satellite
+function primaryReceiveFromSatellite() {
+  showSyncModal('Receive from Satellite', `
+    <div style="text-align: center; padding: 20px;">
+      <div style="font-size: 16px; color: var(--text-muted); margin-bottom: 16px;">
+        Enter the code from your satellite device:
+      </div>
+      <input type="text" id="syncCodeInput" 
+        style="font-size: 28px; font-weight: bold; font-family: var(--mono); letter-spacing: 4px; 
+               text-align: center; width: 100%; max-width: 200px; padding: 12px; 
+               border: 2px solid var(--border); border-radius: var(--radius-sm);
+               background: var(--input-bg); color: var(--text); text-transform: uppercase;"
+        maxlength="${SYNC_CODE_LENGTH}" 
+        placeholder="${'•'.repeat(SYNC_CODE_LENGTH)}"
+        oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')"
+        onkeydown="if(event.key === 'Enter') receiveSatelliteData()">
+      <div id="syncReceiveError" style="color: var(--error-text); font-size: 13px; margin-top: 12px; display: none;"></div>
+    </div>
+    <div style="display: flex; justify-content: center; gap: 12px; margin-top: 16px;">
+      <button class="wizard-btn wizard-btn-secondary" onclick="closeSyncModal()">Cancel</button>
+      <button class="wizard-btn wizard-btn-primary" onclick="receiveSatelliteData()">Receive Data</button>
+    </div>
+  `);
+  
+  setTimeout(() => {
+    const input = document.getElementById('syncCodeInput');
+    if (input) input.focus();
+  }, 100);
+}
+
+// Primary receives data from satellite
+async function receiveSatelliteData() {
+  const input = document.getElementById('syncCodeInput');
+  const errorEl = document.getElementById('syncReceiveError');
+  const code = input.value.trim().toUpperCase();
+  
+  if (code.length !== SYNC_CODE_LENGTH) {
+    errorEl.textContent = 'Please enter a ' + SYNC_CODE_LENGTH + '-character code';
+    errorEl.style.display = 'block';
+    return;
+  }
+  
+  errorEl.style.display = 'none';
+  
+  showSyncModal('Receive from Satellite', `
+    <div style="text-align: center; padding: 20px;">
+      <div style="font-size: 24px; margin-bottom: 12px;">⏳</div>
+      <div>Fetching data from satellite...</div>
+    </div>
+  `);
+  
+  try {
+    const response = await fetch(FIREBASE_SYNC_URL + '/' + code + '.json');
+    
+    if (!response.ok) {
+      throw new Error('Network error');
+    }
+    
+    const data = await response.json();
+    
+    if (!data) {
+      throw new Error('Invalid or expired code');
+    }
+    
+    if (data.expiresAt && Date.now() > data.expiresAt) {
+      cleanupSyncCode(code);
+      throw new Error('This code has expired');
+    }
+    
+    // Validate - should be satellite contribution
+    if (data.type !== 'satellite_contribution') {
+      throw new Error('This is not satellite data. Make sure your satellite device used "Share to Primary".');
+    }
+    
+    const textCount = data.savedTexts ? data.savedTexts.length : 0;
+    const storeId = data.storeId || 'unknown';
+    
+    showSyncModal('Receive from Satellite', `
+      <div style="text-align: center; padding: 20px;">
+        <div style="font-size: 24px; margin-bottom: 12px;">📱</div>
+        <div style="font-size: 16px; margin-bottom: 16px;">Content from satellite:</div>
+        <div style="background: var(--surface-alt); padding: 12px; border-radius: var(--radius-sm); margin-bottom: 16px;">
+          <div style="font-size: 14px;">💾 ${textCount} new item${textCount !== 1 ? 's' : ''}</div>
+          <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">From: ${storeId}</div>
+        </div>
+        <div style="font-size: 13px; color: var(--text-muted);">
+          This will add new content to your library.
+        </div>
+      </div>
+      <div style="display: flex; justify-content: center; gap: 12px; margin-top: 16px;">
+        <button class="wizard-btn wizard-btn-secondary" onclick="closeSyncModal()">Cancel</button>
+        <button class="wizard-btn wizard-btn-primary" onclick="confirmPrimaryReceive()">Import Content</button>
+      </div>
+    `);
+    
+    window._pendingSyncData = data;
+    window._pendingSyncCode = code;
+    
+  } catch (err) {
+    console.error('Primary receive error:', err);
+    showSyncModal('Receive from Satellite', `
+      <div style="text-align: center; padding: 20px;">
+        <div style="font-size: 24px; margin-bottom: 12px;">❌</div>
+        <div style="color: var(--error-text);">${err.message || 'Failed to fetch data'}</div>
+      </div>
+      <div style="display: flex; justify-content: center; gap: 12px; margin-top: 16px;">
+        <button class="wizard-btn wizard-btn-secondary" onclick="closeSyncModal()">Close</button>
+        <button class="wizard-btn wizard-btn-primary" onclick="primaryReceiveFromSatellite()">Try Again</button>
+      </div>
+    `);
+  }
+}
+
+// Confirm primary receive from satellite - append new content
+function confirmPrimaryReceive() {
+  const data = window._pendingSyncData;
+  const code = window._pendingSyncCode;
+  
+  if (!data) {
+    closeSyncModal();
+    return;
+  }
+  
+  // Append satellite texts (don't replace)
+  if (data.savedTexts) {
+    const existingIds = new Set(savedTexts.map(t => t.id));
+    let addedCount = 0;
+    for (const text of data.savedTexts) {
+      if (!existingIds.has(text.id)) {
+        savedTexts.push(text);
+        addedCount++;
+      }
+    }
+    saveSavedTexts();
+  }
+  
+  cleanupSyncCode(code);
+  window._pendingSyncData = null;
+  window._pendingSyncCode = null;
+  
+  closeSyncModal();
+  renderCurrentTab();
+  showToast('Content imported from satellite!', 'success');
+}
+
+// PRIMARY: Share full state to satellite
+async function primaryShareToSatellite() {
+  const code = generateSyncCode();
+  
+  showSyncModal('Share to Satellite', `
+    <div style="text-align: center; padding: 20px;">
+      <div style="font-size: 24px; margin-bottom: 12px;">⏳</div>
+      <div>Preparing sync code...</div>
+    </div>
+  `);
+  
+  // Prepare full state data
+  const data = {
+    version: '3.3.31',
+    type: 'primary_share',
+    exportedAt: new Date().toISOString(),
+    expiresAt: Date.now() + SYNC_EXPIRY_MS,
+    sheets: sheets,
+    activeSheetId: activeSheetId,
+    savedTexts: savedTexts,
+    inventory: inventory,
+    customTokens: customTokens
+  };
+  
+  try {
+    const response = await fetch(FIREBASE_SYNC_URL + '/' + code + '.json', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to upload sync data');
+    }
+    
+    const sheetCount = Object.keys(sheets).length;
+    const textCount = savedTexts.length;
+    
+    showSyncModal('Share to Satellite', `
+      <div style="text-align: center; padding: 20px;">
+        <div style="font-size: 16px; color: var(--text-muted); margin-bottom: 16px;">
+          Enter this code on your satellite device:
+        </div>
+        <div style="font-size: 36px; font-weight: bold; font-family: var(--mono); letter-spacing: 4px; color: var(--accent); margin-bottom: 16px;">
+          ${code}
+        </div>
+        <div style="font-size: 13px; color: var(--text-muted);">
+          Sharing ${sheetCount} sheet${sheetCount !== 1 ? 's' : ''}, ${textCount} text${textCount !== 1 ? 's' : ''} • Code expires in 5 minutes
+        </div>
+      </div>
+      <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border);">
+        <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
+          <strong>On your satellite device:</strong><br>
+          Settings → Receive from Primary → Enter code
+        </div>
+      </div>
+      <div style="display: flex; justify-content: center; margin-top: 16px;">
+        <button class="wizard-btn wizard-btn-secondary" onclick="closeSyncModal()">Done</button>
+      </div>
+    `);
+    
+    setTimeout(() => cleanupSyncCode(code), SYNC_EXPIRY_MS);
+    
+  } catch (err) {
+    console.error('Primary share error:', err);
+    showSyncModal('Share to Satellite', `
+      <div style="text-align: center; padding: 20px;">
+        <div style="font-size: 24px; margin-bottom: 12px;">❌</div>
+        <div style="color: var(--error-text);">Failed to create sync code. Please try again.</div>
+        <div style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">${err.message}</div>
+      </div>
+      <div style="display: flex; justify-content: center; margin-top: 16px;">
+        <button class="wizard-btn wizard-btn-secondary" onclick="closeSyncModal()">Close</button>
+      </div>
+    `);
+  }
+}
+
+// Clear satellite pending queue after successful sync confirmation
+function clearSatellitePendingAfterSync() {
+  saveSatellitePending([]);
+  updateSatellitePendingUI();
+}
+
+// PRIMARY: Transfer primary role to another device
+async function primaryTransferRole() {
+  // Show confirmation first
+  showConfirm(
+    'This will transfer primary status to another device. After the transfer completes, THIS device will become a satellite and will no longer be able to print. Are you sure?',
+    'Transfer Primary Role',
+    'Transfer',
+    true,
+    async (confirmed) => {
+      if (!confirmed) return;
+      
+      const code = generateSyncCode();
+      
+      showSyncModal('Transfer Primary Role', `
+        <div style="text-align: center; padding: 20px;">
+          <div style="font-size: 24px; margin-bottom: 12px;">⏳</div>
+          <div>Preparing transfer code...</div>
+        </div>
+      `);
+      
+      // Prepare transfer data - includes full state + transfer flag
+      const data = {
+        version: '3.3.31',
+        type: 'primary_transfer',
+        exportedAt: new Date().toISOString(),
+        expiresAt: Date.now() + SYNC_EXPIRY_MS,
+        sheets: sheets,
+        activeSheetId: activeSheetId,
+        savedTexts: savedTexts,
+        inventory: inventory,
+        customTokens: customTokens,
+        printHistory: printHistory
+      };
+      
+      try {
+        const response = await fetch(FIREBASE_SYNC_URL + '/' + code + '.json', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to upload transfer data');
+        }
+        
+        const sheetCount = Object.keys(sheets).length;
+        const textCount = savedTexts.length;
+        
+        showSyncModal('Transfer Primary Role', `
+          <div style="text-align: center; padding: 20px;">
+            <div style="font-size: 16px; color: var(--text-muted); margin-bottom: 16px;">
+              Enter this code on the device that will become the new primary:
+            </div>
+            <div style="font-size: 36px; font-weight: bold; font-family: var(--mono); letter-spacing: 4px; color: var(--accent); margin-bottom: 16px;">
+              ${code}
+            </div>
+            <div style="font-size: 13px; color: var(--text-muted);">
+              Transferring ${sheetCount} sheet${sheetCount !== 1 ? 's' : ''}, ${textCount} text${textCount !== 1 ? 's' : ''} • Code expires in 5 minutes
+            </div>
+            <div style="margin-top: 16px; padding: 12px; background: var(--warning-bg); border-radius: var(--radius-sm);">
+              <div style="font-size: 13px; color: var(--warning-text);">
+                ⚠️ After the new device receives this transfer, click "Complete Transfer" below to convert this device to satellite mode.
+              </div>
+            </div>
+          </div>
+          <div style="display: flex; justify-content: center; gap: 12px; margin-top: 16px;">
+            <button class="wizard-btn wizard-btn-secondary" onclick="closeSyncModal()">Cancel</button>
+            <button class="wizard-btn wizard-btn-primary" onclick="completeTransferToSatellite()">Complete Transfer</button>
+          </div>
+        `);
+        
+        setTimeout(() => cleanupSyncCode(code), SYNC_EXPIRY_MS);
+        
+      } catch (err) {
+        console.error('Primary transfer error:', err);
+        showSyncModal('Transfer Primary Role', `
+          <div style="text-align: center; padding: 20px;">
+            <div style="font-size: 24px; margin-bottom: 12px;">❌</div>
+            <div style="color: var(--error-text);">Failed to create transfer code. Please try again.</div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">${err.message}</div>
+          </div>
+          <div style="display: flex; justify-content: center; margin-top: 16px;">
+            <button class="wizard-btn wizard-btn-secondary" onclick="closeSyncModal()">Close</button>
+          </div>
+        `);
+      }
+    }
+  );
+}
+
+// Complete transfer - convert this device to satellite
+function completeTransferToSatellite() {
+  settings.deviceRole = 'satellite';
+  saveSettings();
+  
+  closeSyncModal();
+  updateDeviceRoleUI();
+  updateWorkflowsForRole();
+  
+  showToast('This device is now a satellite. Printing disabled.', 'info');
+}
+
+// ============================================================================
 // CLEAR ALL DATA
 // ============================================================================
 
@@ -17114,6 +18182,9 @@ function init() {
   // Apply UI state
   applyTheme();
   
+  // Update workflows based on device role (primary/satellite)
+  updateWorkflowsForRole();
+  
   // Check for URL parameters (deep linking)
   const urlParams = parseUrlParams();
   if (urlParams.hasParams) {
@@ -17129,7 +18200,7 @@ function init() {
   
   // Log stats for debugging
   const stats = getDataStats();
-  console.log('LabelKeeper v3.3.28 initialized', stats);
+  console.log('LabelKeeper v3.3.31 initialized', stats);
 }
 
 /**
