@@ -4366,6 +4366,12 @@ body {
 .wf1-plan-count { font-size: 28px; font-weight: 700; color: var(--accent); }
 .wf1-plan-detail { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
 .wf1-plan-warning { text-align: center; padding: 20px; }
+.wf1-dedicated-toggle {
+  margin-bottom: 12px; padding: 10px 12px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  color: var(--text-muted);
+}
+.wf1-dedicated-toggle input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; }
 .wf1-plan-options { display: flex; flex-direction: column; gap: 8px; }
 .wf1-plan-option {
   display: flex; align-items: flex-start; gap: 12px; padding: 14px;
@@ -4373,6 +4379,8 @@ body {
   cursor: pointer; transition: all 0.15s; background: var(--surface);
 }
 .wf1-plan-option:hover { border-color: var(--accent); background: var(--accent-bg); }
+.wf1-plan-option.recommended { border-color: var(--accent); background: var(--accent-bg); }
+.wf1-plan-option.recommended .wf1-plan-option-title { color: var(--accent); }
 .wf1-plan-option-icon { font-size: 24px; flex-shrink: 0; }
 .wf1-plan-option-content { flex: 1; }
 .wf1-plan-option-title { font-weight: 600; color: var(--heading); font-size: 14px; }
@@ -4393,15 +4401,54 @@ body {
 }
 .wf1-batch-template-item:hover { border-color: var(--accent); }
 .wf1-batch-template-item.selected { border-color: var(--accent); background: var(--accent-bg); }
-.wf1-batch-template-name { font-weight: 600; color: var(--heading); }
+.wf1-batch-template-item.create-new { border-style: dashed; opacity: 0.8; }
+.wf1-batch-template-item.create-new:hover { opacity: 1; }
+.wf1-batch-template-header { display: flex; justify-content: space-between; align-items: flex-start; }
+.wf1-batch-template-name { font-weight: 600; color: var(--heading); flex: 1; }
 .wf1-batch-template-preview { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+.wf1-template-edit-btn {
+  background: none; border: none; cursor: pointer; font-size: 14px; padding: 2px 6px;
+  opacity: 0.5; transition: opacity 0.15s; border-radius: 4px;
+}
+.wf1-template-edit-btn:hover { opacity: 1; background: var(--surface-alt, rgba(0,0,0,0.1)); }
 .wf1-batch-mapping { display: flex; flex-direction: column; gap: 6px; }
 .wf1-batch-map-row { display: flex; align-items: center; gap: 10px; font-size: 13px; }
 .wf1-batch-map-row label { flex: 0 0 100px; font-weight: 600; color: var(--heading); }
 .wf1-batch-map-row select { flex: 1; padding: 6px 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; background: var(--surface); color: var(--text); }
 .wf1-batch-preview-scroll { max-height: 300px; overflow-y: auto; }
-.wf1-batch-preview-label { padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 6px; font-size: 12px; line-height: 1.5; background: var(--surface); }
-.wf1-batch-preview-count { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; }
+.wf1-batch-preview-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.wf1-batch-preview-hint { font-size: 11px; color: var(--text-muted); }
+.wf1-batch-preview-label { 
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); 
+  margin-bottom: 6px; font-size: 12px; line-height: 1.5; background: var(--surface); 
+}
+.wf1-batch-preview-label.editing { background: var(--accent-bg); border-color: var(--accent); }
+.wf1-batch-label-content { flex: 1; min-width: 0; }
+.wf1-batch-edit-btn { 
+  background: none; border: none; cursor: pointer; font-size: 14px; padding: 2px 4px;
+  opacity: 0.4; transition: opacity 0.15s; flex-shrink: 0;
+}
+.wf1-batch-preview-label:hover .wf1-batch-edit-btn { opacity: 1; }
+.wf1-batch-label-edit { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+.wf1-batch-edit-input {
+  width: 100%; padding: 6px 8px; font-size: 12px; border: 1px solid var(--border);
+  border-radius: var(--radius-sm); background: var(--surface); color: var(--text);
+}
+.wf1-batch-edit-input:focus { border-color: var(--accent); outline: none; }
+.wf1-batch-edit-actions { display: flex; gap: 6px; margin-top: 4px; }
+.wf1-batch-edit-save, .wf1-batch-edit-cancel {
+  padding: 4px 10px; font-size: 11px; border-radius: var(--radius-sm); cursor: pointer; border: none;
+}
+.wf1-batch-edit-save { background: var(--accent); color: white; }
+.wf1-batch-edit-cancel { background: var(--surface-alt, #e5e5e5); color: var(--text); }
+.wf1-batch-edit-delete { 
+  background: none; border: none; cursor: pointer; font-size: 14px; padding: 2px 6px;
+  opacity: 0.5; margin-left: auto;
+}
+.wf1-batch-edit-delete:hover { opacity: 1; }
+.wf1-batch-more-labels { font-size: 12px; color: var(--text-muted); text-align: center; padding: 8px; display: flex; align-items: center; justify-content: center; }
+.wf1-batch-preview-count { font-size: 13px; color: var(--text-muted); }
 
 /* ===== WF1 Step 5: Mini-Grid in Sheet Picker ===== */
 .wf1-sheet-mini-grid {
@@ -16844,15 +16891,32 @@ function wf1ShowBatchLoadedSuccess() {
   const inv = inventory[wf1LabelType];
   const stockAvail = (inv && inv.stock > 0) ? inv.stock : 0;
   
-  // Check existing sheets with space
-  const existingSheets = Object.values(sheets)
+  // Check existing sheets with space - EXCLUDE dedicated sheets by default
+  const allSheets = Object.values(sheets)
     .filter(s => s.labelType === wf1LabelType && !s.retired)
-    .map(s => ({ id: s.id, name: s.name, remaining: getRemainingCount(s) }))
+    .map(s => ({ 
+      id: s.id, 
+      name: s.name, 
+      remaining: getRemainingCount(s),
+      isDedicated: s.texts && Object.keys(s.texts).length > 0
+    }))
     .filter(s => s.remaining > 0)
     .sort((a, b) => b.remaining - a.remaining);
   
+  // Separate open vs dedicated sheets
+  const openSheets = allSheets.filter(s => !s.isDedicated);
+  const dedicatedSheets = allSheets.filter(s => s.isDedicated);
+  
+  // Use open sheets by default (checkbox can include dedicated)
+  const includeDedicated = document.getElementById('wf1IncludeDedicatedCheck')?.checked || false;
+  const existingSheets = includeDedicated ? allSheets : openSheets;
+  
   const spotsOnExisting = existingSheets.reduce((sum, s) => sum + s.remaining, 0);
+  const spotsOnDedicated = dedicatedSheets.reduce((sum, s) => sum + s.remaining, 0);
   const totalAvailable = (stockAvail * lps) + spotsOnExisting;
+  
+  // Find best single sheet (if one can fit the entire job)
+  const singleSheetFit = existingSheets.find(s => s.remaining >= totalNeeded);
   
   // Update question
   const question = document.getElementById('wf1Step3Question');
@@ -16866,12 +16930,23 @@ function wf1ShowBatchLoadedSuccess() {
   html += '<div class="wf1-plan-detail">Columns: ' + wf1BatchCsvColumns.join(', ') + '</div>';
   html += '</div>';
   
+  // Show dedicated sheets checkbox if there are any
+  if (dedicatedSheets.length > 0) {
+    html += '<div class="wf1-dedicated-toggle">';
+    html += '<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">';
+    html += '<input type="checkbox" id="wf1IncludeDedicatedCheck" onchange="wf1ShowBatchLoadedSuccess()"' + (includeDedicated ? ' checked' : '') + '>';
+    html += '<span>Include dedicated sheets (' + spotsOnDedicated + ' spots on ' + dedicatedSheets.length + ' sheet' + (dedicatedSheets.length !== 1 ? 's' : '') + ')</span>';
+    html += '</label>';
+    html += '</div>';
+  }
+  
   // Check if we can handle it at all
-  if (totalAvailable < totalNeeded) {
+  const maxAvailable = (stockAvail * lps) + allSheets.reduce((sum, s) => sum + s.remaining, 0);
+  if (maxAvailable < totalNeeded) {
     html += '<div class="wf1-plan-warning">';
     html += '<div class="wf1-feas-icon">⚠️</div>';
     html += '<div class="wf1-feas-msg">Not enough labels!</div>';
-    html += '<div class="wf1-feas-detail">You need ' + totalNeeded + ' but only have ' + totalAvailable + ' available (' + stockAvail + ' sheets in stock + ' + spotsOnExisting + ' on existing sheets).</div>';
+    html += '<div class="wf1-feas-detail">You need ' + totalNeeded + ' but only have ' + maxAvailable + ' available.</div>';
     html += '<button class="wf1-inv-btn" onclick="wf1ToStep3B()" style="margin-top:12px;">Load different file</button>';
     html += '</div>';
     contentArea.innerHTML = html + '</div>';
@@ -16881,10 +16956,11 @@ function wf1ShowBatchLoadedSuccess() {
   // Show planning options
   html += '<div class="wf1-plan-options">';
   
-  // Option A: All new sheets from stock (if we have enough)
+  // OPTION 1: All new sheets from stock (simplest - no choices needed)
   if (stockAvail >= totalSheetsNeeded) {
-    html += '<div class="wf1-plan-option" onclick="wf1SelectPlanOption(\'allnew\')">';
-    html += '<div class="wf1-plan-option-icon">📦</div>';
+    const isOnlyOption = existingSheets.length === 0;
+    html += '<div class="wf1-plan-option' + (isOnlyOption ? ' recommended' : '') + '" onclick="wf1SelectPlanOption(\'allnew\')">';
+    html += '<div class="wf1-plan-option-icon">' + (isOnlyOption ? '⭐' : '📦') + '</div>';
     html += '<div class="wf1-plan-option-content">';
     html += '<div class="wf1-plan-option-title">Use ' + totalSheetsNeeded + ' new sheet' + (totalSheetsNeeded !== 1 ? 's' : '') + ' from stock</div>';
     html += '<div class="wf1-plan-option-desc">';
@@ -16896,38 +16972,48 @@ function wf1ShowBatchLoadedSuccess() {
     html += '</div></div></div>';
   }
   
-  // Option B: Mix of new + existing (if we have existing sheets and remainder fits)
-  if (existingSheets.length > 0 && remainder > 0 && stockAvail >= fullSheetsNeeded) {
-    // Find sheets that could fit the remainder
+  // OPTION 2: New sheets for full pages + pick existing sheet for remainder
+  // Only show if: we have existing sheets AND job needs more than 1 sheet AND we have stock for full sheets
+  if (existingSheets.length > 0 && fullSheetsNeeded > 0 && stockAvail >= fullSheetsNeeded && remainder > 0) {
+    // Find existing sheets that can fit the remainder
     const fittingSheets = existingSheets.filter(s => s.remaining >= remainder);
     
     if (fittingSheets.length > 0) {
-      html += '<div class="wf1-plan-option" onclick="wf1SelectPlanOption(\'mixed\')">';
-      html += '<div class="wf1-plan-option-icon">🔀</div>';
+      html += '<div class="wf1-plan-option recommended" onclick="wf1SelectPlanOption(\'newPlusExisting\')">';
+      html += '<div class="wf1-plan-option-icon">⭐</div>';
       html += '<div class="wf1-plan-option-content">';
-      html += '<div class="wf1-plan-option-title">Use ' + fullSheetsNeeded + ' new sheet' + (fullSheetsNeeded !== 1 ? 's' : '') + ' + existing sheet</div>';
-      html += '<div class="wf1-plan-option-desc">Put remaining ' + remainder + ' labels on a sheet you already have (' + fittingSheets.length + ' sheet' + (fittingSheets.length !== 1 ? 's' : '') + ' can fit)</div>';
+      html += '<div class="wf1-plan-option-title">' + fullSheetsNeeded + ' new + pick existing for last ' + remainder + '</div>';
+      html += '<div class="wf1-plan-option-desc">' + fittingSheets.length + ' of your sheets can fit the remaining ' + remainder + ' label' + (remainder !== 1 ? 's' : '') + '</div>';
       html += '</div></div>';
     }
   }
   
-  // Option C: Use only existing sheets (if they have enough capacity)
-  if (spotsOnExisting >= totalNeeded) {
-    html += '<div class="wf1-plan-option" onclick="wf1SelectPlanOption(\'existing\')">';
-    html += '<div class="wf1-plan-option-icon">📄</div>';
+  // OPTION 3: Use existing sheets only (if they have enough capacity)
+  if (existingSheets.length > 0 && spotsOnExisting >= totalNeeded) {
+    // Check if single sheet can handle it vs needing multiple
+    const singleFit = existingSheets.find(s => s.remaining >= totalNeeded);
+    
+    html += '<div class="wf1-plan-option recommended" onclick="wf1SelectPlanOption(\'pickExisting\')">';
+    html += '<div class="wf1-plan-option-icon">⭐</div>';
     html += '<div class="wf1-plan-option-content">';
-    html += '<div class="wf1-plan-option-title">Use existing sheets only</div>';
-    html += '<div class="wf1-plan-option-desc">You have ' + spotsOnExisting + ' spots across ' + existingSheets.length + ' sheet' + (existingSheets.length !== 1 ? 's' : '') + '</div>';
+    if (singleFit) {
+      html += '<div class="wf1-plan-option-title">Use existing sheet</div>';
+      html += '<div class="wf1-plan-option-desc">"' + escapeHtml(singleFit.name) + '" has ' + singleFit.remaining + ' spots — fits entire job</div>';
+    } else {
+      html += '<div class="wf1-plan-option-title">Use existing sheets</div>';
+      html += '<div class="wf1-plan-option-desc">Pick which sheets to use (' + spotsOnExisting + ' total spots available)</div>';
+    }
     html += '</div></div>';
   }
   
-  // Option D: Let me pick (always available)
-  html += '<div class="wf1-plan-option" onclick="wf1SelectPlanOption(\'manual\')">';
-  html += '<div class="wf1-plan-option-icon">✋</div>';
-  html += '<div class="wf1-plan-option-content">';
-  html += '<div class="wf1-plan-option-title">Let me choose sheets</div>';
-  html += '<div class="wf1-plan-option-desc">Pick exactly which sheets to use</div>';
-  html += '</div></div>';
+  // No options available warning
+  if (stockAvail < totalSheetsNeeded && spotsOnExisting < totalNeeded) {
+    html += '<div class="wf1-plan-warning" style="margin-top:8px;">';
+    html += '<div class="wf1-feas-icon">⚠️</div>';
+    html += '<div class="wf1-feas-msg">Not enough labels available</div>';
+    html += '<div class="wf1-feas-detail">Need ' + totalNeeded + ' labels. Have ' + spotsOnExisting + ' on existing sheets + ' + (stockAvail * lps) + ' in stock.</div>';
+    html += '</div>';
+  }
   
   html += '</div>'; // end options
   
@@ -16942,7 +17028,7 @@ function wf1ShowBatchLoadedSuccess() {
 }
 
 // Handle plan option selection
-function wf1SelectPlanOption(option) {
+function wf1SelectPlanOption(option, sheetId) {
   const spec = LABEL_TYPES[wf1LabelType];
   const lps = spec.cols * spec.rows;
   const totalNeeded = wf1BatchCsvData.length;
@@ -16950,8 +17036,11 @@ function wf1SelectPlanOption(option) {
   const remainder = totalNeeded % lps;
   const totalSheetsNeeded = remainder > 0 ? fullSheetsNeeded + 1 : fullSheetsNeeded;
   
+  // Check dedicated sheets setting
+  const includeDedicated = document.getElementById('wf1IncludeDedicatedCheck')?.checked || false;
+  
   if (option === 'allnew') {
-    // Build plan using all new sheets
+    // Build plan using all new sheets - no user choices needed
     const steps = [];
     let remaining = totalNeeded;
     for (let i = 0; i < totalSheetsNeeded; i++) {
@@ -16965,25 +17054,36 @@ function wf1SelectPlanOption(option) {
     // Skip sheet picker, go directly to template/mapping (Step 6)
     wf1ToStep6();
     
-  } else if (option === 'mixed') {
-    // Use new sheets for full sheets, then pick existing for remainder
-    // Build partial plan, user will pick the existing sheet
+  } else if (option === 'newPlusExisting') {
+    // Use new sheets for full pages, user picks existing sheet for remainder
+    // Build partial plan with new sheets, go to picker to select existing
     const steps = [];
     for (let i = 0; i < fullSheetsNeeded; i++) {
       steps.push({ sheetId: null, sheetName: null, count: lps, isNew: true, remaining: lps });
     }
-    // Store partial plan, let user pick the final sheet
-    wf1MultiSheetPlan = { steps: steps, totalLabels: totalNeeded, newSheetsNeeded: fullSheetsNeeded, pendingRemainder: remainder };
-    wf1ToStep5(); // Go to sheet picker to select the existing sheet for remainder
+    // Store partial plan - user will pick the sheet for remainder
+    wf1MultiSheetPlan = { 
+      steps: steps, 
+      totalLabels: totalNeeded, 
+      newSheetsNeeded: fullSheetsNeeded, 
+      pendingRemainder: remainder,
+      includeDedicated: includeDedicated
+    };
+    wf1ToStep5(); // Go to sheet picker to select existing sheet for remainder
     
-  } else if (option === 'existing') {
-    // Go to sheet picker, system will build plan from existing sheets only
-    wf1MultiSheetPlan = null;
-    wf1ToStep5();
+  } else if (option === 'pickExisting') {
+    // User wants to use existing sheets only - go to picker
+    wf1MultiSheetPlan = { 
+      existingOnly: true, 
+      totalLabels: totalNeeded,
+      includeDedicated: includeDedicated
+    };
+    wf1ToStep5(); // Go to sheet picker
     
   } else {
-    // manual - go to sheet picker with no preset plan
+    // Fallback - go to sheet picker with no preset plan
     wf1MultiSheetPlan = null;
+    wf1SelectedSheet = null;
     wf1ToStep5();
   }
 }
@@ -17008,16 +17108,22 @@ function wf1RenderBatchTemplateStep() {
   html += '<div class="wf1-batch-template-list">';
   
   // Built-in address template
-  const addressMatch = bestTemplate === '__address__' ? ' style="border-color:var(--accent);background:var(--accent-light,rgba(99,102,241,0.1));"' : '';
-  html += '<div class="wf1-batch-template-item"' + addressMatch + ' onclick="wf1SelectBatchTemplate(\'__address__\')">' +
-    '<div class="wf1-batch-template-name">📬 Standard Address' + (bestTemplate === '__address__' ? ' <span style="font-size:11px;color:var(--accent);">✓ Best match</span>' : '') + '</div>' +
+  const addressMatch = bestTemplate === '__address__' ? ' selected' : '';
+  html += '<div class="wf1-batch-template-item' + addressMatch + '" onclick="wf1SelectBatchTemplate(\'__address__\')">' +
+    '<div class="wf1-batch-template-header">' +
+      '<div class="wf1-batch-template-name">📬 Standard Address' + (bestTemplate === '__address__' ? ' <span style="font-size:11px;color:var(--accent);">✓ Best match</span>' : '') + '</div>' +
+      '<button class="wf1-template-edit-btn" onclick="event.stopPropagation(); wf1CloneBuiltinTemplate(\'__address__\')" title="Clone & customize">✏️</button>' +
+    '</div>' +
     '<div class="wf1-batch-template-preview">{name} · {address} · {city}, {state} {zip}</div>' +
   '</div>';
   
   // Built-in name tag template
-  const nametagMatch = bestTemplate === '__nametag__' ? ' style="border-color:var(--accent);background:var(--accent-light,rgba(99,102,241,0.1));"' : '';
-  html += '<div class="wf1-batch-template-item"' + nametagMatch + ' onclick="wf1SelectBatchTemplate(\'__nametag__\')">' +
-    '<div class="wf1-batch-template-name">👋 Name Tag' + (bestTemplate === '__nametag__' ? ' <span style="font-size:11px;color:var(--accent);">✓ Best match</span>' : '') + '</div>' +
+  const nametagMatch = bestTemplate === '__nametag__' ? ' selected' : '';
+  html += '<div class="wf1-batch-template-item' + nametagMatch + '" onclick="wf1SelectBatchTemplate(\'__nametag__\')">' +
+    '<div class="wf1-batch-template-header">' +
+      '<div class="wf1-batch-template-name">👋 Name Tag' + (bestTemplate === '__nametag__' ? ' <span style="font-size:11px;color:var(--accent);">✓ Best match</span>' : '') + '</div>' +
+      '<button class="wf1-template-edit-btn" onclick="event.stopPropagation(); wf1CloneBuiltinTemplate(\'__nametag__\')" title="Clone & customize">✏️</button>' +
+    '</div>' +
     '<div class="wf1-batch-template-preview">{name} · {title}</div>' +
   '</div>';
   
@@ -17025,12 +17131,21 @@ function wf1RenderBatchTemplateStep() {
   for (const t of templates) {
     const lines = deserializeLines(t.text);
     const preview = lines.map(l => l.text).join(' · ');
-    const isMatch = bestTemplate === t.id ? ' style="border-color:var(--accent);background:var(--accent-light,rgba(99,102,241,0.1));"' : '';
-    html += '<div class="wf1-batch-template-item"' + isMatch + ' onclick="wf1SelectBatchTemplate(\'' + t.id + '\')">' +
-      '<div class="wf1-batch-template-name">' + escapeHtml(t.name) + (bestTemplate === t.id ? ' <span style="font-size:11px;color:var(--accent);">✓ Best match</span>' : '') + '</div>' +
+    const isMatch = bestTemplate === t.id ? ' selected' : '';
+    html += '<div class="wf1-batch-template-item' + isMatch + '" onclick="wf1SelectBatchTemplate(\'' + t.id + '\')">' +
+      '<div class="wf1-batch-template-header">' +
+        '<div class="wf1-batch-template-name">' + escapeHtml(t.name) + (bestTemplate === t.id ? ' <span style="font-size:11px;color:var(--accent);">✓ Best match</span>' : '') + '</div>' +
+        '<button class="wf1-template-edit-btn" onclick="event.stopPropagation(); wf1EditUserTemplate(\'' + t.id + '\')" title="Edit template">✏️</button>' +
+      '</div>' +
       '<div class="wf1-batch-template-preview">' + escapeHtml(preview.substring(0, 80)) + '</div>' +
     '</div>';
   }
+  
+  // Option to create new template
+  html += '<div class="wf1-batch-template-item create-new" onclick="wf1CreateNewTemplate()">' +
+    '<div class="wf1-batch-template-name">➕ Create new template</div>' +
+    '<div class="wf1-batch-template-preview">Design a custom template for this batch</div>' +
+  '</div>';
   
   html += '</div></div>';
   area.innerHTML = html;
@@ -17042,6 +17157,176 @@ function wf1RenderBatchTemplateStep() {
       wf1SelectBatchTemplate(bestTemplate);
     }, 500);
   }
+}
+
+// Store batch workflow state for returning after template edit
+let wf1BatchReturnState = null;
+
+// Clone a built-in template and open for editing
+function wf1CloneBuiltinTemplate(builtinId) {
+  let templateText, templateName;
+  
+  if (builtinId === '__address__') {
+    templateText = '{name}\n{address}\n{city}, {state} {zip}';
+    templateName = 'Address (Custom)';
+  } else if (builtinId === '__nametag__') {
+    templateText = '{name}\n{title}';
+    templateName = 'Name Tag (Custom)';
+  } else {
+    return;
+  }
+  
+  // Create new template
+  const newTemplate = {
+    id: 'tpl_' + Date.now(),
+    name: templateName,
+    type: 'template',
+    text: templateText,
+    createdAt: Date.now()
+  };
+  savedTexts.push(newTemplate);
+  saveToStorage();
+  
+  // Save batch state so we can return
+  wf1BatchReturnState = {
+    labelType: wf1LabelType,
+    csvData: wf1BatchCsvData,
+    csvColumns: wf1BatchCsvColumns,
+    selectedSheet: wf1SelectedSheet,
+    multiSheetPlan: wf1MultiSheetPlan,
+    returnToTemplateId: newTemplate.id
+  };
+  
+  showToast('Template cloned! Customize it in the editor.', 'success');
+  
+  // Open full editor with the new template
+  openFullEditorForTemplate(newTemplate.id);
+}
+
+// Edit an existing user template
+function wf1EditUserTemplate(templateId) {
+  // Save batch state so we can return
+  wf1BatchReturnState = {
+    labelType: wf1LabelType,
+    csvData: wf1BatchCsvData,
+    csvColumns: wf1BatchCsvColumns,
+    selectedSheet: wf1SelectedSheet,
+    multiSheetPlan: wf1MultiSheetPlan,
+    returnToTemplateId: templateId
+  };
+  
+  // Open full editor with the template
+  openFullEditorForTemplate(templateId);
+}
+
+// Create a brand new template
+function wf1CreateNewTemplate() {
+  // Create blank template
+  const newTemplate = {
+    id: 'tpl_' + Date.now(),
+    name: 'Batch Template ' + new Date().toLocaleDateString(),
+    type: 'template',
+    text: '{field1}\n{field2}',
+    createdAt: Date.now()
+  };
+  savedTexts.push(newTemplate);
+  saveToStorage();
+  
+  // Save batch state so we can return
+  wf1BatchReturnState = {
+    labelType: wf1LabelType,
+    csvData: wf1BatchCsvData,
+    csvColumns: wf1BatchCsvColumns,
+    selectedSheet: wf1SelectedSheet,
+    multiSheetPlan: wf1MultiSheetPlan,
+    returnToTemplateId: newTemplate.id
+  };
+  
+  showToast('New template created! Customize it in the editor.', 'success');
+  
+  // Open full editor with the new template
+  openFullEditorForTemplate(newTemplate.id);
+}
+
+// Open full editor for a template and set up return to batch workflow
+function openFullEditorForTemplate(templateId) {
+  const template = savedTexts.find(t => t.id === templateId);
+  if (!template) return;
+  
+  // Load template into full editor
+  const lines = deserializeLines(template.text);
+  fullEditorLines = lines.length > 0 ? lines : [{ text: '', align: 'left', fontSize: 11, bold: false, italic: false }];
+  fullEditorGraphics = template.graphics || { left: null, right: null };
+  fullEditorAlignV = template.alignV || 'center';
+  fullEditorBorder = template.border || null;
+  fullEditorCurrentTemplateId = templateId;
+  
+  // Show the full editor modal
+  const modal = document.getElementById('fullEditorModal');
+  if (modal) {
+    modal.style.display = 'flex';
+    renderFullEditor();
+    
+    // Add a "Return to Batch" button
+    const actions = modal.querySelector('.full-editor-actions');
+    if (actions && !document.getElementById('fullEditorReturnBatchBtn')) {
+      const returnBtn = document.createElement('button');
+      returnBtn.id = 'fullEditorReturnBatchBtn';
+      returnBtn.className = 'editor-btn';
+      returnBtn.style.cssText = 'background:var(--accent);color:white;';
+      returnBtn.textContent = '← Save & Return to Batch';
+      returnBtn.onclick = function() {
+        wf1SaveTemplateAndReturn();
+      };
+      actions.insertBefore(returnBtn, actions.firstChild);
+    }
+  }
+}
+
+// Save template changes and return to batch workflow
+function wf1SaveTemplateAndReturn() {
+  if (!wf1BatchReturnState) {
+    closeFullEditor();
+    return;
+  }
+  
+  // Save current editor state to template
+  const templateId = fullEditorCurrentTemplateId || wf1BatchReturnState.returnToTemplateId;
+  const template = savedTexts.find(t => t.id === templateId);
+  
+  if (template) {
+    template.text = serializeLines(fullEditorLines);
+    template.graphics = fullEditorGraphics;
+    template.alignV = fullEditorAlignV;
+    template.border = fullEditorBorder;
+    template.modifiedAt = Date.now();
+    saveToStorage();
+    showToast('Template saved!', 'success');
+  }
+  
+  // Close editor
+  closeFullEditor();
+  
+  // Remove the return button
+  const returnBtn = document.getElementById('fullEditorReturnBatchBtn');
+  if (returnBtn) returnBtn.remove();
+  
+  // Restore batch state
+  wf1LabelType = wf1BatchReturnState.labelType;
+  wf1BatchCsvData = wf1BatchReturnState.csvData;
+  wf1BatchCsvColumns = wf1BatchReturnState.csvColumns;
+  wf1SelectedSheet = wf1BatchReturnState.selectedSheet;
+  wf1MultiSheetPlan = wf1BatchReturnState.multiSheetPlan;
+  
+  // Re-render template step with the edited template
+  wf1BatchSubStep = 'template';
+  wf1RenderBatchTemplateStep();
+  
+  // Auto-select the template we just edited
+  setTimeout(function() {
+    wf1SelectBatchTemplate(wf1BatchReturnState.returnToTemplateId);
+    wf1BatchReturnState = null;
+  }, 300);
 }
 
 // Detect the best template based on CSV column names
@@ -17277,30 +17562,148 @@ function wf1RenderBatchPreview() {
   const question = document.getElementById('wf1ContentQuestion');
   question.textContent = 'Preview your labels';
   
-  let html = '<div class="wf1-batch-preview-count">' + wf1BatchContent.length + ' label' + (wf1BatchContent.length !== 1 ? 's' : '') + ' from your list</div>';
+  let html = '<div class="wf1-batch-preview-header">';
+  html += '<div class="wf1-batch-preview-count">' + wf1BatchContent.length + ' label' + (wf1BatchContent.length !== 1 ? 's' : '') + ' from your list</div>';
+  html += '<div class="wf1-batch-preview-hint">Click ✏️ to make quick edits</div>';
+  html += '</div>';
   html += '<div class="wf1-batch-preview-scroll">';
   
-  const showCount = Math.min(wf1BatchContent.length, 10);
+  const showCount = Math.min(wf1BatchContent.length, 20); // Show more for editing
   for (let i = 0; i < showCount; i++) {
-    html += '<div class="wf1-batch-preview-label">';
+    html += '<div class="wf1-batch-preview-label" id="wf1BatchLabel' + i + '">';
+    html += '<div class="wf1-batch-label-content">';
     for (const line of wf1BatchContent[i]) {
       html += '<div style="text-align:' + (line.align || 'left') + '; font-size:' + (line.fontSize || 11) + 'px;">' + escapeHtml(line.text) + '</div>';
     }
     html += '</div>';
+    html += '<button class="wf1-batch-edit-btn" onclick="wf1EditBatchLabel(' + i + ')" title="Edit this label">✏️</button>';
+    html += '</div>';
   }
   if (wf1BatchContent.length > showCount) {
-    html += '<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:8px;">...and ' + (wf1BatchContent.length - showCount) + ' more</div>';
+    html += '<div class="wf1-batch-more-labels">';
+    html += '<span>...and ' + (wf1BatchContent.length - showCount) + ' more</span>';
+    html += '<button class="wf1-inv-btn" onclick="wf1ShowAllBatchLabels()" style="margin-left:10px;font-size:11px;padding:4px 8px;">Show all</button>';
+    html += '</div>';
   }
   html += '</div>';
   
   // Edit mapping button
   html += '<div style="margin-top:12px; text-align:center;">' +
-    '<button class="wf1-inv-btn" onclick="wf1BatchSubStep=\'map\'; wf1RenderBatchMapStep();">Edit mapping</button>' +
+    '<button class="wf1-inv-btn" onclick="wf1BatchSubStep=\'map\'; wf1RenderBatchMapStep();">← Edit field mapping</button>' +
   '</div>';
   
   area.innerHTML = html;
   
   document.getElementById('wf1ContentNextBtn').disabled = wf1BatchContent.length === 0;
+}
+
+// Show all batch labels (for large lists)
+function wf1ShowAllBatchLabels() {
+  const area = document.getElementById('wf1ContentArea');
+  const question = document.getElementById('wf1ContentQuestion');
+  question.textContent = 'Preview your labels';
+  
+  let html = '<div class="wf1-batch-preview-header">';
+  html += '<div class="wf1-batch-preview-count">' + wf1BatchContent.length + ' label' + (wf1BatchContent.length !== 1 ? 's' : '') + '</div>';
+  html += '<div class="wf1-batch-preview-hint">Click ✏️ to make quick edits</div>';
+  html += '</div>';
+  html += '<div class="wf1-batch-preview-scroll" style="max-height:400px;">';
+  
+  for (let i = 0; i < wf1BatchContent.length; i++) {
+    html += '<div class="wf1-batch-preview-label" id="wf1BatchLabel' + i + '">';
+    html += '<div class="wf1-batch-label-content">';
+    for (const line of wf1BatchContent[i]) {
+      html += '<div style="text-align:' + (line.align || 'left') + '; font-size:' + (line.fontSize || 11) + 'px;">' + escapeHtml(line.text) + '</div>';
+    }
+    html += '</div>';
+    html += '<button class="wf1-batch-edit-btn" onclick="wf1EditBatchLabel(' + i + ')" title="Edit this label">✏️</button>';
+    html += '</div>';
+  }
+  html += '</div>';
+  
+  // Edit mapping button
+  html += '<div style="margin-top:12px; text-align:center;">' +
+    '<button class="wf1-inv-btn" onclick="wf1BatchSubStep=\'map\'; wf1RenderBatchMapStep();">← Edit field mapping</button>' +
+  '</div>';
+  
+  area.innerHTML = html;
+}
+
+// Edit a single batch label inline
+function wf1EditBatchLabel(index) {
+  const labelDiv = document.getElementById('wf1BatchLabel' + index);
+  if (!labelDiv) return;
+  
+  const lines = wf1BatchContent[index];
+  
+  let html = '<div class="wf1-batch-label-edit">';
+  for (let i = 0; i < lines.length; i++) {
+    html += '<input type="text" class="wf1-batch-edit-input" id="wf1BatchEdit' + index + '_' + i + '" value="' + escapeHtml(lines[i].text) + '" data-line="' + i + '">';
+  }
+  // Option to add a line
+  html += '<div class="wf1-batch-edit-actions">';
+  html += '<button class="wf1-batch-edit-save" onclick="wf1SaveBatchLabel(' + index + ')">Save</button>';
+  html += '<button class="wf1-batch-edit-cancel" onclick="wf1CancelBatchEdit(' + index + ')">Cancel</button>';
+  html += '<button class="wf1-batch-edit-delete" onclick="wf1DeleteBatchLabel(' + index + ')" title="Remove this label">🗑️</button>';
+  html += '</div>';
+  html += '</div>';
+  
+  labelDiv.innerHTML = html;
+  labelDiv.classList.add('editing');
+  
+  // Focus first input
+  const firstInput = document.getElementById('wf1BatchEdit' + index + '_0');
+  if (firstInput) firstInput.focus();
+}
+
+// Save edited batch label
+function wf1SaveBatchLabel(index) {
+  const lines = wf1BatchContent[index];
+  
+  for (let i = 0; i < lines.length; i++) {
+    const input = document.getElementById('wf1BatchEdit' + index + '_' + i);
+    if (input) {
+      lines[i].text = input.value;
+    }
+  }
+  
+  // Re-render this label
+  wf1RenderSingleBatchLabel(index);
+  showToast('Label updated', 'success');
+}
+
+// Cancel editing
+function wf1CancelBatchEdit(index) {
+  wf1RenderSingleBatchLabel(index);
+}
+
+// Delete a batch label
+function wf1DeleteBatchLabel(index) {
+  if (!confirm('Remove this label from the batch?')) return;
+  
+  wf1BatchContent.splice(index, 1);
+  wf1Quantity = wf1BatchContent.length;
+  
+  // Re-render the entire preview
+  wf1RenderBatchPreview();
+  showToast('Label removed', 'info');
+}
+
+// Re-render a single batch label (after edit)
+function wf1RenderSingleBatchLabel(index) {
+  const labelDiv = document.getElementById('wf1BatchLabel' + index);
+  if (!labelDiv || !wf1BatchContent[index]) return;
+  
+  labelDiv.classList.remove('editing');
+  
+  let html = '<div class="wf1-batch-label-content">';
+  for (const line of wf1BatchContent[index]) {
+    html += '<div style="text-align:' + (line.align || 'left') + '; font-size:' + (line.fontSize || 11) + 'px;">' + escapeHtml(line.text) + '</div>';
+  }
+  html += '</div>';
+  html += '<button class="wf1-batch-edit-btn" onclick="wf1EditBatchLabel(' + index + ')" title="Edit this label">✏️</button>';
+  
+  labelDiv.innerHTML = html;
 }
 
 // ---- STEP 7: Preview & Print ----
@@ -17524,8 +17927,9 @@ function buildCombinedPrintHtml(sh, manifest, sheetId) {
   // Build CSS (same as buildSheetPrintHtml)
   let html = '<!DOCTYPE html><html><head><style>';
   html += '@page { size: letter; margin: 0; }';
+  html += '@media print { .print-sheet, .id-page { page-break-after: always; page-break-inside: avoid; } }';
   html += 'html, body { margin: 0; padding: 0; }';
-  html += '.print-sheet { width: 8.5in; height: 11in; margin: 0; padding: 0; position: relative; box-sizing: border-box; page-break-after: always; }';
+  html += '.print-sheet { width: 8.5in; height: 11in; margin: 0; padding: 0; position: relative; box-sizing: border-box; page-break-after: always; page-break-inside: avoid; }';
   html += '.print-label { position:absolute; overflow:hidden; font-family:Arial,sans-serif; line-height:1.3; color:#000; display:flex; flex-direction:column; box-sizing:border-box; }';
   html += '.print-label-gfx { flex-direction:row; align-items:stretch; }';
   html += '.print-graphic { flex-shrink:0; display:flex; align-items:center; justify-content:center; overflow:hidden; }';
@@ -17552,8 +17956,8 @@ function buildCombinedPrintHtml(sh, manifest, sheetId) {
     html += '.tent-top { top:0; height:50%; }';
     html += '.tent-bottom { bottom:0; height:50%; transform:rotate(180deg); }';
   }
-  // ID label page styles
-  html += '.id-page { width: 8.5in; height: 11in; display: flex; align-items: center; justify-content: center; font-family: Arial, sans-serif; }';
+  // ID label page styles - must force new page
+  html += '.id-page { width: 8.5in; min-height: 11in; height: 11in; display: flex; align-items: center; justify-content: center; font-family: Arial, sans-serif; page-break-before: always; page-break-inside: avoid; box-sizing: border-box; }';
   html += '.id-label { border: 2px solid #333; border-radius: 8px; padding: 24px 32px; text-align: center; max-width: 4in; }';
   html += '.id-label h2 { margin: 0 0 6px; font-size: 18px; }';
   html += '.id-label .type { font-size: 14px; color: #555; margin-bottom: 12px; }';
