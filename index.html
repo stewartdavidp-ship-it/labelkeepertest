@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="gs-app-id" content="labelkeeper">
-<meta name="version" content="3.17.0">
+<meta name="version" content="3.18.0">
 
 <!-- App Meta Tags -->
 <meta name="description" content="Print labels without wasting a single position. Track which spots on your label sheets have been used.">
@@ -4699,6 +4699,17 @@ body {
 }
 .wf2-qty-hint { font-size: 13px; color: var(--text-muted); margin-top: 12px; }
 
+/* Batch reprint preview */
+.wf2-batch-reprint-preview { margin: 16px 0; }
+.wf2-batch-preview-scroll { 
+  border: 1px solid var(--border); border-radius: var(--radius-sm); 
+  overflow-y: auto; background: var(--surface); 
+}
+.wf2-batch-preview-item {
+  padding: 8px 12px; border-bottom: 1px solid var(--border); font-size: 12px; line-height: 1.4;
+}
+.wf2-batch-preview-item:last-child { border-bottom: none; }
+
 /* Sheet validation step */
 .wf2-sheet-status {
   padding: 16px; border-radius: var(--radius-sm); margin-bottom: 12px;
@@ -6126,7 +6137,7 @@ body {
   <header class="app-header">
     <div class="app-title">
       🏷️ LabelKeeper
-      <span class="version">v3.17.0</span>
+      <span class="version">v3.18.0</span>
     </div>
     <div class="header-actions">
       <button class="icon-btn" onclick="openSettings()" title="Settings">⚙️</button>
@@ -7543,7 +7554,7 @@ Examples:
     <div class="welcome-header">
       <div class="welcome-icon">🏷️</div>
       <div class="welcome-title">Welcome to LabelKeeper</div>
-      <div class="welcome-version">v3.17.0</div>
+      <div class="welcome-version">v3.18.0</div>
     </div>
     <div class="welcome-body">
       <div class="welcome-tagline">
@@ -8841,7 +8852,7 @@ function cloneSavedText(id, newName) {
 
 function exportAllDataJSON() {
   const data = {
-    version: '3.17.0',
+    version: '3.18.0',
     exportedAt: new Date().toISOString(),
     sheets,
     savedTexts,
@@ -15277,7 +15288,16 @@ function wf1Close() {
 // Process checked post-print options
 function wf1ProcessPostPrintOptions() {
   const result = wf1PrintResult;
-  if (!result || result.isMultiSheet) return;
+  if (!result) return;
+  
+  // Check if save list was selected (batch jobs)
+  const saveListCheckbox = document.getElementById('wf1PostSaveList');
+  if (saveListCheckbox && saveListCheckbox.checked) {
+    wf1DoSaveList();
+  }
+  
+  // Multi-sheet jobs only have the save list option
+  if (result.isMultiSheet) return;
   
   // Check if link content was selected
   const linkCheckbox = document.getElementById('wf1PostLinkContent');
@@ -15290,6 +15310,66 @@ function wf1ProcessPostPrintOptions() {
   if (splitCheckbox && splitCheckbox.checked) {
     wf1DoSplitRemaining();
   }
+}
+
+// Save batch list data for reprinting
+function wf1DoSaveList() {
+  if (!wf1BatchContent || wf1BatchContent.length === 0) return;
+  
+  // Create a saved list object
+  const listId = 'list_' + Date.now();
+  const savedList = {
+    id: listId,
+    name: 'Batch List (' + wf1BatchContent.length + ' items) - ' + new Date().toLocaleDateString(),
+    createdAt: Date.now(),
+    labelType: wf1LabelType,
+    content: wf1BatchContent, // Array of line arrays
+    template: wf1BatchSelectedTemplate,
+    columnMap: wf1BatchColumnMap
+  };
+  
+  // Store in savedLists
+  if (!window.savedLists) window.savedLists = [];
+  savedLists.push(savedList);
+  saveSavedLists();
+  
+  // Update the most recent print history entry to reference this list
+  if (printHistory && printHistory.length > 0) {
+    const lastEntry = printHistory[printHistory.length - 1];
+    if (lastEntry.textName && lastEntry.textName.startsWith('Batch')) {
+      lastEntry.savedListId = listId;
+      savePrintHistory();
+    }
+  }
+  
+  showToast('List saved! You can reprint via "Print Something Again"', 'success');
+}
+
+// Load and save savedLists from localStorage
+function loadSavedLists() {
+  try {
+    const stored = localStorage.getItem('lk_savedLists');
+    if (stored) {
+      window.savedLists = JSON.parse(stored);
+    } else {
+      window.savedLists = [];
+    }
+  } catch (e) {
+    window.savedLists = [];
+  }
+}
+
+function saveSavedLists() {
+  try {
+    localStorage.setItem('lk_savedLists', JSON.stringify(savedLists));
+  } catch (e) {
+    console.error('Failed to save lists:', e);
+  }
+}
+
+function getSavedList(listId) {
+  if (!savedLists) loadSavedLists();
+  return savedLists.find(l => l.id === listId);
 }
 
 // Link content to sheet (silent version for checkbox flow)
@@ -18460,8 +18540,22 @@ function wf1ShowPostPrintOptions() {
       '<div class="wf1-postprint-icon">✅</div>' +
       '<div class="wf1-postprint-msg">Print confirmed!</div>' +
       '<div class="wf1-postprint-detail">' + result.totalLabels + ' labels printed across ' + result.sheetResults.length + ' sheets.</div>' +
-      '<div class="wf1-postprint-sheets">' + detailHtml + '</div>' +
-    '</div>';
+      '<div class="wf1-postprint-sheets">' + detailHtml + '</div>';
+    
+    // Add save list option for batch multi-sheet jobs
+    if (result.isBatch && wf1BatchContent && wf1BatchContent.length > 0) {
+      html += '<div class="wf1-postprint-options" style="margin-top:16px;">' +
+        '<label class="wf1-postprint-checkbox" style="display:flex; align-items:flex-start; gap:10px; padding:10px; background:var(--surface-alt); border:1px solid var(--border); border-radius:var(--radius-sm); cursor:pointer;">' +
+          '<input type="checkbox" id="wf1PostSaveList" style="margin-top:3px;" checked>' +
+          '<div>' +
+            '<div style="font-weight:500; color:var(--text);">💾 Save list for reprinting</div>' +
+            '<div style="font-size:12px; color:var(--text-muted);">Stores your ' + wf1BatchContent.length + ' labels so you can reprint them later via "Print Something Again"</div>' +
+          '</div>' +
+        '</label>' +
+      '</div>';
+    }
+    
+    html += '</div>';
     content.innerHTML = html;
     document.getElementById('wf1Step8Actions').style.display = 'flex';
     return;
@@ -18480,9 +18574,21 @@ function wf1ShowPostPrintOptions() {
   // Build checkbox options
   const hasLinkOption = !result.isBatch && remaining > 0;
   const hasSplitOption = remaining > 0 && remaining < lps;
+  const hasSaveListOption = result.isBatch && wf1BatchContent && wf1BatchContent.length > 0;
   
-  if (hasLinkOption || hasSplitOption) {
+  if (hasLinkOption || hasSplitOption || hasSaveListOption) {
     html += '<div class="wf1-postprint-options" style="margin-top:16px;">';
+    
+    // Save list option for batch jobs
+    if (hasSaveListOption) {
+      html += '<label class="wf1-postprint-checkbox" style="display:flex; align-items:flex-start; gap:10px; padding:10px; background:var(--surface-alt); border:1px solid var(--border); border-radius:var(--radius-sm); cursor:pointer; margin-bottom:8px;">' +
+        '<input type="checkbox" id="wf1PostSaveList" style="margin-top:3px;" checked>' +
+        '<div>' +
+          '<div style="font-weight:500; color:var(--text);">💾 Save list for reprinting</div>' +
+          '<div style="font-size:12px; color:var(--text-muted);">Stores your ' + wf1BatchContent.length + ' labels so you can reprint them later via "Print Something Again"</div>' +
+        '</div>' +
+      '</label>';
+    }
     
     if (hasLinkOption) {
       html += '<label class="wf1-postprint-checkbox" style="display:flex; align-items:flex-start; gap:10px; padding:10px; background:var(--surface-alt); border:1px solid var(--border); border-radius:var(--radius-sm); cursor:pointer; margin-bottom:8px;">' +
@@ -18847,10 +18953,21 @@ function wf2BuildContentListHtml(filter) {
   }
   
   // Section 2: Recent print history
-  const filteredHist = printHistory.filter(e => !f || 
-    (e.textName && e.textName.toLowerCase().includes(f)) ||
-    (e.sheetName && e.sheetName.toLowerCase().includes(f))
-  ).slice(0, 10);
+  // Filter out batch entries that don't have saved list data (they can't be reprinted)
+  const filteredHist = printHistory.filter(e => {
+    // Apply search filter
+    if (f && !(
+      (e.textName && e.textName.toLowerCase().includes(f)) ||
+      (e.sheetName && e.sheetName.toLowerCase().includes(f))
+    )) return false;
+    
+    // If it's a batch job, it must have savedListId to be reprintable
+    if (e.textName && e.textName.startsWith('Batch')) {
+      return e.savedListId && getSavedList(e.savedListId);
+    }
+    
+    return true;
+  }).slice(0, 10);
   if (filteredHist.length > 0) {
     html += '<div class="wf2-section-label">🕐 Recent Prints</div>';
     for (const entry of filteredHist) {
@@ -18862,26 +18979,35 @@ function wf2BuildContentListHtml(filter) {
       const spec = LABEL_TYPES[entry.labelType];
       const typeName = spec ? spec.name : entry.labelType;
       
+      // Check if this is a batch job with saved list
+      const isBatch = entry.textName && entry.textName.startsWith('Batch');
+      const savedList = entry.savedListId ? getSavedList(entry.savedListId) : null;
+      
       // Check if same sheet still exists and has room
       const sh = entry.sheetId ? sheets[entry.sheetId] : null;
       const sheetRemaining = sh ? getRemainingCount(sh) : 0;
-      const canQuickPrint = sh && !sh.retired && sheetRemaining >= count;
+      const canQuickPrint = !isBatch && sh && !sh.retired && sheetRemaining >= count;
       
       // Build context
       let contextLine = dateStr + ' · ' + count + ' label' + (count !== 1 ? 's' : '') + ' · ' + typeName;
-      if (sh && !sh.retired) {
+      if (savedList) {
+        contextLine += '<br><span style="color:var(--accent);">📋 List saved — ' + savedList.content.length + ' items</span>';
+      } else if (sh && !sh.retired) {
         contextLine += '<br><span style="color:var(--text-muted);">Sheet: "' + escapeHtml(sh.name) + '" (' + sheetRemaining + ' spot' + (sheetRemaining !== 1 ? 's' : '') + ' left)</span>';
       }
       
+      // Icon based on type
+      const icon = isBatch ? '📋' : '📜';
+      
       html += '<div class="wf2-content-card' + selected + '" onclick="wf2SelectItem(\'' + escapeAttr(id) + '\', \'history\')" ondblclick="wf2SelectItemAndAdvance(\'' + escapeAttr(id) + '\', \'history\')">' +
-        '<div class="wf2-content-card-icon">📜</div>' +
+        '<div class="wf2-content-card-icon">' + icon + '</div>' +
         '<div class="wf2-content-card-info">' +
           '<div class="wf2-content-card-title">' + escapeHtml(entry.textName || 'Labels') + '</div>' +
           '<div class="wf2-content-card-meta">' + contextLine + '</div>' +
         '</div>' +
         '<div class="wf2-content-card-actions">' +
           (canQuickPrint ? '<button class="wf2-quick-btn" onclick="event.stopPropagation(); wf2QuickReprint(\'' + escapeAttr(id) + '\', \'history\', ' + count + ')" title="Print ' + count + ' label' + (count !== 1 ? 's' : '') + ' on same sheet">⚡ Same</button>' : '') +
-          '<div class="wf2-content-card-badge history">History</div>' +
+          '<div class="wf2-content-card-badge history">' + (isBatch ? 'Batch' : 'History') + '</div>' +
         '</div>' +
       '</div>';
     }
@@ -18998,28 +19124,47 @@ function wf2SelectItem(id, type) {
     const entry = printHistory.find(e => e.id === entryId);
     if (!entry) return;
     
-    // Try to get full lines from history entry or reconstruct from saved text
-    let lines;
-    if (entry.lines && entry.lines.length > 0) {
-      lines = entry.lines;
-    } else if (entry.textId) {
-      const text = getSavedText(entry.textId);
-      if (text) lines = wf2ResolveLinesFromSavedText(text);
-    }
-    if (!lines || lines.length === 0) {
-      lines = [{ text: entry.textName || 'Label', align: 'left', fontSize: 11 }];
-    }
+    // Check if this is a batch job with saved list
+    const isBatch = entry.textName && entry.textName.startsWith('Batch');
+    const savedList = entry.savedListId ? getSavedList(entry.savedListId) : null;
     
-    wf2SelectedItem = {
-      type: 'history',
-      id: id,
-      textId: entry.textId || null,
-      sheetId: entry.sheetId || null,
-      labelType: entry.labelType || '5160',
-      lines: lines,
-      lastQty: entry.count || 1,
-      textName: entry.textName || 'Labels'
-    };
+    if (isBatch && savedList) {
+      // Batch job with saved list - load batch content
+      wf2SelectedItem = {
+        type: 'batch',
+        id: id,
+        savedListId: entry.savedListId,
+        sheetId: entry.sheetId || null,
+        labelType: entry.labelType || savedList.labelType || '5160',
+        batchContent: savedList.content, // Array of line arrays
+        lastQty: entry.count || savedList.content.length,
+        textName: entry.textName || 'Batch List'
+      };
+    } else {
+      // Regular history entry
+      // Try to get full lines from history entry or reconstruct from saved text
+      let lines;
+      if (entry.lines && entry.lines.length > 0) {
+        lines = entry.lines;
+      } else if (entry.textId) {
+        const text = getSavedText(entry.textId);
+        if (text) lines = wf2ResolveLinesFromSavedText(text);
+      }
+      if (!lines || lines.length === 0) {
+        lines = [{ text: entry.textName || 'Label', align: 'left', fontSize: 11 }];
+      }
+      
+      wf2SelectedItem = {
+        type: 'history',
+        id: id,
+        textId: entry.textId || null,
+        sheetId: entry.sheetId || null,
+        labelType: entry.labelType || '5160',
+        lines: lines,
+        lastQty: entry.count || 1,
+        textName: entry.textName || 'Labels'
+      };
+    }
     
   } else if (type === 'saved') {
     const textId = id.replace('saved_', '');
@@ -19081,11 +19226,52 @@ function wf2ToStep2() {
   if (!wf2SelectedItem) return;
   
   wf2Step = 2;
-  wf2Quantity = wf2SelectedItem.lastQty || 1;
-  wf2ContentLines = wf2SelectedItem.lines;
   
-  wf2RenderQuantityCheck();
+  // For batch items, skip quantity step - they reprint the whole list
+  if (wf2SelectedItem.type === 'batch') {
+    wf2Quantity = wf2SelectedItem.batchContent.length;
+    wf2BatchContent = wf2SelectedItem.batchContent;
+    wf2IsBatchReprint = true;
+    wf2RenderBatchQuantityCheck();
+  } else {
+    wf2Quantity = wf2SelectedItem.lastQty || 1;
+    wf2ContentLines = wf2SelectedItem.lines;
+    wf2IsBatchReprint = false;
+    wf2RenderQuantityCheck();
+  }
+  
   wf2ShowStep('wf2Step2');
+}
+
+// Track batch reprint state
+let wf2BatchContent = [];
+let wf2IsBatchReprint = false;
+
+// Render quantity check for batch reprints
+function wf2RenderBatchQuantityCheck() {
+  const container = document.getElementById('wf2QuantityContent');
+  const item = wf2SelectedItem;
+  const count = item.batchContent.length;
+  const spec = LABEL_TYPES[wf2LabelType];
+  const perSheet = spec ? (spec.cols * spec.rows) : 30;
+  const sheetsNeeded = Math.ceil(count / perSheet);
+  
+  const html = '<div class="wf2-qty-section">' +
+    '<div class="wf2-qty-prompt">Reprinting saved list with <strong>' + count + ' labels</strong></div>' +
+    '<div class="wf2-batch-reprint-preview">' +
+      '<div class="wf2-batch-preview-scroll" style="max-height:200px;">' +
+        item.batchContent.slice(0, 5).map(function(lines, i) {
+          return '<div class="wf2-batch-preview-item">' + 
+            lines.map(function(l) { return '<div>' + escapeHtml(l.text) + '</div>'; }).join('') +
+          '</div>';
+        }).join('') +
+        (count > 5 ? '<div style="text-align:center;color:var(--text-muted);font-size:12px;padding:8px;">...and ' + (count - 5) + ' more</div>' : '') +
+      '</div>' +
+    '</div>' +
+    '<div class="wf2-qty-hint">' + count + ' labels = ' + sheetsNeeded + ' sheet' + (sheetsNeeded !== 1 ? 's' : '') + ' of ' + (spec ? spec.name : wf2LabelType) + '</div>' +
+  '</div>';
+  
+  container.innerHTML = html;
 }
 
 function wf2RenderQuantityCheck() {
@@ -20753,7 +20939,7 @@ function safeLoad(key, defaultValue) {
 
 function exportAllData() {
   const data = {
-    version: '3.17.0',
+    version: '3.18.0',
     exportedAt: new Date().toISOString(),
     settings: settings,
     sheets: sheets,
@@ -20918,7 +21104,7 @@ async function startSyncShare() {
   
   // Prepare data
   const data = {
-    version: '3.17.0',
+    version: '3.18.0',
     exportedAt: new Date().toISOString(),
     expiresAt: Date.now() + SYNC_EXPIRY_MS,
     sheets: sheets,
@@ -21306,7 +21492,7 @@ async function satelliteShareToPrimary() {
   const pendingTexts = savedTexts.filter(t => pending.includes(t.id));
   
   const data = {
-    version: '3.17.0',
+    version: '3.18.0',
     type: 'satellite_contribution',
     storeId: getOrCreateStoreId(),
     exportedAt: new Date().toISOString(),
@@ -21752,7 +21938,7 @@ async function primaryShareToSatellite() {
   
   // Prepare full state data
   const data = {
-    version: '3.17.0',
+    version: '3.18.0',
     type: 'primary_share',
     exportedAt: new Date().toISOString(),
     expiresAt: Date.now() + SYNC_EXPIRY_MS,
@@ -21846,7 +22032,7 @@ async function primaryTransferRole() {
       
       // Prepare transfer data - includes full state + transfer flag
       const data = {
-        version: '3.17.0',
+        version: '3.18.0',
         type: 'primary_transfer',
         exportedAt: new Date().toISOString(),
         expiresAt: Date.now() + SYNC_EXPIRY_MS,
@@ -22031,6 +22217,7 @@ function init() {
   loadJobHistory();
   loadCustomTokens();
   loadPrintHistory();
+  loadSavedLists();
   
   // Apply UI state
   applyTheme();
@@ -22059,7 +22246,7 @@ function init() {
   
   // Log stats for debugging
   const stats = getDataStats();
-  console.log('LabelKeeper v3.17.0 initialized', stats);
+  console.log('LabelKeeper v3.18.0 initialized', stats);
 }
 
 /**
