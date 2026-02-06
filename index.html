@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="gs-app-id" content="labelkeeper">
-<meta name="version" content="3.27.6">
+<meta name="version" content="3.27.7">
 
 <!-- App Meta Tags -->
 <meta name="description" content="Print labels without wasting a single position. Track which spots on your label sheets have been used.">
@@ -7357,7 +7357,7 @@ body.dark-mode .wf1-narrowed-option.suggested::after {
   <header class="app-header">
     <div class="app-title">
       🏷️ LabelKeeper
-      <span class="version">v3.27.6</span>
+      <span class="version">v3.27.7</span>
     </div>
     <div class="header-actions">
       <button class="icon-btn" onclick="openSettings()" title="Settings">⚙️</button>
@@ -8942,7 +8942,7 @@ Examples:
     <div class="welcome-header">
       <div class="welcome-icon">🏷️</div>
       <div class="welcome-title">Welcome to LabelKeeper</div>
-      <div class="welcome-version">v3.27.6</div>
+      <div class="welcome-version">v3.27.7</div>
     </div>
     <div class="welcome-body">
       <div class="welcome-tagline">
@@ -13845,7 +13845,7 @@ function cloneSavedText(id, newName) {
 
 function exportAllDataJSON() {
   const data = {
-    version: '3.27.6',
+    version: '3.27.7',
     exportedAt: new Date().toISOString(),
     sheets,
     savedTexts,
@@ -15870,9 +15870,32 @@ PRINT ORIENTATION:
 - "row by row", "across", "normal" → printOrientation "row"
 
 CONTENT LINE FORMAT (when user provides actual text):
-Format: alignment,size:text
-- Example: "center,14:FRAGILE" or "left,11:John Smith"
+Format: alignment,size,color:text
+- alignment: left, center, right
+- size: 9 (small), 11 (normal), 14 (large)
+- color: optional hex color (e.g., #2563eb for blue)
+- Examples:
+  - "center,14:FRAGILE" (centered, large, default black)
+  - "left,11,#2563eb:John Smith" (left, normal, blue)
+  - "center,14,#dc2626:URGENT" (centered, large, red)
 - Default to "left,11:" if not specified
+
+AVAILABLE COLORS (use hex codes):
+- Black: #000000 (default)
+- Red: #dc2626
+- Blue: #2563eb
+- Green: #16a34a
+- Orange: #ea580c
+- Purple: #9333ea
+- Brown: #78350f
+- Gray: #6b7280
+
+When user requests colors, map their words to hex codes:
+- "red", "urgent", "warning" → #dc2626
+- "blue", "corporate", "professional" → #2563eb
+- "green", "success", "approved" → #16a34a
+- "orange", "attention" → #ea580c
+- "purple", "special" → #9333ea
 
 RESPOND WITH JSON ONLY.`;
 }
@@ -16403,16 +16426,18 @@ function aiConvLaunchEditor() {
   }
 }
 
-// Parse a label line format "alignment,size:text"
+// Parse a label line format "alignment,size,color:text"
+// Color is optional - format can be "align,size:text" or "align,size,#hex:text"
 function parseLabelLine(rawLine) {
   let text = rawLine;
   let align = 'left';
   let fontSize = 11;
+  let color = '';
   
-  if (!rawLine) return { text: '', align, fontSize };
+  if (!rawLine) return { text: '', align, fontSize, color };
   
   const colonIndex = rawLine.indexOf(':');
-  if (colonIndex > 0 && colonIndex < 15) {
+  if (colonIndex > 0 && colonIndex < 25) {
     const prefix = rawLine.substring(0, colonIndex);
     const parts = prefix.split(',');
     
@@ -16426,10 +16451,18 @@ function parseLabelLine(rawLine) {
           fontSize = size;
         }
       }
+      
+      if (parts.length >= 3 && parts[2]) {
+        // Validate hex color format
+        const colorVal = parts[2].trim();
+        if (/^#[0-9A-Fa-f]{6}$/.test(colorVal)) {
+          color = colorVal;
+        }
+      }
     }
   }
   
-  return { text, align, fontSize };
+  return { text, align, fontSize, color };
 }
 
 // ============================================================================
@@ -25691,7 +25724,7 @@ function wf1RenderPreview() {
       html += '<div style="margin-top:4px; font-size:12px; color:var(--text-muted);">This sheet ' + identifiers.join(', ') + '.</div>';
     }
     
-    html += '<div style="margin-top:8px;">Load this sheet into your printer with the label side facing <strong>up</strong> (or according to your printer\'s instructions).</div>';
+    html += '<div style="margin-top:8px;">Load this sheet according to your printer\'s instructions for label sheets.</div>';
     html += '</div>';
   }
   
@@ -28886,7 +28919,7 @@ function safeLoad(key, defaultValue) {
 
 function exportAllData() {
   const data = {
-    version: '3.27.6',
+    version: '3.27.7',
     exportedAt: new Date().toISOString(),
     settings: settings,
     sheets: sheets,
@@ -29057,7 +29090,7 @@ async function startSyncShare() {
   
   // Prepare data
   const data = {
-    version: '3.27.6',
+    version: '3.27.7',
     exportedAt: new Date().toISOString(),
     expiresAt: Date.now() + SYNC_EXPIRY_MS,
     sheets: sheets,
@@ -29445,7 +29478,7 @@ async function satelliteShareToPrimary() {
   const pendingTexts = savedTexts.filter(t => pending.includes(t.id));
   
   const data = {
-    version: '3.27.6',
+    version: '3.27.7',
     type: 'satellite_contribution',
     storeId: getOrCreateStoreId(),
     exportedAt: new Date().toISOString(),
@@ -29891,7 +29924,7 @@ async function primaryShareToSatellite() {
   
   // Prepare full state data
   const data = {
-    version: '3.27.6',
+    version: '3.27.7',
     type: 'primary_share',
     exportedAt: new Date().toISOString(),
     expiresAt: Date.now() + SYNC_EXPIRY_MS,
@@ -29985,7 +30018,7 @@ async function primaryTransferRole() {
       
       // Prepare transfer data - includes full state + transfer flag
       const data = {
-        version: '3.27.6',
+        version: '3.27.7',
         type: 'primary_transfer',
         exportedAt: new Date().toISOString(),
         expiresAt: Date.now() + SYNC_EXPIRY_MS,
