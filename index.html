@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="gs-app-id" content="labelkeeper">
-<meta name="version" content="3.18.0">
+<meta name="version" content="3.18.6">
 
 <!-- App Meta Tags -->
 <meta name="description" content="Print labels without wasting a single position. Track which spots on your label sheets have been used.">
@@ -976,6 +976,19 @@ body {
 .sheet-card.active {
   border-color: var(--accent);
   background: var(--accent-bg);
+}
+
+.sheet-card.highlight-flash {
+  animation: highlightFlash 1.5s ease-out;
+}
+
+@keyframes highlightFlash {
+  0% { background: var(--accent); border-color: var(--accent); }
+  100% { background: var(--surface); border-color: var(--border); }
+}
+
+.saved-card.highlight-flash {
+  animation: highlightFlash 1.5s ease-out;
 }
 
 .sheet-card-header {
@@ -2235,6 +2248,101 @@ body {
   transform: translateX(20px);
 }
 
+/* Barcode UI */
+.barcode-analysis-box {
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  font-size: 13px;
+}
+
+.barcode-analysis-box .analysis-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.barcode-analysis-box .analysis-item:hover:not(.disabled) {
+  background: var(--surface);
+}
+
+.barcode-analysis-box .analysis-item.selected {
+  background: var(--accent-bg);
+}
+
+.barcode-analysis-box .analysis-item.available {
+  color: var(--text);
+}
+
+.barcode-analysis-box .analysis-item.unavailable,
+.barcode-analysis-box .analysis-item.disabled {
+  color: var(--text-muted);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.barcode-analysis-box .barcode-type-radio {
+  font-size: 14px;
+  width: 16px;
+  text-align: center;
+  color: var(--accent);
+}
+
+.barcode-analysis-box .analysis-suggestion {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  color: var(--accent-text);
+  font-size: 12px;
+}
+
+.barcode-position-selector {
+  display: flex;
+  gap: 8px;
+}
+
+.barcode-pos-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 8px;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text-secondary);
+  transition: all 0.15s;
+}
+
+.barcode-pos-btn:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.barcode-pos-btn.active {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+  color: var(--accent-text);
+}
+
+.barcode-pos-btn.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.barcode-pos-btn .pos-icon {
+  font-size: 18px;
+}
+
 .settings-divider {
   height: 1px;
   background: var(--border);
@@ -2248,6 +2356,84 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-bottom: 16px;
+}
+
+.settings-section-collapsible {
+  cursor: pointer;
+  padding: 8px 0;
+  margin: -8px 0;
+  border-radius: var(--radius-sm);
+  transition: background 0.15s;
+}
+
+.settings-section-collapsible:hover {
+  background: var(--surface-alt);
+}
+
+.settings-warning-box {
+  display: flex;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--warning-bg);
+  border: 1px solid var(--warning-border);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.settings-warning-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.settings-warning-text {
+  color: var(--warning-text);
+}
+
+.settings-warning-text strong {
+  font-weight: 600;
+}
+
+.backup-status-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+.backup-status-box.status-ok {
+  background: var(--success-bg);
+  border: 1px solid var(--success-border);
+  color: var(--success-text);
+}
+
+.backup-status-box.status-warning {
+  background: var(--warning-bg);
+  border: 1px solid var(--warning-border);
+  color: var(--warning-text);
+}
+
+.backup-status-box.status-never {
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.backup-status-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.backup-status-text {
+  flex: 1;
+  line-height: 1.4;
+}
+
+.backup-status-text strong {
+  font-weight: 600;
 }
 
 .settings-data-stats {
@@ -3130,6 +3316,33 @@ body {
   border-color: var(--accent);
   color: var(--accent);
   background: var(--accent-bg);
+}
+
+.fe-graphic-barcode-placeholder {
+  padding: 6px 14px;
+  border: 2px solid var(--accent);
+  border-radius: 8px;
+  background: var(--accent-bg);
+  color: var(--accent-text);
+  font-size: 12px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fe-graphic-disabled {
+  padding: 6px 14px;
+  border: 2px dashed var(--border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  opacity: 0.6;
 }
 
 .fe-graphic-thumb {
@@ -6137,7 +6350,7 @@ body {
   <header class="app-header">
     <div class="app-title">
       🏷️ LabelKeeper
-      <span class="version">v3.18.0</span>
+      <span class="version">v3.18.6</span>
     </div>
     <div class="header-actions">
       <button class="icon-btn" onclick="openSettings()" title="Settings">⚙️</button>
@@ -6254,6 +6467,10 @@ body {
       <button class="modal-close" onclick="closeSettings()">×</button>
     </div>
     <div class="modal-body">
+      
+      <!-- ===== GENERAL (Most Used) ===== -->
+      <div class="settings-section-title">General</div>
+      
       <div class="setting-row">
         <div>
           <div class="setting-label">Dark Mode</div>
@@ -6267,129 +6484,25 @@ body {
       <div class="setting-row" style="margin-top: 16px;">
         <div style="flex: 1;">
           <div class="setting-label">Quick Actions</div>
-          <div class="setting-desc">Number of recent prints to show on home screen (0 = hide)</div>
+          <div class="setting-desc">Recent prints on home screen (0 = hide)</div>
         </div>
         <div style="display: flex; align-items: center; gap: 8px;">
           <input type="number" id="quickActionsCount" min="0" max="10" step="1" style="width: 60px; padding: 8px; border: 2px solid var(--input-border); border-radius: 6px; background: var(--input-bg); color: var(--text); font-size: 14px;" onchange="updateQuickActionsCount()">
         </div>
       </div>
       
+      <!-- ===== DATA MANAGEMENT ===== -->
       <div class="settings-divider"></div>
-      <div class="settings-section-title">Advanced</div>
-      <div class="setting-desc" style="margin-bottom: 12px;">
-        Print calibration settings. Safari's print preview may not accurately show label positions, but the actual print is usually correct at 1.0. Only reduce below 1.0 if labels are actually misaligned on paper.
-      </div>
-      
-      <div class="setting-row" style="margin-bottom: 12px;">
-        <div style="flex: 1;">
-          <div class="setting-label">Safari Vertical Scale</div>
-          <div class="setting-desc" style="font-size: 11px;">Compresses labels vertically to fit Safari's print area (0.90-1.0)</div>
-        </div>
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <input type="number" id="safariVScale" min="0.90" max="1.0" step="0.01" style="width: 70px; padding: 8px; border: 2px solid var(--input-border); border-radius: 6px; background: var(--input-bg); color: var(--text); font-size: 14px;" onchange="updatePrintOffset()">
-        </div>
-      </div>
-      
-      <div class="setting-row" style="gap: 16px;">
-        <div style="flex: 1;">
-          <div class="setting-label">Manual Vertical Offset</div>
-          <div style="display: flex; align-items: center; gap: 8px; margin-top: 6px;">
-            <input type="number" id="printOffsetTop" step="0.05" style="width: 70px; padding: 8px; border: 2px solid var(--input-border); border-radius: 6px; background: var(--input-bg); color: var(--text); font-size: 14px;" onchange="updatePrintOffset()">
-            <span style="color: var(--text-muted); font-size: 13px;">in</span>
-          </div>
-        </div>
-        <div style="flex: 1;">
-          <div class="setting-label">Manual Horizontal Offset</div>
-          <div style="display: flex; align-items: center; gap: 8px; margin-top: 6px;">
-            <input type="number" id="printOffsetLeft" step="0.05" style="width: 70px; padding: 8px; border: 2px solid var(--input-border); border-radius: 6px; background: var(--input-bg); color: var(--text); font-size: 14px;" onchange="updatePrintOffset()">
-            <span style="color: var(--text-muted); font-size: 13px;">in</span>
-          </div>
-        </div>
-      </div>
-      
-      <div class="setting-row" style="margin-top: 16px;">
-        <div>
-          <div class="setting-label">Show Label Boundaries</div>
-          <div class="setting-desc">Print light gray rectangles showing label positions for alignment testing</div>
-        </div>
-        <div class="toggle" id="labelBoundariesToggle" onclick="toggleLabelBoundaries()">
-          <div class="toggle-thumb"></div>
-        </div>
-      </div>
-      
-      <div class="settings-divider"></div>
-      <div class="settings-section-title">Data Management</div>
+      <div class="settings-section-title">Data &amp; Sync</div>
       
       <div class="settings-data-stats" id="settingsDataStats">
         <!-- Populated by JS -->
       </div>
       
-      <div class="settings-divider"></div>
-      <div class="settings-section-title">Device Sync</div>
-      
-      <!-- Device Role Selector -->
-      <div class="setting-row" style="margin-bottom: 16px;">
-        <div class="setting-label">This device is:</div>
-        <div class="device-role-selector" id="deviceRoleSelector">
-          <button class="device-role-btn" data-role="primary" onclick="setDeviceRole('primary')">
-            <span class="role-icon">💻</span>
-            <span class="role-name">Primary</span>
-            <span class="role-desc">Full access, can print</span>
-          </button>
-          <button class="device-role-btn" data-role="satellite" onclick="setDeviceRole('satellite')">
-            <span class="role-icon">📱</span>
-            <span class="role-name">Satellite</span>
-            <span class="role-desc">Capture content only</span>
-          </button>
-        </div>
+      <!-- Backup Status -->
+      <div id="backupStatusBox" class="backup-status-box">
+        <!-- Populated by JS -->
       </div>
-      
-      <!-- Primary mode buttons -->
-      <div id="syncPrimaryUI">
-        <div class="setting-desc" style="margin-bottom: 12px;">
-          Sync content between your primary and satellite devices.
-        </div>
-        <div class="settings-btn-row">
-          <button class="settings-action-btn" onclick="primaryReceiveFromSatellite()">
-            <span>📥</span> Receive from Satellite
-          </button>
-          <button class="settings-action-btn" onclick="primaryShareToSatellite()">
-            <span>📤</span> Share to Satellite
-          </button>
-        </div>
-        <div class="settings-btn-row" style="margin-top: 8px;">
-          <button class="settings-action-btn secondary" onclick="primaryTransferRole()">
-            <span>🔄</span> Transfer Primary to Another Device
-          </button>
-        </div>
-      </div>
-      
-      <!-- Satellite mode buttons -->
-      <div id="syncSatelliteUI" style="display: none;">
-        <div class="setting-desc" style="margin-bottom: 12px;">
-          Content you create here will sync to your primary device.
-        </div>
-        
-        <!-- Pending queue display -->
-        <div id="satellitePendingSection" style="margin-bottom: 16px;">
-          <div class="setting-label" style="margin-bottom: 8px;">Pending sync (<span id="satellitePendingCount">0</span> items):</div>
-          <div id="satellitePendingList" class="satellite-pending-list">
-            <!-- Populated by JS -->
-          </div>
-        </div>
-        
-        <div class="settings-btn-row">
-          <button class="settings-action-btn" onclick="satelliteShareToPrimary()">
-            <span>📤</span> Share to Primary
-          </button>
-          <button class="settings-action-btn" onclick="satelliteReceiveFromPrimary()">
-            <span>📥</span> Receive from Primary
-          </button>
-        </div>
-      </div>
-      
-      <div class="settings-divider"></div>
-      <div class="settings-section-title">Backup &amp; Restore</div>
       
       <div class="settings-btn-row">
         <button class="settings-action-btn" onclick="exportAllData()">
@@ -6401,15 +6514,148 @@ body {
         </label>
       </div>
       
-      <div class="settings-btn-row">
+      <!-- Device Sync (Collapsible) -->
+      <div class="settings-section-collapsible" style="margin-top: 16px;" onclick="toggleSettingsDeviceSync()">
+        <div class="setting-label" style="cursor: pointer; display: flex; align-items: center; gap: 8px;">
+          <span id="settingsDeviceSyncArrow" style="font-size: 12px; transition: transform 0.2s;">▶</span>
+          📱 Device Sync
+        </div>
+        <div class="setting-desc" style="margin-left: 20px; margin-top: 2px;">Sync between primary &amp; satellite devices</div>
+      </div>
+      
+      <div id="settingsDeviceSyncPanel" style="display: none; margin-top: 12px;">
+        <!-- Device Role Selector -->
+        <div class="setting-row" style="margin-bottom: 16px;">
+          <div class="setting-label">This device is:</div>
+          <div class="device-role-selector" id="deviceRoleSelector">
+            <button class="device-role-btn" data-role="primary" onclick="setDeviceRole('primary')">
+              <span class="role-icon">💻</span>
+              <span class="role-name">Primary</span>
+              <span class="role-desc">Full access, can print</span>
+            </button>
+            <button class="device-role-btn" data-role="satellite" onclick="setDeviceRole('satellite')">
+              <span class="role-icon">📱</span>
+              <span class="role-name">Satellite</span>
+              <span class="role-desc">Capture content only</span>
+            </button>
+          </div>
+        </div>
+        
+        <!-- Primary mode buttons -->
+        <div id="syncPrimaryUI">
+          <div class="setting-desc" style="margin-bottom: 12px;">
+            Sync content between your primary and satellite devices.
+          </div>
+          <div class="settings-btn-row">
+            <button class="settings-action-btn" onclick="primaryReceiveFromSatellite()">
+              <span>📥</span> Receive from Satellite
+            </button>
+            <button class="settings-action-btn" onclick="primaryShareToSatellite()">
+              <span>📤</span> Share to Satellite
+            </button>
+          </div>
+          <div class="settings-btn-row" style="margin-top: 8px;">
+            <button class="settings-action-btn secondary" onclick="primaryTransferRole()">
+              <span>🔄</span> Transfer Primary to Another Device
+            </button>
+          </div>
+        </div>
+        
+        <!-- Satellite mode buttons -->
+        <div id="syncSatelliteUI" style="display: none;">
+          <div class="setting-desc" style="margin-bottom: 12px;">
+            Content you create here will sync to your primary device.
+          </div>
+          
+          <!-- Pending queue display -->
+          <div id="satellitePendingSection" style="margin-bottom: 16px;">
+            <div class="setting-label" style="margin-bottom: 8px;">Pending sync (<span id="satellitePendingCount">0</span> items):</div>
+            <div id="satellitePendingList" class="satellite-pending-list">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+          
+          <div class="settings-btn-row">
+            <button class="settings-action-btn" onclick="satelliteShareToPrimary()">
+              <span>📤</span> Share to Primary
+            </button>
+            <button class="settings-action-btn" onclick="satelliteReceiveFromPrimary()">
+              <span>📥</span> Receive from Primary
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="settings-btn-row" style="margin-top: 16px;">
         <button class="settings-action-btn secondary" onclick="showWelcome()">
-          <span>👋</span> Show Welcome Screen
+          <span>👋</span> Show Welcome
         </button>
         <button class="settings-action-btn danger" onclick="clearAllData()">
           <span>🗑️</span> Clear All Data
         </button>
       </div>
       
+      <!-- ===== ADVANCED (Collapsible) ===== -->
+      <div class="settings-divider"></div>
+      <div class="settings-section-collapsible" onclick="toggleSettingsAdvanced()">
+        <div class="settings-section-title" style="margin-bottom: 0; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+          <span id="settingsAdvancedArrow" style="font-size: 12px; transition: transform 0.2s;">▶</span>
+          Advanced
+        </div>
+        <div class="setting-desc" style="margin-left: 20px; margin-top: 4px;">Print calibration settings</div>
+      </div>
+      
+      <div id="settingsAdvancedPanel" style="display: none; margin-top: 12px;">
+        <div class="settings-warning-box">
+          <div class="settings-warning-icon">⚠️</div>
+          <div class="settings-warning-text">
+            <strong>Caution:</strong> These settings affect print alignment. Only adjust if labels are printing incorrectly on paper. Safari's print preview may look wrong but usually prints correctly at default values.
+          </div>
+        </div>
+        
+        <div class="setting-row" style="margin-top: 16px; margin-bottom: 12px;">
+          <div style="flex: 1;">
+            <div class="setting-label">Safari Vertical Scale</div>
+            <div class="setting-desc" style="font-size: 11px;">Compresses labels vertically (0.90-1.0)</div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <input type="number" id="safariVScale" min="0.90" max="1.0" step="0.01" style="width: 70px; padding: 8px; border: 2px solid var(--input-border); border-radius: 6px; background: var(--input-bg); color: var(--text); font-size: 14px;" onchange="updatePrintOffset()">
+          </div>
+        </div>
+        
+        <div class="setting-row" style="gap: 16px;">
+          <div style="flex: 1;">
+            <div class="setting-label">Vertical Offset</div>
+            <div style="display: flex; align-items: center; gap: 8px; margin-top: 6px;">
+              <input type="number" id="printOffsetTop" step="0.05" style="width: 70px; padding: 8px; border: 2px solid var(--input-border); border-radius: 6px; background: var(--input-bg); color: var(--text); font-size: 14px;" onchange="updatePrintOffset()">
+              <span style="color: var(--text-muted); font-size: 13px;">in</span>
+            </div>
+          </div>
+          <div style="flex: 1;">
+            <div class="setting-label">Horizontal Offset</div>
+            <div style="display: flex; align-items: center; gap: 8px; margin-top: 6px;">
+              <input type="number" id="printOffsetLeft" step="0.05" style="width: 70px; padding: 8px; border: 2px solid var(--input-border); border-radius: 6px; background: var(--input-bg); color: var(--text); font-size: 14px;" onchange="updatePrintOffset()">
+              <span style="color: var(--text-muted); font-size: 13px;">in</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="setting-row" style="margin-top: 16px;">
+          <div>
+            <div class="setting-label">Show Label Boundaries</div>
+            <div class="setting-desc">Print gray rectangles for alignment testing</div>
+          </div>
+          <div class="toggle" id="labelBoundariesToggle" onclick="toggleLabelBoundaries()">
+            <div class="toggle-thumb"></div>
+          </div>
+        </div>
+        
+        <button class="settings-action-btn secondary" style="margin-top: 16px; width: 100%;" onclick="resetAdvancedSettings()">
+          <span>↩️</span> Reset to Defaults
+        </button>
+      </div>
+      
+      <!-- ===== AI INTEGRATION ===== -->
       <div class="settings-divider"></div>
       <div class="settings-section-title">AI Integration</div>
       
@@ -6446,6 +6692,7 @@ body {
         </button>
       </div>
       
+      <!-- ===== HELP ===== -->
       <div class="settings-divider"></div>
       <div class="settings-section-title">Help</div>
       
@@ -6741,6 +6988,63 @@ Examples:
   </div>
 </div>
 
+<!-- Barcode Modal -->
+<div class="modal-overlay" id="barcodeModal" style="z-index: 1100;">
+  <div class="modal" style="max-width: 420px;">
+    <div class="modal-header">
+      <div class="modal-title">▣ Add Barcode</div>
+      <button class="modal-close" onclick="closeBarcodeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <!-- Analysis Results -->
+      <div class="barcode-analysis-box" id="barcodeAnalysisBox">
+        <!-- Populated by JS -->
+      </div>
+      
+      <!-- QR Options (shown when QR selected) -->
+      <div id="barcodeQrOptions" style="display: none; margin-top: 16px;">
+        <div class="form-group">
+          <label class="form-label">Position</label>
+          <div class="barcode-position-selector">
+            <button type="button" class="barcode-pos-btn" data-pos="only" onclick="setBarcodePosition('only')">
+              <span class="pos-icon">▣</span> Replace Text
+            </button>
+            <button type="button" class="barcode-pos-btn" data-pos="left" onclick="setBarcodePosition('left')">
+              <span class="pos-icon">◨</span> Left + Text
+            </button>
+            <button type="button" class="barcode-pos-btn active" data-pos="right" onclick="setBarcodePosition('right')">
+              <span class="pos-icon">◧</span> Right + Text
+            </button>
+          </div>
+        </div>
+        
+        <div class="form-group" style="margin-top: 12px;">
+          <label class="form-label">Encode As</label>
+          <select class="form-input" id="barcodeEncodeType" style="padding: 8px 12px;">
+            <option value="text">Plain Text</option>
+            <option value="vcard">vCard (Contact)</option>
+            <option value="url">URL</option>
+          </select>
+        </div>
+      </div>
+      
+      <!-- 1D Barcode Options (shown when 1D barcode selected - future) -->
+      <div id="barcode1dOptions" style="display: none; margin-top: 16px;">
+        <label class="form-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+          <input type="checkbox" id="barcode1dShowText" checked>
+          Show text below barcode
+        </label>
+      </div>
+      
+      <div class="modal-btns" style="margin-top: 20px;">
+        <button class="btn btn-secondary" onclick="closeBarcodeModal()">Cancel</button>
+        <button class="btn btn-danger" id="barcodeRemoveBtn" style="display: none;" onclick="removeBarcode()">Remove</button>
+        <button class="btn btn-primary" id="barcodeApplyBtn" onclick="applyBarcode()">Apply</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- OCR Scan Modal -->
 <div class="modal-overlay" id="ocrModal" style="z-index: 1100;">
   <div class="modal" style="max-width: 520px;">
@@ -6921,6 +7225,7 @@ Examples:
         <button class="fe-emoji-toggle" id="fePasteToggle" onclick="pasteToEditor()" title="Paste from clipboard">📋 Paste</button>
         <button class="fe-emoji-toggle" id="feEmojiToggle" onclick="toggleFeEmojiPanel()">😀 Emoji</button>
         <button class="fe-emoji-toggle" id="feOcrToggle" onclick="openOcrModal()">📷 Scan</button>
+        <button class="fe-emoji-toggle" id="feBarcodeToggle" onclick="openBarcodeModal()">▣ Barcode</button>
       </div>
       <div class="fe-emoji-panel" id="feEmojiPanel">
         <input type="text" class="fe-emoji-search" id="feEmojiSearch" placeholder="Search emoji…" oninput="filterFeEmojis()">
@@ -7554,7 +7859,7 @@ Examples:
     <div class="welcome-header">
       <div class="welcome-icon">🏷️</div>
       <div class="welcome-title">Welcome to LabelKeeper</div>
-      <div class="welcome-version">v3.18.0</div>
+      <div class="welcome-version">v3.18.6</div>
     </div>
     <div class="welcome-body">
       <div class="welcome-tagline">
@@ -7622,6 +7927,492 @@ Examples:
 
 <script>
 // ============================================================================
+// QR CODE GENERATOR (Compact implementation)
+// Based on qrcode-generator by Kazuhiko Arase - MIT License
+// ============================================================================
+const QRCode = (function() {
+  const PAD0 = 0xEC, PAD1 = 0x11;
+  const _QRMath = {
+    glog: function(n) { if (n < 1) throw new Error('glog(' + n + ')'); return _QRMath.LOG_TABLE[n]; },
+    gexp: function(n) { while (n < 0) n += 255; while (n >= 256) n -= 255; return _QRMath.EXP_TABLE[n]; },
+    EXP_TABLE: new Array(256), LOG_TABLE: new Array(256)
+  };
+  for (let i = 0; i < 8; i++) _QRMath.EXP_TABLE[i] = 1 << i;
+  for (let i = 8; i < 256; i++) _QRMath.EXP_TABLE[i] = _QRMath.EXP_TABLE[i - 4] ^ _QRMath.EXP_TABLE[i - 5] ^ _QRMath.EXP_TABLE[i - 6] ^ _QRMath.EXP_TABLE[i - 8];
+  for (let i = 0; i < 255; i++) _QRMath.LOG_TABLE[_QRMath.EXP_TABLE[i]] = i;
+
+  function QRPolynomial(num, shift) {
+    let offset = 0;
+    while (offset < num.length && num[offset] === 0) offset++;
+    this.num = new Array(num.length - offset + shift);
+    for (let i = 0; i < num.length - offset; i++) this.num[i] = num[i + offset];
+  }
+  QRPolynomial.prototype = {
+    get: function(index) { return this.num[index]; },
+    getLength: function() { return this.num.length; },
+    multiply: function(e) {
+      const num = new Array(this.getLength() + e.getLength() - 1);
+      for (let i = 0; i < this.getLength(); i++)
+        for (let j = 0; j < e.getLength(); j++)
+          num[i + j] ^= _QRMath.gexp(_QRMath.glog(this.get(i)) + _QRMath.glog(e.get(j)));
+      return new QRPolynomial(num, 0);
+    },
+    mod: function(e) {
+      if (this.getLength() - e.getLength() < 0) return this;
+      const ratio = _QRMath.glog(this.get(0)) - _QRMath.glog(e.get(0));
+      const num = new Array(this.getLength());
+      for (let i = 0; i < this.getLength(); i++) num[i] = this.get(i);
+      for (let i = 0; i < e.getLength(); i++) num[i] ^= _QRMath.gexp(_QRMath.glog(e.get(i)) + ratio);
+      return new QRPolynomial(num, 0).mod(e);
+    }
+  };
+
+  function QRRSBlock(totalCount, dataCount) { this.totalCount = totalCount; this.dataCount = dataCount; }
+  QRRSBlock.RS_BLOCK_TABLE = [
+    [1, 26, 19], [1, 26, 16], [1, 26, 13], [1, 26, 9],
+    [1, 44, 34], [1, 44, 28], [1, 44, 22], [1, 44, 16],
+    [1, 70, 55], [1, 70, 44], [2, 35, 17], [2, 35, 13],
+    [1, 100, 80], [2, 50, 32], [2, 50, 24], [4, 25, 9],
+    [1, 134, 108], [2, 67, 43], [2, 33, 15, 2, 34, 16], [2, 33, 11, 2, 34, 12],
+    [2, 86, 68], [4, 43, 27], [4, 43, 19], [4, 43, 15],
+    [2, 98, 78], [4, 49, 31], [2, 32, 14, 4, 33, 15], [4, 39, 13, 1, 40, 14],
+    [2, 121, 97], [2, 60, 38, 2, 61, 39], [4, 40, 18, 2, 41, 19], [4, 40, 14, 2, 41, 15],
+    [2, 146, 116], [3, 58, 36, 2, 59, 37], [4, 36, 16, 4, 37, 17], [4, 36, 12, 4, 37, 13],
+    [2, 86, 68, 2, 87, 69], [4, 69, 43, 1, 70, 44], [6, 43, 19, 2, 44, 20], [6, 43, 15, 2, 44, 16]
+  ];
+  QRRSBlock.getRSBlocks = function(typeNumber, errorCorrectLevel) {
+    const rsBlock = QRRSBlock.RS_BLOCK_TABLE[(typeNumber - 1) * 4 + errorCorrectLevel];
+    const list = [];
+    for (let i = 0; i < rsBlock.length; i += 3) {
+      const count = rsBlock[i], totalCount = rsBlock[i + 1], dataCount = rsBlock[i + 2];
+      for (let j = 0; j < count; j++) list.push(new QRRSBlock(totalCount, dataCount));
+    }
+    return list;
+  };
+
+  function QRBitBuffer() { this.buffer = []; this.length = 0; }
+  QRBitBuffer.prototype = {
+    get: function(index) { return ((this.buffer[Math.floor(index / 8)] >>> (7 - index % 8)) & 1) === 1; },
+    put: function(num, length) { for (let i = 0; i < length; i++) this.putBit(((num >>> (length - i - 1)) & 1) === 1); },
+    getLengthInBits: function() { return this.length; },
+    putBit: function(bit) { if (this.length === this.buffer.length * 8) this.buffer.push(0); if (bit) this.buffer[Math.floor(this.length / 8)] |= (0x80 >>> (this.length % 8)); this.length++; }
+  };
+
+  const QRUtil = {
+    PATTERN_POSITION_TABLE: [[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54],[6,32,58],[6,34,62],[6,26,46,66],[6,26,48,70],[6,26,50,74],[6,30,54,78],[6,30,56,82],[6,30,58,86],[6,34,62,90],[6,28,50,72,94],[6,26,50,74,98],[6,30,54,78,102],[6,28,54,80,106],[6,32,58,84,110],[6,30,58,86,114],[6,34,62,90,118],[6,26,50,74,98,122],[6,30,54,78,102,126],[6,26,52,78,104,130],[6,30,56,82,108,134],[6,34,60,86,112,138],[6,30,58,86,114,142],[6,34,62,90,118,146],[6,30,54,78,102,126,150],[6,24,50,76,102,128,154],[6,28,54,80,106,132,158],[6,32,58,84,110,136,162],[6,26,54,82,110,138,166],[6,30,58,86,114,142,170]],
+    G15: (1 << 10) | (1 << 8) | (1 << 5) | (1 << 4) | (1 << 2) | (1 << 1) | (1 << 0),
+    G18: (1 << 12) | (1 << 11) | (1 << 10) | (1 << 9) | (1 << 8) | (1 << 5) | (1 << 2) | (1 << 0),
+    G15_MASK: (1 << 14) | (1 << 12) | (1 << 10) | (1 << 4) | (1 << 1),
+    getBCHTypeInfo: function(data) { let d = data << 10; while (QRUtil.getBCHDigit(d) - QRUtil.getBCHDigit(QRUtil.G15) >= 0) d ^= (QRUtil.G15 << (QRUtil.getBCHDigit(d) - QRUtil.getBCHDigit(QRUtil.G15))); return ((data << 10) | d) ^ QRUtil.G15_MASK; },
+    getBCHTypeNumber: function(data) { let d = data << 12; while (QRUtil.getBCHDigit(d) - QRUtil.getBCHDigit(QRUtil.G18) >= 0) d ^= (QRUtil.G18 << (QRUtil.getBCHDigit(d) - QRUtil.getBCHDigit(QRUtil.G18))); return (data << 12) | d; },
+    getBCHDigit: function(data) { let digit = 0; while (data !== 0) { digit++; data >>>= 1; } return digit; },
+    getPatternPosition: function(typeNumber) { return QRUtil.PATTERN_POSITION_TABLE[typeNumber - 1]; },
+    getMask: function(maskPattern, i, j) {
+      switch (maskPattern) {
+        case 0: return (i + j) % 2 === 0;
+        case 1: return i % 2 === 0;
+        case 2: return j % 3 === 0;
+        case 3: return (i + j) % 3 === 0;
+        case 4: return (Math.floor(i / 2) + Math.floor(j / 3)) % 2 === 0;
+        case 5: return (i * j) % 2 + (i * j) % 3 === 0;
+        case 6: return ((i * j) % 2 + (i * j) % 3) % 2 === 0;
+        case 7: return ((i * j) % 3 + (i + j) % 2) % 2 === 0;
+        default: throw new Error('bad maskPattern:' + maskPattern);
+      }
+    },
+    getErrorCorrectPolynomial: function(errorCorrectLength) {
+      let a = new QRPolynomial([1], 0);
+      for (let i = 0; i < errorCorrectLength; i++) a = a.multiply(new QRPolynomial([1, _QRMath.gexp(i)], 0));
+      return a;
+    },
+    getLengthInBits: function(mode, type) {
+      if (1 <= type && type < 10) return mode === 4 ? 8 : mode === 2 ? 9 : mode === 1 ? 10 : 8;
+      else if (type < 27) return mode === 4 ? 16 : mode === 2 ? 11 : mode === 1 ? 13 : 10;
+      else return mode === 4 ? 16 : mode === 2 ? 13 : mode === 1 ? 15 : 12;
+    },
+    getLostPoint: function(qrCode) {
+      const moduleCount = qrCode.getModuleCount();
+      let lostPoint = 0;
+      for (let row = 0; row < moduleCount; row++) {
+        for (let col = 0; col < moduleCount; col++) {
+          let sameCount = 0;
+          const dark = qrCode.isDark(row, col);
+          for (let r = -1; r <= 1; r++) {
+            if (row + r < 0 || moduleCount <= row + r) continue;
+            for (let c = -1; c <= 1; c++) {
+              if (col + c < 0 || moduleCount <= col + c) continue;
+              if (r === 0 && c === 0) continue;
+              if (dark === qrCode.isDark(row + r, col + c)) sameCount++;
+            }
+          }
+          if (sameCount > 5) lostPoint += (3 + sameCount - 5);
+        }
+      }
+      for (let row = 0; row < moduleCount - 1; row++) {
+        for (let col = 0; col < moduleCount - 1; col++) {
+          let count = 0;
+          if (qrCode.isDark(row, col)) count++;
+          if (qrCode.isDark(row + 1, col)) count++;
+          if (qrCode.isDark(row, col + 1)) count++;
+          if (qrCode.isDark(row + 1, col + 1)) count++;
+          if (count === 0 || count === 4) lostPoint += 3;
+        }
+      }
+      for (let row = 0; row < moduleCount; row++) {
+        for (let col = 0; col < moduleCount - 6; col++) {
+          if (qrCode.isDark(row, col) && !qrCode.isDark(row, col + 1) && qrCode.isDark(row, col + 2) && qrCode.isDark(row, col + 3) && qrCode.isDark(row, col + 4) && !qrCode.isDark(row, col + 5) && qrCode.isDark(row, col + 6)) lostPoint += 40;
+        }
+      }
+      for (let col = 0; col < moduleCount; col++) {
+        for (let row = 0; row < moduleCount - 6; row++) {
+          if (qrCode.isDark(row, col) && !qrCode.isDark(row + 1, col) && qrCode.isDark(row + 2, col) && qrCode.isDark(row + 3, col) && qrCode.isDark(row + 4, col) && !qrCode.isDark(row + 5, col) && qrCode.isDark(row + 6, col)) lostPoint += 40;
+        }
+      }
+      let darkCount = 0;
+      for (let col = 0; col < moduleCount; col++) for (let row = 0; row < moduleCount; row++) if (qrCode.isDark(row, col)) darkCount++;
+      const ratio = Math.abs(100 * darkCount / moduleCount / moduleCount - 50) / 5;
+      lostPoint += ratio * 10;
+      return lostPoint;
+    }
+  };
+
+  function QR8bitByte(data) { this.mode = 4; this.data = data; }
+  QR8bitByte.prototype = {
+    getLength: function() { return this.data.length; },
+    write: function(buffer) { for (let i = 0; i < this.data.length; i++) buffer.put(this.data.charCodeAt(i), 8); }
+  };
+
+  function QRCodeModel(typeNumber, errorCorrectLevel) {
+    this.typeNumber = typeNumber;
+    this.errorCorrectLevel = errorCorrectLevel;
+    this.modules = null;
+    this.moduleCount = 0;
+    this.dataCache = null;
+    this.dataList = [];
+  }
+  QRCodeModel.prototype = {
+    addData: function(data) { this.dataList.push(new QR8bitByte(data)); this.dataCache = null; },
+    isDark: function(row, col) { return this.modules[row][col]; },
+    getModuleCount: function() { return this.moduleCount; },
+    make: function() { this.makeImpl(false, this.getBestMaskPattern()); },
+    makeImpl: function(test, maskPattern) {
+      this.moduleCount = this.typeNumber * 4 + 17;
+      this.modules = new Array(this.moduleCount);
+      for (let row = 0; row < this.moduleCount; row++) {
+        this.modules[row] = new Array(this.moduleCount);
+        for (let col = 0; col < this.moduleCount; col++) this.modules[row][col] = null;
+      }
+      this.setupPositionProbePattern(0, 0);
+      this.setupPositionProbePattern(this.moduleCount - 7, 0);
+      this.setupPositionProbePattern(0, this.moduleCount - 7);
+      this.setupPositionAdjustPattern();
+      this.setupTimingPattern();
+      this.setupTypeInfo(test, maskPattern);
+      if (this.typeNumber >= 7) this.setupTypeNumber(test);
+      if (this.dataCache === null) this.dataCache = QRCodeModel.createData(this.typeNumber, this.errorCorrectLevel, this.dataList);
+      this.mapData(this.dataCache, maskPattern);
+    },
+    setupPositionProbePattern: function(row, col) {
+      for (let r = -1; r <= 7; r++) {
+        if (row + r <= -1 || this.moduleCount <= row + r) continue;
+        for (let c = -1; c <= 7; c++) {
+          if (col + c <= -1 || this.moduleCount <= col + c) continue;
+          if ((0 <= r && r <= 6 && (c === 0 || c === 6)) || (0 <= c && c <= 6 && (r === 0 || r === 6)) || (2 <= r && r <= 4 && 2 <= c && c <= 4)) this.modules[row + r][col + c] = true;
+          else this.modules[row + r][col + c] = false;
+        }
+      }
+    },
+    getBestMaskPattern: function() {
+      let minLostPoint = 0, pattern = 0;
+      for (let i = 0; i < 8; i++) {
+        this.makeImpl(true, i);
+        const lostPoint = QRUtil.getLostPoint(this);
+        if (i === 0 || minLostPoint > lostPoint) { minLostPoint = lostPoint; pattern = i; }
+      }
+      return pattern;
+    },
+    setupTimingPattern: function() {
+      for (let r = 8; r < this.moduleCount - 8; r++) {
+        if (this.modules[r][6] !== null) continue;
+        this.modules[r][6] = (r % 2 === 0);
+      }
+      for (let c = 8; c < this.moduleCount - 8; c++) {
+        if (this.modules[6][c] !== null) continue;
+        this.modules[6][c] = (c % 2 === 0);
+      }
+    },
+    setupPositionAdjustPattern: function() {
+      const pos = QRUtil.getPatternPosition(this.typeNumber);
+      for (let i = 0; i < pos.length; i++) {
+        for (let j = 0; j < pos.length; j++) {
+          const row = pos[i], col = pos[j];
+          if (this.modules[row][col] !== null) continue;
+          for (let r = -2; r <= 2; r++) {
+            for (let c = -2; c <= 2; c++) {
+              if (r === -2 || r === 2 || c === -2 || c === 2 || (r === 0 && c === 0)) this.modules[row + r][col + c] = true;
+              else this.modules[row + r][col + c] = false;
+            }
+          }
+        }
+      }
+    },
+    setupTypeNumber: function(test) {
+      const bits = QRUtil.getBCHTypeNumber(this.typeNumber);
+      for (let i = 0; i < 18; i++) {
+        const mod = (!test && ((bits >> i) & 1) === 1);
+        this.modules[Math.floor(i / 3)][i % 3 + this.moduleCount - 8 - 3] = mod;
+      }
+      for (let i = 0; i < 18; i++) {
+        const mod = (!test && ((bits >> i) & 1) === 1);
+        this.modules[i % 3 + this.moduleCount - 8 - 3][Math.floor(i / 3)] = mod;
+      }
+    },
+    setupTypeInfo: function(test, maskPattern) {
+      const data = (this.errorCorrectLevel << 3) | maskPattern;
+      const bits = QRUtil.getBCHTypeInfo(data);
+      for (let i = 0; i < 15; i++) {
+        const mod = (!test && ((bits >> i) & 1) === 1);
+        if (i < 6) this.modules[i][8] = mod;
+        else if (i < 8) this.modules[i + 1][8] = mod;
+        else this.modules[this.moduleCount - 15 + i][8] = mod;
+      }
+      for (let i = 0; i < 15; i++) {
+        const mod = (!test && ((bits >> i) & 1) === 1);
+        if (i < 8) this.modules[8][this.moduleCount - i - 1] = mod;
+        else if (i < 9) this.modules[8][15 - i - 1 + 1] = mod;
+        else this.modules[8][15 - i - 1] = mod;
+      }
+      this.modules[this.moduleCount - 8][8] = (!test);
+    },
+    mapData: function(data, maskPattern) {
+      let inc = -1, row = this.moduleCount - 1, bitIndex = 7, byteIndex = 0;
+      for (let col = this.moduleCount - 1; col > 0; col -= 2) {
+        if (col === 6) col--;
+        while (true) {
+          for (let c = 0; c < 2; c++) {
+            if (this.modules[row][col - c] === null) {
+              let dark = false;
+              if (byteIndex < data.length) dark = (((data[byteIndex] >>> bitIndex) & 1) === 1);
+              const mask = QRUtil.getMask(maskPattern, row, col - c);
+              if (mask) dark = !dark;
+              this.modules[row][col - c] = dark;
+              bitIndex--;
+              if (bitIndex === -1) { byteIndex++; bitIndex = 7; }
+            }
+          }
+          row += inc;
+          if (row < 0 || this.moduleCount <= row) { row -= inc; inc = -inc; break; }
+        }
+      }
+    }
+  };
+  QRCodeModel.createData = function(typeNumber, errorCorrectLevel, dataList) {
+    const rsBlocks = QRRSBlock.getRSBlocks(typeNumber, errorCorrectLevel);
+    const buffer = new QRBitBuffer();
+    for (let i = 0; i < dataList.length; i++) {
+      const data = dataList[i];
+      buffer.put(data.mode, 4);
+      buffer.put(data.getLength(), QRUtil.getLengthInBits(data.mode, typeNumber));
+      data.write(buffer);
+    }
+    let totalDataCount = 0;
+    for (let i = 0; i < rsBlocks.length; i++) totalDataCount += rsBlocks[i].dataCount;
+    if (buffer.getLengthInBits() > totalDataCount * 8) throw new Error('code length overflow');
+    if (buffer.getLengthInBits() + 4 <= totalDataCount * 8) buffer.put(0, 4);
+    while (buffer.getLengthInBits() % 8 !== 0) buffer.putBit(false);
+    while (true) {
+      if (buffer.getLengthInBits() >= totalDataCount * 8) break;
+      buffer.put(PAD0, 8);
+      if (buffer.getLengthInBits() >= totalDataCount * 8) break;
+      buffer.put(PAD1, 8);
+    }
+    return QRCodeModel.createBytes(buffer, rsBlocks);
+  };
+  QRCodeModel.createBytes = function(buffer, rsBlocks) {
+    let offset = 0, maxDcCount = 0, maxEcCount = 0;
+    const dcdata = new Array(rsBlocks.length), ecdata = new Array(rsBlocks.length);
+    for (let r = 0; r < rsBlocks.length; r++) {
+      const dcCount = rsBlocks[r].dataCount, ecCount = rsBlocks[r].totalCount - dcCount;
+      maxDcCount = Math.max(maxDcCount, dcCount);
+      maxEcCount = Math.max(maxEcCount, ecCount);
+      dcdata[r] = new Array(dcCount);
+      for (let i = 0; i < dcdata[r].length; i++) dcdata[r][i] = 0xff & buffer.buffer[i + offset];
+      offset += dcCount;
+      const rsPoly = QRUtil.getErrorCorrectPolynomial(ecCount);
+      const rawPoly = new QRPolynomial(dcdata[r], rsPoly.getLength() - 1);
+      const modPoly = rawPoly.mod(rsPoly);
+      ecdata[r] = new Array(rsPoly.getLength() - 1);
+      for (let i = 0; i < ecdata[r].length; i++) {
+        const modIndex = i + modPoly.getLength() - ecdata[r].length;
+        ecdata[r][i] = (modIndex >= 0) ? modPoly.get(modIndex) : 0;
+      }
+    }
+    let totalCodeCount = 0;
+    for (let i = 0; i < rsBlocks.length; i++) totalCodeCount += rsBlocks[i].totalCount;
+    const data = new Array(totalCodeCount);
+    let index = 0;
+    for (let i = 0; i < maxDcCount; i++) for (let r = 0; r < rsBlocks.length; r++) if (i < dcdata[r].length) data[index++] = dcdata[r][i];
+    for (let i = 0; i < maxEcCount; i++) for (let r = 0; r < rsBlocks.length; r++) if (i < ecdata[r].length) data[index++] = ecdata[r][i];
+    return data;
+  };
+
+  // Public API
+  return {
+    create: function(text, errorLevel) {
+      errorLevel = errorLevel || 0; // 0=L, 1=M, 2=Q, 3=H
+      // Auto-detect type number (size)
+      for (let typeNumber = 1; typeNumber <= 10; typeNumber++) {
+        try {
+          const qr = new QRCodeModel(typeNumber, errorLevel);
+          qr.addData(text);
+          qr.make();
+          return qr;
+        } catch (e) { continue; }
+      }
+      throw new Error('Text too long for QR code');
+    },
+    toDataURL: function(text, options) {
+      options = options || {};
+      const size = options.size || 100;
+      const margin = options.margin !== undefined ? options.margin : 2;
+      const dark = options.dark || '#000000';
+      const light = options.light || '#ffffff';
+      const errorLevel = options.errorLevel || 0;
+      
+      const qr = this.create(text, errorLevel);
+      const moduleCount = qr.getModuleCount();
+      const cellSize = Math.floor(size / (moduleCount + margin * 2));
+      const actualSize = cellSize * (moduleCount + margin * 2);
+      
+      const canvas = document.createElement('canvas');
+      canvas.width = actualSize;
+      canvas.height = actualSize;
+      const ctx = canvas.getContext('2d');
+      
+      ctx.fillStyle = light;
+      ctx.fillRect(0, 0, actualSize, actualSize);
+      
+      ctx.fillStyle = dark;
+      for (let row = 0; row < moduleCount; row++) {
+        for (let col = 0; col < moduleCount; col++) {
+          if (qr.isDark(row, col)) {
+            ctx.fillRect((col + margin) * cellSize, (row + margin) * cellSize, cellSize, cellSize);
+          }
+        }
+      }
+      return canvas.toDataURL('image/png');
+    }
+  };
+})();
+
+// ============================================================================
+// BARCODE ANALYSIS - Smart detection of available encoding types
+// ============================================================================
+function analyzeBarcodeOptions(text) {
+  if (!text || text.length === 0) {
+    return { available: [], suggestion: null };
+  }
+  
+  const len = text.length;
+  const isDigitsOnly = /^\d+$/.test(text);
+  const isAlphanumUpper = /^[A-Z0-9\-. $/+%]+$/.test(text);
+  const looksLikeContact = /\d{3}[-.)]?\s*\d{3}[-.]\d{4}/.test(text) || /@/.test(text);
+  const looksLikeURL = /^https?:\/\//i.test(text);
+  const looksLikeEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text);
+  
+  const available = [];
+  
+  // QR Code - always available for any text
+  available.push({
+    type: 'qr',
+    name: 'QR Code',
+    note: len + ' chars',
+    available: true
+  });
+  
+  // Code 128 - up to ~30 chars, full ASCII
+  available.push({
+    type: 'code128',
+    name: 'Code 128',
+    note: len > 30 ? 'too long (max ~30)' : len + ' chars',
+    available: len <= 30
+  });
+  
+  // Code 39 - alphanumeric uppercase only
+  available.push({
+    type: 'code39',
+    name: 'Code 39',
+    note: !isAlphanumUpper ? 'invalid chars (A-Z, 0-9, - . $ / + % only)' : len > 30 ? 'too long' : len + ' chars',
+    available: isAlphanumUpper && len <= 30
+  });
+  
+  // UPC-A - exactly 12 digits (or 11 + check digit)
+  available.push({
+    type: 'upca',
+    name: 'UPC-A',
+    note: !isDigitsOnly ? 'digits only' : (len !== 11 && len !== 12) ? 'needs 11-12 digits' : '✓',
+    available: isDigitsOnly && (len === 11 || len === 12)
+  });
+  
+  // EAN-13 - exactly 13 digits (or 12 + check digit)
+  available.push({
+    type: 'ean13',
+    name: 'EAN-13',
+    note: !isDigitsOnly ? 'digits only' : (len !== 12 && len !== 13) ? 'needs 12-13 digits' : '✓',
+    available: isDigitsOnly && (len === 12 || len === 13)
+  });
+  
+  // EAN-8 - exactly 8 digits (or 7 + check digit)
+  available.push({
+    type: 'ean8',
+    name: 'EAN-8',
+    note: !isDigitsOnly ? 'digits only' : (len !== 7 && len !== 8) ? 'needs 7-8 digits' : '✓',
+    available: isDigitsOnly && (len === 7 || len === 8)
+  });
+  
+  // Smart suggestion
+  let suggestion = null;
+  if (looksLikeURL) {
+    suggestion = { type: 'url', label: 'URL detected - QR code recommended for easy scanning' };
+  } else if (looksLikeEmail) {
+    suggestion = { type: 'email', label: 'Email detected - can encode as mailto: QR' };
+  } else if (looksLikeContact) {
+    suggestion = { type: 'contact', label: 'Looks like contact info - could encode as vCard QR' };
+  } else if (isDigitsOnly && (len === 11 || len === 12)) {
+    suggestion = { type: 'upc', label: 'Looks like a UPC code' };
+  }
+  
+  return { available, suggestion };
+}
+
+// Generate vCard format from text lines
+function generateVCard(lines) {
+  // Try to parse: Name, Address, City State ZIP, Phone/Email
+  const vcard = ['BEGIN:VCARD', 'VERSION:3.0'];
+  
+  if (lines[0]) vcard.push('FN:' + lines[0]);
+  if (lines[1] && lines[2]) {
+    // Parse city, state, zip from line 3
+    const csz = lines[2].match(/^(.+),\s*([A-Z]{2})\s+(\d{5}(-\d{4})?)/i);
+    if (csz) {
+      vcard.push('ADR:;;' + lines[1] + ';' + csz[1] + ';' + csz[2] + ';' + csz[3] + ';');
+    } else {
+      vcard.push('ADR:;;' + lines[1] + ';;;' + lines[2] + ';');
+    }
+  }
+  if (lines[3]) {
+    if (/@/.test(lines[3])) {
+      vcard.push('EMAIL:' + lines[3]);
+    } else {
+      vcard.push('TEL:' + lines[3].replace(/[^\d+]/g, ''));
+    }
+  }
+  
+  vcard.push('END:VCARD');
+  return vcard.join('\n');
+}
+
+// ============================================================================
 // LABELKEEPER v2.5.0 — DATA LAYER
 // ============================================================================
 
@@ -7636,11 +8427,13 @@ const LABEL_TYPES = {
   '5168': { name: '5168 / 8168', desc: 'Extra Large Shipping', labelW: 3.5, labelH: 5, cols: 2, rows: 2, topMargin: 0.5, leftMargin: 0.5, hGutter: 0.5, vGutter: 0, sizeDisplay: '3½″ × 5″', layoutDisplay: '2 × 2' },
   '5195': { name: '5195 / 8195', desc: 'Small Return Address', labelW: 1.75, labelH: 0.667, cols: 4, rows: 15, topMargin: 0.5, leftMargin: 0.28125, hGutter: 0.3125, vGutter: 0, sizeDisplay: '⅔″ × 1¾″', layoutDisplay: '4 × 15' },
   '5165': { name: '5165', desc: 'Full Sheet', labelW: 8.5, labelH: 11, cols: 1, rows: 1, topMargin: 0, leftMargin: 0, hGutter: 0, vGutter: 0, sizeDisplay: '8½″ × 11″', layoutDisplay: '1 × 1' },
+  // Round Labels
+  '8293': { name: '8293', desc: 'Round Label', labelW: 1.5, labelH: 1.5, cols: 4, rows: 5, topMargin: 0.75, leftMargin: 0.4375, hGutter: 0.5, vGutter: 0.5, sizeDisplay: '1½″ ⌀', layoutDisplay: '4 × 5', category: 'round' },
   // Name Badges & Tent Cards (Session 21)
   '5395': { name: '5395', desc: 'Name Badge', labelW: 3.375, labelH: 2.333, cols: 2, rows: 4, topMargin: 0.55, leftMargin: 0.6875, hGutter: 0.375, vGutter: 0.19, sizeDisplay: '2⅓″ × 3⅜″', layoutDisplay: '2 × 4', category: 'badge' },
   '5302': { name: '5302', desc: 'Tent Card (Small)', labelW: 3.5, labelH: 4, cols: 2, rows: 2, topMargin: 0.75, leftMargin: 0.75, hGutter: 0, vGutter: 0, sizeDisplay: '3½″ × 2″ (folded)', layoutDisplay: '2 × 2', category: 'tent', foldLine: 2 }
 };
-const TYPE_ORDER = ['5160', '5163', '5164', '5161', '5162', '5167', '5195', '5168', '5165', '5395', '5302'];
+const TYPE_ORDER = ['5160', '5163', '5164', '5161', '5162', '5167', '5195', '5168', '5165', '8293', '5395', '5302'];
 
 // ========== LOCALSTORAGE KEYS ==========
 // v1.x compatible keys (preserved for data migration)
@@ -8737,6 +9530,43 @@ function renameSheet(id, newName) {
   return true;
 }
 
+function cloneSheet(id) {
+  const original = sheets[id];
+  if (!original) return null;
+  
+  const cloneId = generateId('sheet');
+  const clone = {
+    id: cloneId,
+    name: original.name + ' (Copy)',
+    labelType: original.labelType,
+    printed: [],  // Start fresh - no positions used
+    texts: {},    // No linked content
+    hasBackLabel: original.hasBackLabel || false,
+    createdAt: Date.now(),
+    lastUsedAt: Date.now()
+  };
+  
+  sheets[cloneId] = clone;
+  saveSheets();
+  
+  // Refresh the current view to show the new sheet
+  renderCurrentTab();
+  
+  showToast('Sheet cloned: ' + clone.name, 'success');
+  
+  // Scroll to and highlight the new sheet card after a brief delay
+  setTimeout(() => {
+    const card = document.querySelector('[data-sheet-id="' + cloneId + '"]');
+    if (card) {
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      card.classList.add('highlight-flash');
+      setTimeout(() => card.classList.remove('highlight-flash'), 1500);
+    }
+  }, 100);
+  
+  return cloneId;
+}
+
 function setActiveSheet(id) {
   if (sheets[id]) {
     activeSheetId = id;
@@ -8769,6 +9599,7 @@ function createSavedText(name, lines, opts = {}) {
     createdAt: Date.now()
   };
   if (opts.graphics) entry.graphics = opts.graphics;
+  if (opts.barcode) entry.barcode = opts.barcode;
   if (opts.isTemplate) {
     entry.type = 'template';
     entry.tokens = extractTokens(entry.text);
@@ -8821,17 +9652,35 @@ function deleteSavedText(id) {
   return true;
 }
 
+async function confirmDeleteSavedText(id) {
+  const st = getSavedText(id);
+  if (!st) return;
+  const ok = await showConfirmDialog(
+    'Delete "' + st.name + '"? This cannot be undone.',
+    'Delete Saved Text',
+    'Delete',
+    'Cancel'
+  );
+  if (ok) {
+    deleteSavedText(id);
+    showToast('Deleted', 'success');
+    renderCurrentTab();
+  }
+}
+
 function cloneSavedText(id, newName) {
   const original = getSavedText(id);
   if (!original) return null;
   const clone = {
     id: generateId('st'),
-    name: newName,
+    name: newName || (original.name + ' (Copy)'),
     text: original.text,
     alignV: original.alignV || 'center',
     createdAt: Date.now()
   };
   if (original.graphics) clone.graphics = JSON.parse(JSON.stringify(original.graphics));
+  if (original.border) clone.border = JSON.parse(JSON.stringify(original.border));
+  if (original.barcode) clone.barcode = JSON.parse(JSON.stringify(original.barcode));
   if (original.type === 'template') {
     clone.type = 'template';
     clone.tokens = [...(original.tokens || [])];
@@ -8843,6 +9692,12 @@ function cloneSavedText(id, newName) {
   // Track in satellite pending queue if in satellite mode
   addToSatellitePending(clone.id);
   
+  showToast('Cloned: ' + clone.name, 'success');
+  renderAll();
+  
+  // Open the Full Editor with the new clone for immediate editing
+  openFullEditor(clone.id, clone.type === 'template');
+  
   return clone.id;
 }
 
@@ -8852,7 +9707,7 @@ function cloneSavedText(id, newName) {
 
 function exportAllDataJSON() {
   const data = {
-    version: '3.18.0',
+    version: '3.18.6',
     exportedAt: new Date().toISOString(),
     sheets,
     savedTexts,
@@ -9024,6 +9879,9 @@ function openSettings() {
   // Update AI key status
   updateAIKeyStatusUI();
   
+  // Update backup status
+  updateBackupStatus();
+  
   document.getElementById('settingsModal').classList.add('visible');
 }
 
@@ -9069,6 +9927,98 @@ function updateQuickActionsCount() {
 
 function closeSettings() {
   document.getElementById('settingsModal').classList.remove('visible');
+}
+
+// Toggle advanced settings panel
+function toggleSettingsAdvanced() {
+  const panel = document.getElementById('settingsAdvancedPanel');
+  const arrow = document.getElementById('settingsAdvancedArrow');
+  
+  if (panel.style.display === 'none') {
+    panel.style.display = 'block';
+    arrow.style.transform = 'rotate(90deg)';
+  } else {
+    panel.style.display = 'none';
+    arrow.style.transform = 'rotate(0deg)';
+  }
+}
+
+// Reset advanced print settings to defaults
+function resetAdvancedSettings() {
+  document.getElementById('safariVScale').value = '1.0';
+  document.getElementById('printOffsetTop').value = '0';
+  document.getElementById('printOffsetLeft').value = '0';
+  
+  settings.safariVScale = 1.0;
+  settings.printOffsetTop = 0;
+  settings.printOffsetLeft = 0;
+  settings.showLabelBoundaries = false;
+  
+  // Update the toggle
+  document.getElementById('labelBoundariesToggle').classList.remove('active');
+  
+  saveSettings();
+  showToast('Print settings reset to defaults', 'success');
+}
+
+// Toggle device sync panel
+function toggleSettingsDeviceSync() {
+  const panel = document.getElementById('settingsDeviceSyncPanel');
+  const arrow = document.getElementById('settingsDeviceSyncArrow');
+  
+  if (panel.style.display === 'none') {
+    panel.style.display = 'block';
+    arrow.style.transform = 'rotate(90deg)';
+  } else {
+    panel.style.display = 'none';
+    arrow.style.transform = 'rotate(0deg)';
+  }
+}
+
+// Update backup status display
+function updateBackupStatus() {
+  const box = document.getElementById('backupStatusBox');
+  if (!box) return;
+  
+  const lastBackup = settings.lastBackupAt;
+  const now = Date.now();
+  const oneWeek = 7 * 24 * 60 * 60 * 1000;
+  const oneDay = 24 * 60 * 60 * 1000;
+  
+  if (!lastBackup) {
+    // Never backed up
+    box.className = 'backup-status-box status-warning';
+    box.innerHTML = '<span class="backup-status-icon">⚠️</span>' +
+      '<span class="backup-status-text"><strong>No backup yet</strong> — Export a backup to protect your data</span>';
+  } else {
+    const elapsed = now - lastBackup;
+    const daysAgo = Math.floor(elapsed / oneDay);
+    
+    // Format the date
+    const backupDate = new Date(lastBackup);
+    const dateStr = backupDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    
+    if (elapsed > oneWeek) {
+      // More than a week - warning
+      box.className = 'backup-status-box status-warning';
+      box.innerHTML = '<span class="backup-status-icon">⚠️</span>' +
+        '<span class="backup-status-text"><strong>Backup recommended</strong> — Last backup was ' + 
+        (daysAgo === 1 ? 'yesterday' : daysAgo + ' days ago') + ' (' + dateStr + ')</span>';
+    } else {
+      // Recent backup - OK
+      box.className = 'backup-status-box status-ok';
+      let timeAgo;
+      if (daysAgo === 0) {
+        timeAgo = 'today';
+      } else if (daysAgo === 1) {
+        timeAgo = 'yesterday';
+      } else {
+        timeAgo = daysAgo + ' days ago';
+      }
+      box.innerHTML = '<span class="backup-status-icon">✓</span>' +
+        '<span class="backup-status-text">Last backup: ' + timeAgo + ' (' + dateStr + ')</span>';
+    }
+  }
 }
 
 // ========== AI PROMPT MODAL ==========
@@ -9254,8 +10204,14 @@ function saveAIKey() {
 }
 
 // Clear AI key
-function clearAIKey() {
-  if (confirm('Remove your API key? You can add it again anytime.')) {
+async function clearAIKey() {
+  const ok = await showConfirmDialog(
+    'Remove your API key? You can add it again anytime.',
+    'Remove API Key',
+    'Remove',
+    'Cancel'
+  );
+  if (ok) {
     clearAIKeyFromStorage();
     showToast('API key removed', 'info');
     updateAIKeyStatusUI();
@@ -11211,6 +12167,9 @@ let feOriginalState = null;
 // New: Border state
 let feBorder = { top: false, bottom: false, left: false, right: false, color: '#000000' };
 
+// New: Barcode state
+let feCurrentBarcode = null;
+
 // New: Preview label type
 let fePreviewLabelType = '5160';
 
@@ -11484,6 +12443,7 @@ function captureEditorState() {
     alignV: feAlignV,
     graphics: feGraphics,
     border: feBorder,
+    barcode: feCurrentBarcode,
     name: document.getElementById('feNameEdit')?.value || ''
   });
 }
@@ -11508,10 +12468,16 @@ function updateDirtyIndicator() {
   }
 }
 
-function closeFullEditor() {
+async function closeFullEditor() {
   // Check for unsaved changes
   if (feDirty) {
-    if (!confirm('You have unsaved changes. Discard them?')) {
+    const ok = await showConfirmDialog(
+      'You have unsaved changes. Discard them?',
+      'Unsaved Changes',
+      'Discard',
+      'Keep Editing'
+    );
+    if (!ok) {
       return;
     }
   }
@@ -11898,7 +12864,7 @@ async function pasteToEditor() {
   }
   
   updateFePreview();
-  markFeDirty();
+  checkEditorDirty();
   
   if (rows.length > 4) {
     showToast('Pasted first 4 of ' + rows.length + ' lines (label limit)', 'success');
@@ -11933,7 +12899,7 @@ function clearEditorLines() {
   }
   
   updateFePreview();
-  markFeDirty();
+  checkEditorDirty();
 }
 
 function ocrImageAreaClick() {
@@ -12389,7 +13355,7 @@ function ocrLmApplyDirect(rows) {
       if (input) input.value = i < rows.length ? rows[i] : '';
     }
     updateFePreview();
-    markFeDirty();
+    checkEditorDirty();
     showToast('Imported ' + Math.min(rows.length, 4) + ' line' + (rows.length !== 1 ? 's' : '') + ' from scan', 'success');
   }
 }
@@ -12417,7 +13383,7 @@ function ocrLmApplyMapped() {
       if (input) input.value = lines[i];
     }
     updateFePreview();
-    markFeDirty();
+    checkEditorDirty();
   }
   
   closeGenericModal('ocrLineMapModal');
@@ -12434,6 +13400,7 @@ function resetFullEditorState() {
   ];
   feAlignV = 'center';
   feGraphics = { left: null, right: null };
+  feCurrentBarcode = null; // Reset barcode state
   feLastFocusedLine = null; // Reset token insertion target
   
   // Close token panel if open
@@ -12480,6 +13447,9 @@ function resetFullEditorState() {
   
   // Reset graphics display
   renderFeGraphics();
+  
+  // Reset barcode button state
+  updateBarcodeButtonState();
 }
 
 function loadTextIntoFullEditor(text) {
@@ -12531,6 +13501,14 @@ function loadTextIntoFullEditor(text) {
     feBorder = { top: false, bottom: false, left: false, right: false, color: '#000000' };
   }
   updateBorderUI();
+  
+  // Load barcode state
+  if (text.barcode && text.barcode.enabled) {
+    feCurrentBarcode = { ...text.barcode };
+  } else {
+    feCurrentBarcode = null;
+  }
+  updateBarcodeButtonState();
 }
 
 function updateBorderUI() {
@@ -12655,6 +13633,36 @@ function updateFeBorderColor(color) {
 function changeFePreviewType(labelType) {
   fePreviewLabelType = labelType;
   updateFullEditorPreview();
+  updateFeGraphicsAvailability();
+}
+
+// Update graphics section based on label type restrictions
+function updateFeGraphicsAvailability() {
+  const spec = LABEL_TYPES[fePreviewLabelType];
+  const isRound = spec && spec.category === 'round';
+  const isTent = spec && spec.category === 'tent';
+  
+  // Round and tent labels don't support side graphics
+  const graphicsDisabled = isRound || isTent;
+  
+  const graphicsSection = document.getElementById('feGraphicsSection');
+  if (graphicsSection) {
+    if (graphicsDisabled) {
+      graphicsSection.classList.add('disabled');
+      graphicsSection.title = isRound ? 'Graphics not available for round labels' : 'Graphics not available for tent cards';
+    } else {
+      graphicsSection.classList.remove('disabled');
+      graphicsSection.title = '';
+    }
+  }
+  
+  // Also update barcode position options if modal is open
+  if (document.getElementById('barcodeModal').classList.contains('visible')) {
+    updateBarcodePositionButtons();
+  }
+  
+  // Re-render graphics to reflect disabled state
+  renderFeGraphics();
 }
 
 // Style popover
@@ -12751,7 +13759,31 @@ function renderFeGraphicSide(side) {
   const container = document.getElementById('feGraphic' + (side === 'left' ? 'Left' : 'Right') + 'Content');
   const g = feGraphics[side];
   
-  if (!g || !g.data) {
+  // Check if label type doesn't support graphics
+  const spec = LABEL_TYPES[fePreviewLabelType];
+  const graphicsDisabled = spec && (spec.category === 'round' || spec.category === 'tent');
+  
+  if (graphicsDisabled) {
+    // Show disabled state
+    const reason = spec.category === 'round' ? 'round labels' : 'tent cards';
+    container.innerHTML = `<div class="fe-graphic-disabled">
+      <span style="opacity: 0.5;">🖼</span>
+      <span>N/A for ${reason}</span>
+    </div>`;
+    return;
+  }
+  
+  // Check if barcode is using this slot
+  const barcodeUsesSlot = feCurrentBarcode && feCurrentBarcode.enabled && 
+    feCurrentBarcode.type === 'qr' && feCurrentBarcode.position === side;
+  
+  if (barcodeUsesSlot) {
+    // Show that barcode is using this slot
+    container.innerHTML = `<div class="fe-graphic-barcode-placeholder">
+      <span style="font-size: 20px;">▣</span>
+      <span>QR Code</span>
+    </div>`;
+  } else if (!g || !g.data) {
     container.innerHTML = `<button class="fe-graphic-add" onclick="openFeGraphicPicker('${side}')">🖼 Add Graphic</button>`;
   } else {
     let html = `<div class="fe-graphic-thumb" onclick="openFeGraphicPicker('${side}')"><img src="${g.data}"></div>`;
@@ -12876,7 +13908,12 @@ function updateFullEditorPreview() {
   const previewLabel = document.getElementById('fePreviewLabel');
   const nonEmptyLines = feLines.filter(l => l.text.trim());
   
-  if (nonEmptyLines.length === 0 && !feGraphics.left && !feGraphics.right) {
+  // Check if we have a QR code to show
+  const hasQR = feCurrentBarcode && feCurrentBarcode.enabled && feCurrentBarcode.type === 'qr';
+  const qrPosition = hasQR ? feCurrentBarcode.position : null;
+  const qrOnly = qrPosition === 'only';
+  
+  if (nonEmptyLines.length === 0 && !feGraphics.left && !feGraphics.right && !hasQR) {
     previewLabel.className = 'fe-preview-label empty-preview';
     previewLabel.innerHTML = '<span>Type above to preview</span>';
     previewLabel.style.borderTop = '';
@@ -12918,16 +13955,37 @@ function updateFullEditorPreview() {
     previewLabel.style.justifyContent = 'center';
   }
   
+  // QR Only mode - just show the QR code
+  if (qrOnly) {
+    const qrDataURL = generatePreviewQR();
+    if (qrDataURL) {
+      const qrSize = Math.min(height - 10, 80);
+      previewLabel.innerHTML = `<div style="display:flex;justify-content:center;align-items:center;width:100%;height:100%;"><img src="${qrDataURL}" style="width:${qrSize}px;height:${qrSize}px;"></div>`;
+    } else {
+      previewLabel.innerHTML = '<span style="color:var(--text-muted);">QR Code</span>';
+    }
+    return;
+  }
+  
   // Build preview HTML
   let html = '';
   
-  // Add graphics wrapper if needed
-  const hasGraphics = feGraphics.left || feGraphics.right;
+  // Check for graphics or QR in left/right positions
+  const hasLeftContent = feGraphics.left || qrPosition === 'left';
+  const hasRightContent = feGraphics.right || qrPosition === 'right';
+  const hasGraphics = hasLeftContent || hasRightContent;
+  
   if (hasGraphics) {
     html += '<div style="display:flex;align-items:center;width:100%;height:100%;">';
     
-    // Left graphic
-    if (feGraphics.left) {
+    // Left side (graphic or QR)
+    if (qrPosition === 'left') {
+      const qrDataURL = generatePreviewQR();
+      const qrSize = Math.min(height - 10, 48);
+      if (qrDataURL) {
+        html += `<div style="flex-shrink:0;margin-right:6px;"><img src="${qrDataURL}" style="width:${qrSize}px;height:${qrSize}px;"></div>`;
+      }
+    } else if (feGraphics.left) {
       const size = feGraphics.left.size === 'S' ? 24 : feGraphics.left.size === 'L' ? 48 : 36;
       html += `<div style="flex-shrink:0;margin-right:6px;"><img src="${feGraphics.left.data}" style="width:${size}px;height:${size}px;object-fit:contain;"></div>`;
     }
@@ -12969,8 +14027,14 @@ function updateFullEditorPreview() {
   if (hasGraphics) {
     html += '</div>';
     
-    // Right graphic
-    if (feGraphics.right) {
+    // Right side (graphic or QR)
+    if (qrPosition === 'right') {
+      const qrDataURL = generatePreviewQR();
+      const qrSize = Math.min(height - 10, 48);
+      if (qrDataURL) {
+        html += `<div style="flex-shrink:0;margin-left:6px;"><img src="${qrDataURL}" style="width:${qrSize}px;height:${qrSize}px;"></div>`;
+      }
+    } else if (feGraphics.right) {
       const size = feGraphics.right.size === 'S' ? 24 : feGraphics.right.size === 'L' ? 48 : 36;
       html += `<div style="flex-shrink:0;margin-left:6px;"><img src="${feGraphics.right.data}" style="width:${size}px;height:${size}px;object-fit:contain;"></div>`;
     }
@@ -13000,6 +14064,9 @@ function saveFromFullEditor() {
   // Check if any border is enabled
   const hasBorder = feBorder.top || feBorder.bottom || feBorder.left || feBorder.right;
   
+  // Check if barcode is enabled
+  const hasBarcode = feCurrentBarcode && feCurrentBarcode.enabled;
+  
   if (feEditingId) {
     // Update existing
     const text = getSavedText(feEditingId);
@@ -13014,6 +14081,7 @@ function saveFromFullEditor() {
       text.alignV = feAlignV;
       text.graphics = feGraphics.left || feGraphics.right ? { ...feGraphics } : undefined;
       text.border = hasBorder ? { ...feBorder } : undefined;
+      text.barcode = hasBarcode ? { ...feCurrentBarcode } : undefined;
       saveSavedTexts();
       showToast('Saved changes', 'success');
       renderCurrentTab();
@@ -13035,6 +14103,7 @@ function saveFromFullEditor() {
       alignV: feAlignV,
       graphics: feGraphics.left || feGraphics.right ? { ...feGraphics } : undefined,
       border: hasBorder ? { ...feBorder } : undefined,
+      barcode: hasBarcode ? { ...feCurrentBarcode } : undefined,
       tokens: feIsTemplate ? extractTokens(serialized) : []
     };
     
@@ -13159,7 +14228,9 @@ function renderQuickActions() {
     
     for (const action of uniqueActions) {
       const lines = action.lines || [];
-      const preview = lines[0] ? escapeHtml(lines[0].substring(0, 40)) : 'Untitled';
+      // lines[0] may be a string or an object with .text property
+      const firstLine = lines[0] ? (typeof lines[0] === 'string' ? lines[0] : lines[0].text || '') : '';
+      const preview = firstLine ? escapeHtml(firstLine.substring(0, 40)) : 'Untitled';
       const labelType = action.labelType || '5160';
       const spec = LABEL_TYPES[labelType];
       
@@ -13171,6 +14242,7 @@ function renderQuickActions() {
       let icon = '🏷️';
       if (spec && spec.category === 'badge') icon = '👋';
       else if (spec && spec.category === 'tent') icon = '⛺';
+      else if (spec && spec.category === 'round') icon = '⭕';
       
       html += '<div class="quick-action-item" onclick="quickActionReprint(\'' + action.id + '\')">' +
         '<div class="quick-action-icon">' + icon + '</div>' +
@@ -13705,6 +14777,472 @@ function closeAddTextPickerModal() {
   window._addTextSheetId = null;
 }
 
+// Sheet modal functions
+let editingSheetId = null;
+
+function openNewSheetModal() {
+  editingSheetId = null;
+  document.getElementById('sheetModalTitle').textContent = 'New Sheet';
+  document.getElementById('sheetNameInput').value = '';
+  document.getElementById('sheetNoteInput').value = '';
+  document.getElementById('sheetCountInput').value = '1';
+  document.getElementById('sheetCountGroup').style.display = 'block';
+  
+  // Populate label type dropdown
+  const select = document.getElementById('sheetTypeSelect');
+  select.innerHTML = '';
+  for (const [typeId, spec] of Object.entries(LABEL_TYPES)) {
+    const opt = document.createElement('option');
+    opt.value = typeId;
+    opt.textContent = spec.name + ' (' + spec.cols + '×' + spec.rows + ')';
+    select.appendChild(opt);
+  }
+  select.disabled = false;
+  
+  document.getElementById('sheetModal').classList.add('visible');
+  setTimeout(() => document.getElementById('sheetNameInput').focus(), 100);
+}
+
+function openEditSheetModal(sheetId) {
+  const sh = sheets[sheetId];
+  if (!sh) return;
+  
+  editingSheetId = sheetId;
+  document.getElementById('sheetModalTitle').textContent = 'Edit Sheet';
+  document.getElementById('sheetNameInput').value = sh.name || '';
+  document.getElementById('sheetNoteInput').value = sh.note || '';
+  document.getElementById('sheetCountInput').value = sh.sheetCount || 1;
+  document.getElementById('sheetCountGroup').style.display = 'none'; // Can't change count after creation
+  
+  // Populate and lock label type
+  const select = document.getElementById('sheetTypeSelect');
+  select.innerHTML = '';
+  const spec = LABEL_TYPES[sh.labelType];
+  const opt = document.createElement('option');
+  opt.value = sh.labelType;
+  opt.textContent = spec.name + ' (' + spec.cols + '×' + spec.rows + ')';
+  select.appendChild(opt);
+  select.disabled = true;
+  
+  document.getElementById('sheetModal').classList.add('visible');
+  setTimeout(() => document.getElementById('sheetNameInput').focus(), 100);
+}
+
+function closeSheetModal() {
+  document.getElementById('sheetModal').classList.remove('visible');
+  editingSheetId = null;
+}
+
+function saveSheetModal() {
+  const name = document.getElementById('sheetNameInput').value.trim();
+  const note = document.getElementById('sheetNoteInput').value.trim();
+  const labelType = document.getElementById('sheetTypeSelect').value;
+  const sheetCount = parseInt(document.getElementById('sheetCountInput').value) || 1;
+  
+  if (!name) {
+    showToast('Please enter a sheet name', 'error');
+    return;
+  }
+  
+  if (editingSheetId) {
+    // Edit existing
+    const sh = sheets[editingSheetId];
+    if (sh) {
+      sh.name = name;
+      sh.note = note || null;
+      saveSheets();
+      showToast('Sheet updated', 'success');
+    }
+  } else {
+    // Create new
+    const id = generateId('sheet');
+    sheets[id] = {
+      id,
+      name,
+      labelType,
+      printed: [],
+      texts: {},
+      note: note || null,
+      sheetCount,
+      createdAt: Date.now(),
+      lastUsedAt: Date.now()
+    };
+    saveSheets();
+    showToast('Sheet created', 'success');
+  }
+  
+  closeSheetModal();
+  renderCurrentTab();
+}
+
+// Saved text modal functions
+let editingSavedTextId = null;
+
+function openNewSavedTextModal() {
+  editingSavedTextId = null;
+  document.getElementById('savedTextModalTitle').textContent = 'New Saved Text';
+  document.getElementById('savedTextNameInput').value = '';
+  document.getElementById('savedTextLine1').value = '';
+  document.getElementById('savedTextLine2').value = '';
+  document.getElementById('savedTextLine3').value = '';
+  document.getElementById('savedTextLine4').value = '';
+  
+  document.getElementById('savedTextModal').classList.add('visible');
+  setTimeout(() => document.getElementById('savedTextNameInput').focus(), 100);
+}
+
+function openEditSavedTextModal(textId) {
+  const st = getSavedText(textId);
+  if (!st) return;
+  
+  editingSavedTextId = textId;
+  document.getElementById('savedTextModalTitle').textContent = 'Edit Saved Text';
+  document.getElementById('savedTextNameInput').value = st.name || '';
+  
+  const lines = deserializeLines(st.text);
+  document.getElementById('savedTextLine1').value = lines[0] ? getFlatText([lines[0]]) : '';
+  document.getElementById('savedTextLine2').value = lines[1] ? getFlatText([lines[1]]) : '';
+  document.getElementById('savedTextLine3').value = lines[2] ? getFlatText([lines[2]]) : '';
+  document.getElementById('savedTextLine4').value = lines[3] ? getFlatText([lines[3]]) : '';
+  
+  document.getElementById('savedTextModal').classList.add('visible');
+  setTimeout(() => document.getElementById('savedTextNameInput').focus(), 100);
+}
+
+function closeSavedTextModal() {
+  document.getElementById('savedTextModal').classList.remove('visible');
+  editingSavedTextId = null;
+}
+
+// Barcode Modal functions for Full Editor
+let selectedBarcodeType = null;
+
+function openBarcodeModal() {
+  // Get text from Full Editor lines
+  const lines = [];
+  for (let i = 1; i <= 4; i++) {
+    const input = document.getElementById('feLine' + i);
+    if (input) {
+      const text = input.value.trim();
+      if (text) lines.push(text);
+    }
+  }
+  
+  const allText = lines.join('\n');
+  
+  if (!allText) {
+    showToast('Enter some text first', 'warning');
+    return;
+  }
+  
+  // Analyze what barcode types are possible
+  const analysis = analyzeBarcodeOptions(allText);
+  
+  // Build the analysis box HTML
+  const box = document.getElementById('barcodeAnalysisBox');
+  let html = '<div style="font-weight: 600; margin-bottom: 10px;">Select barcode type:</div>';
+  
+  // QR Code - always available
+  const qrOption = analysis.available.find(a => a.type === 'qr');
+  html += '<div class="analysis-item available barcode-type-option" data-type="qr" onclick="selectBarcodeType(\'qr\')">' +
+    '<span class="barcode-type-radio">○</span> ' +
+    '<strong>QR Code</strong> <span style="color: var(--text-muted);">(' + qrOption.note + ')</span>' +
+    '</div>';
+  
+  // Other barcode types (grayed out for now)
+  const otherTypes = analysis.available.filter(a => a.type !== 'qr');
+  otherTypes.forEach(opt => {
+    const available = opt.available;
+    const cls = available ? 'available' : 'unavailable';
+    const icon = available ? '○' : '○';
+    const note = opt.note || '';
+    const comingSoon = ' <span style="color: var(--text-muted); font-size: 11px;">(coming soon)</span>';
+    html += '<div class="analysis-item ' + cls + ' barcode-type-option disabled" data-type="' + opt.type + '">' +
+      '<span class="barcode-type-radio">' + icon + '</span> ' +
+      '<strong>' + opt.name + '</strong>' + comingSoon +
+      (note && !available ? ' <span style="color: var(--text-muted); font-size: 11px;">— ' + note + '</span>' : '') +
+      '</div>';
+  });
+  
+  // Show suggestion if any
+  if (analysis.suggestion) {
+    html += '<div class="analysis-suggestion">💡 ' + analysis.suggestion.label + '</div>';
+  }
+  
+  box.innerHTML = html;
+  
+  // Check if barcode already set, show Remove button
+  const removeBtn = document.getElementById('barcodeRemoveBtn');
+  if (feCurrentBarcode && feCurrentBarcode.enabled) {
+    removeBtn.style.display = 'inline-block';
+    // Pre-select the current type and options
+    selectedBarcodeType = feCurrentBarcode.type || 'qr';
+    selectBarcodeType(selectedBarcodeType, true);
+    setBarcodePosition(feCurrentBarcode.position || 'right');
+    document.getElementById('barcodeEncodeType').value = feCurrentBarcode.encodeType || 'text';
+  } else {
+    removeBtn.style.display = 'none';
+    selectedBarcodeType = null;
+    document.getElementById('barcodeQrOptions').style.display = 'none';
+    document.getElementById('barcode1dOptions').style.display = 'none';
+  }
+  
+  document.getElementById('barcodeModal').classList.add('visible');
+}
+
+function closeBarcodeModal() {
+  document.getElementById('barcodeModal').classList.remove('visible');
+  selectedBarcodeType = null;
+}
+
+function selectBarcodeType(type, skipAnimation) {
+  // Don't allow selecting disabled types
+  const option = document.querySelector('.barcode-type-option[data-type="' + type + '"]');
+  if (option && option.classList.contains('disabled')) {
+    return;
+  }
+  
+  selectedBarcodeType = type;
+  
+  // Update radio appearance
+  document.querySelectorAll('.barcode-type-option').forEach(el => {
+    const radio = el.querySelector('.barcode-type-radio');
+    if (el.dataset.type === type) {
+      el.classList.add('selected');
+      radio.textContent = '●';
+    } else {
+      el.classList.remove('selected');
+      radio.textContent = '○';
+    }
+  });
+  
+  // Show appropriate options panel
+  if (type === 'qr') {
+    document.getElementById('barcodeQrOptions').style.display = 'block';
+    document.getElementById('barcode1dOptions').style.display = 'none';
+    
+    // Update position buttons based on existing graphics
+    updateBarcodePositionButtons();
+  } else {
+    document.getElementById('barcodeQrOptions').style.display = 'none';
+    document.getElementById('barcode1dOptions').style.display = 'block';
+  }
+}
+
+function updateBarcodePositionButtons() {
+  const leftBtn = document.querySelector('#barcodeModal .barcode-pos-btn[data-pos="left"]');
+  const rightBtn = document.querySelector('#barcodeModal .barcode-pos-btn[data-pos="right"]');
+  const onlyBtn = document.querySelector('#barcodeModal .barcode-pos-btn[data-pos="only"]');
+  
+  const hasLeftGraphic = feGraphics && feGraphics.left;
+  const hasRightGraphic = feGraphics && feGraphics.right;
+  
+  // Check if label type doesn't support side positions
+  const spec = LABEL_TYPES[fePreviewLabelType];
+  const sidePositionsDisabled = spec && (spec.category === 'round' || spec.category === 'tent');
+  const sideDisabledReason = sidePositionsDisabled ? 
+    (spec.category === 'round' ? 'Not available for round labels' : 'Not available for tent cards') : '';
+  
+  // Disable left button if graphic exists OR label type doesn't support it
+  if (leftBtn) {
+    const leftDisabled = hasLeftGraphic || sidePositionsDisabled;
+    leftBtn.disabled = leftDisabled;
+    leftBtn.classList.toggle('disabled', leftDisabled);
+    if (sidePositionsDisabled) {
+      leftBtn.title = sideDisabledReason;
+    } else if (hasLeftGraphic) {
+      leftBtn.title = 'Left graphic slot is occupied';
+    } else {
+      leftBtn.title = '';
+    }
+  }
+  
+  // Disable right button if graphic exists OR label type doesn't support it
+  if (rightBtn) {
+    const rightDisabled = hasRightGraphic || sidePositionsDisabled;
+    rightBtn.disabled = rightDisabled;
+    rightBtn.classList.toggle('disabled', rightDisabled);
+    if (sidePositionsDisabled) {
+      rightBtn.title = sideDisabledReason;
+    } else if (hasRightGraphic) {
+      rightBtn.title = 'Right graphic slot is occupied';
+    } else {
+      rightBtn.title = '';
+    }
+  }
+  
+  // "Replace Text" is always available
+  if (onlyBtn) {
+    onlyBtn.disabled = false;
+    onlyBtn.classList.remove('disabled');
+  }
+  
+  // If current selection is disabled, switch to an available option
+  const currentPos = getBarcodePosition();
+  const leftDisabled = hasLeftGraphic || sidePositionsDisabled;
+  const rightDisabled = hasRightGraphic || sidePositionsDisabled;
+  
+  if ((currentPos === 'left' && leftDisabled) || (currentPos === 'right' && rightDisabled)) {
+    // Find first available position
+    if (!rightDisabled) {
+      setBarcodePosition('right');
+    } else if (!leftDisabled) {
+      setBarcodePosition('left');
+    } else {
+      setBarcodePosition('only');
+    }
+  }
+}
+
+function setBarcodePosition(pos) {
+  const btns = document.querySelectorAll('#barcodeModal .barcode-pos-btn');
+  btns.forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.pos === pos);
+  });
+}
+
+function getBarcodePosition() {
+  const activeBtn = document.querySelector('#barcodeModal .barcode-pos-btn.active');
+  return activeBtn ? activeBtn.dataset.pos : 'right';
+}
+
+function applyBarcode() {
+  if (!selectedBarcodeType) {
+    showToast('Select a barcode type', 'warning');
+    return;
+  }
+  
+  if (selectedBarcodeType === 'qr') {
+    feCurrentBarcode = {
+      enabled: true,
+      type: 'qr',
+      position: getBarcodePosition(),
+      encodeType: document.getElementById('barcodeEncodeType').value
+    };
+  } else {
+    // Future: 1D barcodes
+    feCurrentBarcode = {
+      enabled: true,
+      type: selectedBarcodeType,
+      showText: document.getElementById('barcode1dShowText').checked
+    };
+  }
+  
+  checkEditorDirty();
+  closeBarcodeModal();
+  showToast('Barcode added', 'success');
+  
+  // Update button to show barcode is active
+  updateBarcodeButtonState();
+}
+
+function removeBarcode() {
+  feCurrentBarcode = null;
+  checkEditorDirty();
+  closeBarcodeModal();
+  showToast('Barcode removed', 'success');
+  updateBarcodeButtonState();
+}
+
+function updateBarcodeButtonState() {
+  const btn = document.getElementById('feBarcodeToggle');
+  if (btn) {
+    if (feCurrentBarcode && feCurrentBarcode.enabled) {
+      btn.classList.add('active');
+      btn.textContent = '▣ Barcode ✓';
+    } else {
+      btn.classList.remove('active');
+      btn.textContent = '▣ Barcode';
+    }
+  }
+  // Update graphics section to show/hide barcode placeholder
+  renderFeGraphics();
+  // Also update the preview to show/hide QR
+  updateFullEditorPreview();
+}
+
+// Generate QR code for Full Editor preview
+function generatePreviewQR() {
+  if (!feCurrentBarcode || !feCurrentBarcode.enabled || feCurrentBarcode.type !== 'qr') {
+    return null;
+  }
+  
+  // Get text from feLines
+  const textLines = feLines.map(l => l.text || '').filter(Boolean);
+  if (textLines.length === 0) return null;
+  
+  let textToEncode = textLines.join('\n');
+  
+  // Handle encode type
+  if (feCurrentBarcode.encodeType === 'vcard') {
+    textToEncode = generateVCard(textLines);
+  } else if (feCurrentBarcode.encodeType === 'url' && !textToEncode.startsWith('http')) {
+    textToEncode = 'https://' + textToEncode;
+  }
+  
+  try {
+    return QRCode.toDataURL(textToEncode, { size: 100, margin: 1 });
+  } catch (e) {
+    console.error('QR preview generation failed:', e);
+    return null;
+  }
+}
+
+function saveSavedTextModal() {
+  const name = document.getElementById('savedTextNameInput').value.trim();
+  const line1 = document.getElementById('savedTextLine1').value.trim();
+  const line2 = document.getElementById('savedTextLine2').value.trim();
+  const line3 = document.getElementById('savedTextLine3').value.trim();
+  const line4 = document.getElementById('savedTextLine4').value.trim();
+  
+  if (!name) {
+    showToast('Please enter a name', 'error');
+    return;
+  }
+  
+  if (!line1 && !line2 && !line3 && !line4) {
+    showToast('Please enter at least one line of text', 'error');
+    return;
+  }
+  
+  // Build lines array
+  const lines = [];
+  if (line1) lines.push({ text: line1, align: 'left', fontSize: 11, bold: false, italic: false });
+  if (line2) lines.push({ text: line2, align: 'left', fontSize: 11, bold: false, italic: false });
+  if (line3) lines.push({ text: line3, align: 'left', fontSize: 11, bold: false, italic: false });
+  if (line4) lines.push({ text: line4, align: 'left', fontSize: 11, bold: false, italic: false });
+  
+  if (editingSavedTextId) {
+    // Edit existing
+    const updates = {
+      name,
+      text: serializeLines(lines)
+    };
+    updateSavedText(editingSavedTextId, updates);
+    showToast('Saved text updated', 'success');
+  } else {
+    // Create new
+    createSavedText(name, lines, {});
+    showToast('Saved text created', 'success');
+  }
+  
+  closeSavedTextModal();
+  renderCurrentTab();
+}
+
+// Generic simple modal close
+function closeSimpleModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.classList.remove('visible');
+  }
+}
+
+// Generic modal close (alias)
+function closeModal(modalId) {
+  closeSimpleModal(modalId);
+}
+
 // Add text to sheet from picker
 function addTextToSheetFromPicker(textId) {
   const sheetId = window._addTextSheetId;
@@ -13786,9 +15324,10 @@ function printFromSheet(sheetId) {
     const graphics = st.graphics || { left: null, right: null };
     const alignV = st.alignV || 'center';
     const border = st.border || null;
+    const barcode = st.barcode || null;
     
     indices.forEach(idx => {
-      printManifest.push({ idx, lines, graphics, alignV, border, textId });
+      printManifest.push({ idx, lines, graphics, alignV, border, textId, barcode });
     });
   });
   
@@ -14072,7 +15611,7 @@ function syncSheetMarkAllAvailable(sheetId) {
 }
 
 // Set a specific number of used labels (marks from position 0)
-function syncSheetSetUsedCount(sheetId) {
+async function syncSheetSetUsedCount(sheetId) {
   const sh = sheets[sheetId];
   if (!sh) return;
   
@@ -14080,7 +15619,11 @@ function syncSheetSetUsedCount(sheetId) {
   const total = getPoolSize(sh);
   const currentUsed = getPrintedCount(sh);
   
-  const input = prompt('How many labels have been used? (0-' + total + ')', currentUsed.toString());
+  const input = await showPromptDialog(
+    'How many labels have been used? (0-' + total + ')',
+    'Set Used Count',
+    currentUsed.toString()
+  );
   if (input === null) return;
   
   const count = parseInt(input);
@@ -14708,6 +16251,7 @@ function buildSheetPrintHtml(sh, manifest) {
   const spec = LABEL_TYPES[sh.labelType];
   const lps = spec.cols * spec.rows;
   const isTentCard = spec.category === 'tent';
+  const isRound = spec.category === 'round';
   
   // Build CSS
   let html = '<!DOCTYPE html><html><head><style>';
@@ -14733,6 +16277,12 @@ function buildSheetPrintHtml(sh, manifest) {
   html += '.print-line.fill-line { display:flex; align-items:flex-end; gap:3px; }';
   html += '.print-line.fill-line .fill-label { white-space:nowrap; flex-shrink:0; }';
   html += '.print-line.fill-line .fill-rule { flex:1; border-bottom:1px solid #000; min-width:0.25in; margin-bottom:1px; }';
+  // Round label styling
+  if (isRound) {
+    html += '.print-label.round-label { border-radius:50%; justify-content:center; align-items:center; text-align:center; }';
+    html += '.print-label.round-label .print-text-zone { align-items:center; justify-content:center; }';
+    html += '.print-label.round-label .print-line { justify-content:center; text-align:center; }';
+  }
   // Tent card fold line styling
   if (isTentCard) {
     html += '.print-label.tent-card { position:relative; padding:0; }';
@@ -14761,6 +16311,33 @@ function buildSheetPrintHtml(sh, manifest) {
     if (alignV === 'bottom') return 'flex-end';
     if (alignV === 'spread') return 'space-between';
     return 'center';
+  }
+  
+  // Helper to generate QR code data URL
+  function getQRDataURL(item, spec) {
+    const bc = item.barcode;
+    if (!bc || !bc.enabled) return null;
+    
+    // Build text to encode
+    let textToEncode = item.lines.map(l => l.text || '').filter(Boolean).join('\n');
+    
+    // Handle different encode types
+    if (bc.encodeType === 'vcard') {
+      const lineTexts = item.lines.map(l => l.text || '');
+      textToEncode = generateVCard(lineTexts);
+    } else if (bc.encodeType === 'url' && !textToEncode.startsWith('http')) {
+      textToEncode = 'https://' + textToEncode;
+    }
+    
+    // Calculate QR size based on label height (roughly 80% of label height)
+    const qrSize = Math.floor(spec.labelH * 96 * 0.8); // 96 DPI
+    
+    try {
+      return QRCode.toDataURL(textToEncode, { size: qrSize, margin: 1 });
+    } catch (e) {
+      console.error('QR generation failed:', e);
+      return null;
+    }
   }
   
   // Render each page
@@ -14800,14 +16377,55 @@ function buildSheetPrintHtml(sh, manifest) {
       const linesHtml = item.lines.map(l => renderPrintLineHtml(l)).join('');
       const gfx = item.graphics;
       const hasGfx = gfx && (gfx.left || gfx.right);
+      const bc = item.barcode;
+      const hasQR = bc && bc.enabled && bc.type === 'qr';
       
       if (isTentCard) {
-        // Tent card rendering
+        // Tent card rendering (no QR support for now)
         html += '<div class="print-label tent-card" style="top:' + top + 'in;left:' + left + 'in;width:' + spec.labelW + 'in;height:' + labelH + 'in;">';
         html += '<div class="fold-line"></div>';
         html += '<div class="tent-top"><div class="print-text-zone">' + linesHtml + '</div></div>';
         html += '<div class="tent-bottom"><div class="print-text-zone">' + linesHtml + '</div></div>';
         html += '</div>';
+      } else if (isRound) {
+        // Round label rendering - content centered
+        if (hasQR && bc.position === 'only') {
+          // QR code only for round label
+          const qrDataURL = getQRDataURL(item, spec);
+          const qrSize = (spec.labelW * 0.7).toFixed(3); // QR is 70% of label diameter
+          html += '<div class="print-label round-label" style="top:' + top + 'in;left:' + left + 'in;width:' + spec.labelW + 'in;height:' + labelH + 'in;">';
+          html += '<div class="print-qr" style="width:' + qrSize + 'in;height:' + qrSize + 'in;"><img src="' + qrDataURL + '"></div>';
+          html += '</div>';
+        } else {
+          // Text centered in round label (graphics and side QR not practical for round)
+          html += '<div class="print-label round-label" style="top:' + top + 'in;left:' + left + 'in;width:' + spec.labelW + 'in;height:' + labelH + 'in;padding:0.15in;">';
+          html += '<div class="print-text-zone">' + linesHtml + '</div>';
+          html += '</div>';
+        }
+      } else if (hasQR) {
+        // QR code layout
+        const qrDataURL = getQRDataURL(item, spec);
+        const qrPosition = bc.position || 'right';
+        const qrSize = (spec.labelH * 0.85).toFixed(3); // QR is ~85% of label height
+        
+        if (qrPosition === 'only') {
+          // QR code only, no text
+          html += '<div class="print-label" style="top:' + top + 'in;left:' + left + 'in;width:' + spec.labelW + 'in;height:' + labelH + 'in;padding:0.05in;justify-content:center;align-items:center;">';
+          html += '<div class="print-qr" style="width:' + qrSize + 'in;height:' + qrSize + 'in;"><img src="' + qrDataURL + '"></div>';
+          html += '</div>';
+        } else {
+          // QR + text layout
+          let innerHtml = '';
+          if (qrPosition === 'left') {
+            innerHtml += '<div class="print-qr" style="width:' + qrSize + 'in;height:' + qrSize + 'in;"><img src="' + qrDataURL + '"></div>';
+            innerHtml += '<div class="print-text-zone" style="justify-content:' + getFlexAlign(item.alignV) + ';padding-left:0.08in;">' + linesHtml + '</div>';
+          } else {
+            // right (default)
+            innerHtml += '<div class="print-text-zone" style="justify-content:' + getFlexAlign(item.alignV) + ';padding-right:0.08in;">' + linesHtml + '</div>';
+            innerHtml += '<div class="print-qr" style="width:' + qrSize + 'in;height:' + qrSize + 'in;"><img src="' + qrDataURL + '"></div>';
+          }
+          html += '<div class="print-label print-label-qr" style="top:' + top + 'in;left:' + left + 'in;width:' + spec.labelW + 'in;height:' + labelH + 'in;padding:0.08in 0.12in;flex-direction:row;align-items:stretch;">' + innerHtml + '</div>';
+        }
       } else if (hasGfx) {
         // Graphics layout (same as v1.2)
         const usableW = spec.labelW - 0.24;
@@ -14870,10 +16488,14 @@ function renderSavedTab(stats) {
       sheetLinksHtml = '<div class="saved-card-sheets" style="font-size:11px;color:var(--text-muted);margin-top:4px;">📄 ' + links + '</div>';
     }
     
+    // QR badge
+    const hasQR = t.barcode && t.barcode.enabled;
+    const qrBadge = hasQR ? ' <span class="badge" style="background:var(--accent-bg);color:var(--accent-text);font-size:10px;">QR</span>' : '';
+    
     html += '<div class="saved-card" onclick="openFullEditor(\'' + t.id + '\', false)">' +
       '<div class="saved-card-header">' +
         '<div>' +
-          '<div class="saved-card-name">' + escapeHtml(t.name) + '</div>' +
+          '<div class="saved-card-name">' + escapeHtml(t.name) + qrBadge + '</div>' +
           '<div class="saved-card-preview">' + escapeHtml(preview) + (preview.length >= 60 ? '…' : '') + '</div>' +
           sheetLinksHtml +
         '</div>' +
@@ -15529,6 +17151,7 @@ function wf1RenderTypeGrid() {
     let catBadge = '';
     if (spec.category === 'badge') catBadge = ' 🏷️';
     else if (spec.category === 'tent') catBadge = ' ⛺';
+    else if (spec.category === 'round') catBadge = ' ⭕';
     
     html += '<div class="wf1-type-card' + (selected ? ' selected' : '') + (isLast ? ' last-used' : '') + '" data-type="' + typeId + '" onclick="wf1SelectType(\'' + typeId + '\')" ondblclick="wf1SelectTypeAndAdvance(\'' + typeId + '\')">' +
       '<div class="wf1-type-card-id">' + typeId + catBadge + '</div>' +
@@ -17244,14 +18867,16 @@ let wf1BatchReturnState = null;
 
 // Clone a built-in template and open for editing
 function wf1CloneBuiltinTemplate(builtinId) {
-  let templateText, templateName;
+  let templateText, templateName, templateTokens;
   
   if (builtinId === '__address__') {
     templateText = '{name}\n{address}\n{city}, {state} {zip}';
     templateName = 'Address (Custom)';
+    templateTokens = ['name', 'address', 'city', 'state', 'zip'];
   } else if (builtinId === '__nametag__') {
     templateText = '{name}\n{title}';
     templateName = 'Name Tag (Custom)';
+    templateTokens = ['name', 'title'];
   } else {
     return;
   }
@@ -17262,10 +18887,11 @@ function wf1CloneBuiltinTemplate(builtinId) {
     name: templateName,
     type: 'template',
     text: templateText,
+    tokens: templateTokens,
     createdAt: Date.now()
   };
   savedTexts.push(newTemplate);
-  saveToStorage();
+  saveSavedTexts();
   
   // Save batch state so we can return
   wf1BatchReturnState = {
@@ -17307,10 +18933,11 @@ function wf1CreateNewTemplate() {
     name: 'Batch Template ' + new Date().toLocaleDateString(),
     type: 'template',
     text: '{field1}\n{field2}',
+    tokens: ['field1', 'field2'],
     createdAt: Date.now()
   };
   savedTexts.push(newTemplate);
-  saveToStorage();
+  saveSavedTexts();
   
   // Save batch state so we can return
   wf1BatchReturnState = {
@@ -17379,8 +19006,9 @@ function wf1SaveTemplateAndReturn() {
     template.graphics = fullEditorGraphics;
     template.alignV = fullEditorAlignV;
     template.border = fullEditorBorder;
+    template.tokens = extractTokens(template.text);
     template.modifiedAt = Date.now();
-    saveToStorage();
+    saveSavedTexts();
     showToast('Template saved!', 'success');
   }
   
@@ -17758,8 +19386,14 @@ function wf1CancelBatchEdit(index) {
 }
 
 // Delete a batch label
-function wf1DeleteBatchLabel(index) {
-  if (!confirm('Remove this label from the batch?')) return;
+async function wf1DeleteBatchLabel(index) {
+  const ok = await showConfirmDialog(
+    'Remove this label from the batch?',
+    'Remove Label',
+    'Remove',
+    'Cancel'
+  );
+  if (!ok) return;
   
   wf1BatchContent.splice(index, 1);
   wf1Quantity = wf1BatchContent.length;
@@ -18000,6 +19634,7 @@ function buildCombinedPrintHtml(sh, manifest, sheetId) {
   const spec = LABEL_TYPES[sh.labelType];
   const lps = spec.cols * spec.rows;
   const isTentCard = spec.category === 'tent';
+  const isRound = spec.category === 'round';
   const printed = new Set(sh.printed || []);
   const remaining = lps - printed.size;
   const createdDate = new Date(sh.createdAt || Date.now()).toLocaleDateString();
@@ -18029,6 +19664,11 @@ function buildCombinedPrintHtml(sh, manifest, sheetId) {
   html += '.print-line.fill-line { display:flex; align-items:flex-end; gap:3px; }';
   html += '.print-line.fill-line .fill-label { white-space:nowrap; flex-shrink:0; }';
   html += '.print-line.fill-line .fill-rule { flex:1; border-bottom:1px solid #000; min-width:0.25in; margin-bottom:1px; }';
+  if (isRound) {
+    html += '.print-label.round-label { border-radius:50%; justify-content:center; align-items:center; text-align:center; }';
+    html += '.print-label.round-label .print-text-zone { align-items:center; justify-content:center; }';
+    html += '.print-label.round-label .print-line { justify-content:center; text-align:center; }';
+  }
   if (isTentCard) {
     html += '.print-label.tent-card { position:relative; padding:0; }';
     html += '.fold-line { position:absolute; left:0; right:0; top:50%; border-top:1px dashed #ccc; z-index:1; }';
@@ -18070,7 +19710,12 @@ function buildCombinedPrintHtml(sh, manifest, sheetId) {
       if (item.border.right) borderStyle += 'border-right:2px solid ' + bc + ';';
     }
     
-    html += '<div class="print-label' + (hasGraphics ? ' print-label-gfx' : '') + '" style="top:' + top + 'in;left:' + left + 'in;width:' + spec.labelW + 'in;height:' + spec.labelH + 'in;padding:0.05in;justify-content:' + flexAlign + ';' + borderStyle + '">';
+    // Determine label class
+    let labelClass = 'print-label';
+    if (isRound) labelClass += ' round-label';
+    else if (hasGraphics) labelClass += ' print-label-gfx';
+    
+    html += '<div class="' + labelClass + '" style="top:' + top + 'in;left:' + left + 'in;width:' + spec.labelW + 'in;height:' + spec.labelH + 'in;padding:0.05in;justify-content:' + flexAlign + ';' + borderStyle + '">';
     
     if (hasGraphics && item.graphics.left) {
       const size = item.graphics.left.size === 'S' ? 0.3 : item.graphics.left.size === 'L' ? 0.6 : 0.45;
@@ -20783,6 +22428,13 @@ function closePromptModal(result) {
   }
 }
 
+// Promise-based prompt dialog
+function showPromptDialog(message, title, defaultValue) {
+  return new Promise(resolve => {
+    showPrompt(message, title, defaultValue, resolve);
+  });
+}
+
 // ============================================================================
 // WELCOME / FIRST RUN
 // ============================================================================
@@ -20939,7 +22591,7 @@ function safeLoad(key, defaultValue) {
 
 function exportAllData() {
   const data = {
-    version: '3.18.0',
+    version: '3.18.6',
     exportedAt: new Date().toISOString(),
     settings: settings,
     sheets: sheets,
@@ -20960,6 +22612,11 @@ function exportAllData() {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+  
+  // Record backup timestamp
+  settings.lastBackupAt = Date.now();
+  saveSettings();
+  updateBackupStatus();
   
   showToast('Data exported successfully', 'success');
 }
@@ -21104,7 +22761,7 @@ async function startSyncShare() {
   
   // Prepare data
   const data = {
-    version: '3.18.0',
+    version: '3.18.6',
     exportedAt: new Date().toISOString(),
     expiresAt: Date.now() + SYNC_EXPIRY_MS,
     sheets: sheets,
@@ -21492,7 +23149,7 @@ async function satelliteShareToPrimary() {
   const pendingTexts = savedTexts.filter(t => pending.includes(t.id));
   
   const data = {
-    version: '3.18.0',
+    version: '3.18.6',
     type: 'satellite_contribution',
     storeId: getOrCreateStoreId(),
     exportedAt: new Date().toISOString(),
@@ -21938,7 +23595,7 @@ async function primaryShareToSatellite() {
   
   // Prepare full state data
   const data = {
-    version: '3.18.0',
+    version: '3.18.6',
     type: 'primary_share',
     exportedAt: new Date().toISOString(),
     expiresAt: Date.now() + SYNC_EXPIRY_MS,
@@ -22032,7 +23689,7 @@ async function primaryTransferRole() {
       
       // Prepare transfer data - includes full state + transfer flag
       const data = {
-        version: '3.18.0',
+        version: '3.18.6',
         type: 'primary_transfer',
         exportedAt: new Date().toISOString(),
         expiresAt: Date.now() + SYNC_EXPIRY_MS,
@@ -22246,7 +23903,7 @@ function init() {
   
   // Log stats for debugging
   const stats = getDataStats();
-  console.log('LabelKeeper v3.18.0 initialized', stats);
+  console.log('LabelKeeper v3.18.6 initialized', stats);
 }
 
 /**
