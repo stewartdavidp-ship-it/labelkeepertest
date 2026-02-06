@@ -17090,6 +17090,10 @@ function closeFullEditorToWizard() {
     // Clear style template selection (user is now using custom Full Editor styles)
     wf1StyleTemplateId = null;
     
+    // Clear saved text selection - user has customized content in Full Editor
+    // so we should use wf1FeSnapshot and wf1ContentLines, not the original saved text
+    wf1SelectedSavedTextId = null;
+    
     // Transfer content back to WF1 editor (text, align, fontSize only — wizard can display these)
     for (let i = 1; i <= 4; i++) {
       const feInput = document.getElementById('feLine' + i);
@@ -25740,8 +25744,22 @@ function wf1RenderPreview() {
   if (wf1FeSnapshot) {
     graphics = wf1FeSnapshot.graphics || null;
     border = wf1FeSnapshot.border || null;
-    barcode = wf1FeSnapshot.barcode || null;
+    barcode = wf1FeSnapshot.barcode ? { ...wf1FeSnapshot.barcode } : null;
     alignV = wf1FeSnapshot.alignV || 'center';
+    
+    // Generate QR data if barcode is enabled (barcode object doesn't store data, it's generated at render time)
+    if (barcode && barcode.enabled && barcode.type === 'qr' && wf1ContentLines.length > 0) {
+      const textLines = wf1ContentLines.map(l => l.text || '').filter(Boolean);
+      if (textLines.length > 0) {
+        let textToEncode = textLines.join('\n');
+        if (barcode.encodeType === 'vcard') {
+          textToEncode = generateVCard(textLines);
+        } else if (barcode.encodeType === 'url' && !textToEncode.startsWith('http')) {
+          textToEncode = 'https://' + textToEncode;
+        }
+        barcode.data = textToEncode;
+      }
+    }
   }
   
   if (wf1JobType === 'individual') {
