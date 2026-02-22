@@ -25698,7 +25698,7 @@ function wf1RenderPreview() {
     html += '</div>';
   } else if (isNewSheet) {
     // New sheet from stock
-    const inv = getInventory(wf1LabelType);
+    const inv = getInventoryForType(wf1LabelType);
     const hasStock = inv && inv.stock > 0;
     html += '<div style="font-size:13px; color:var(--text); line-height:1.5;">';
     if (hasStock) {
