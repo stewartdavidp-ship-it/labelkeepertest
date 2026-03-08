@@ -12926,7 +12926,7 @@ function renderUnifiedLabelPreview(config, options = {}) {
   
   // Calculate preview-appropriate graphic sizes based on label preview height
   const previewGfxSize = Math.max(Math.floor(height * 0.7), 40);
-  const previewQRSize = Math.max(Math.floor(height * 0.55), 32);
+  const previewQRSize = Math.max(Math.floor(height * 0.35), 28);
 
   if (hasSideContent) {
     html += '<div style="display:flex;align-items:center;width:100%;height:100%;gap:6px;">';
@@ -21178,8 +21178,8 @@ function buildSheetPrintHtml(sh, manifest) {
         // Graphic: fill available height, cap width at 35% of label width
         const maxGfxW = spec.labelW * 0.35;
         const gfxW = Math.min(availH, maxGfxW).toFixed(3);
-        // QR: 60% of label height (compact but scannable when sharing space with graphics)
-        const qrSize = (spec.labelH * 0.6).toFixed(3);
+        // QR: 35% of label height (compact but scannable when sharing space with graphics)
+        const qrSize = (spec.labelH * 0.35).toFixed(3);
         let innerHtml = '';
 
         // Left side
