@@ -9514,9 +9514,10 @@ const LABEL_TYPES = {
   '8293': { name: '8293', desc: 'Round Label', labelW: 1.5, labelH: 1.5, cols: 4, rows: 5, topMargin: 0.75, leftMargin: 0.4375, hGutter: 0.5, vGutter: 0.5, sizeDisplay: '1½″ ⌀', layoutDisplay: '4 × 5', category: 'round' },
   // Name Badges & Tent Cards (Session 21)
   '5395': { name: '5395', desc: 'Name Badge', labelW: 3.375, labelH: 2.333, cols: 2, rows: 4, topMargin: 0.55, leftMargin: 0.6875, hGutter: 0.375, vGutter: 0.19, sizeDisplay: '2⅓″ × 3⅜″', layoutDisplay: '2 × 4', category: 'badge' },
-  '5302': { name: '5302', desc: 'Tent Card (Small)', labelW: 3.5, labelH: 4, cols: 2, rows: 2, topMargin: 0.75, leftMargin: 0.75, hGutter: 0, vGutter: 0, sizeDisplay: '3½″ × 2″ (folded)', layoutDisplay: '2 × 2', category: 'tent', foldLine: 2 }
+  '5302': { name: '5302', desc: 'Tent Card (Small)', labelW: 3.5, labelH: 4, cols: 2, rows: 2, topMargin: 0.75, leftMargin: 0.75, hGutter: 0, vGutter: 0, sizeDisplay: '3½″ × 2″ (folded)', layoutDisplay: '2 × 2', category: 'tent', foldLine: 2 },
+  '5371': { name: '5371 / 8371', desc: 'Business Card', labelW: 3.5, labelH: 2, cols: 2, rows: 5, topMargin: 0.5, leftMargin: 0.75, hGutter: 0, vGutter: 0, sizeDisplay: '3½″ × 2″', layoutDisplay: '2 × 5', category: 'card' }
 };
-const TYPE_ORDER = ['5160', '5163', '5164', '5161', '5162', '5167', '5195', '5168', '5165', '8293', '5395', '5302'];
+const TYPE_ORDER = ['5160', '5163', '5164', '5161', '5162', '5167', '5195', '5168', '5165', '8293', '5395', '5302', '5371'];
 
 // ========== LOCALSTORAGE KEYS ==========
 // v1.x compatible keys (preserved for data migration)
@@ -12975,9 +12976,7 @@ function renderUnifiedLabelPreview(config, options = {}) {
 function generateQRDataURL(data, size) {
   if (!data || typeof QRCode === 'undefined') return null;
   try {
-    const canvas = document.createElement('canvas');
-    QRCode.toCanvas(canvas, data, { width: size || 64, margin: 1 }, function() {});
-    return canvas.toDataURL();
+    return QRCode.toDataURL(data, { size: size || 64, margin: 1 });
   } catch (e) {
     return null;
   }
@@ -13206,13 +13205,18 @@ function parseUrlParams() {
   
   // Check for sheet deep link (QR code scan)
   if (params.has('sheet')) {
-    return { 
+    return {
       hasParams: true,
       action: 'openSheet',
       sheetId: params.get('sheet')
     };
   }
-  
+
+  // Check for printCard deep link (from Shir Glassworks admin)
+  if (params.get('action') === 'printCard') {
+    return { hasParams: true, action: 'printCard' };
+  }
+
   if (!params.has('text') && !params.has('action')) {
     return { hasParams: false };
   }
@@ -19910,18 +19914,23 @@ function generatePreviewQR() {
   if (!feCurrentBarcode || !feCurrentBarcode.enabled || feCurrentBarcode.type !== 'qr') {
     return null;
   }
-  
-  // Get text from feLines
-  const textLines = feLines.map(l => l.text || '').filter(Boolean);
-  if (textLines.length === 0) return null;
-  
-  let textToEncode = textLines.join('\n');
-  
-  // Handle encode type
-  if (feCurrentBarcode.encodeType === 'vcard') {
-    textToEncode = generateVCard(textLines);
-  } else if (feCurrentBarcode.encodeType === 'url' && !textToEncode.startsWith('http')) {
-    textToEncode = 'https://' + textToEncode;
+
+  let textToEncode;
+  if (feCurrentBarcode.fixedData) {
+    textToEncode = feCurrentBarcode.fixedData;
+  } else {
+    // Get text from feLines
+    const textLines = feLines.map(l => l.text || '').filter(Boolean);
+    if (textLines.length === 0) return null;
+
+    textToEncode = textLines.join('\n');
+
+    // Handle encode type
+    if (feCurrentBarcode.encodeType === 'vcard') {
+      textToEncode = generateVCard(textLines);
+    } else if (feCurrentBarcode.encodeType === 'url' && !textToEncode.startsWith('http')) {
+      textToEncode = 'https://' + textToEncode;
+    }
   }
   
   try {
@@ -21068,16 +21077,21 @@ function buildSheetPrintHtml(sh, manifest) {
   function getQRDataURL(item, spec) {
     const bc = item.barcode;
     if (!bc || !bc.enabled) return null;
-    
-    // Build text to encode
-    let textToEncode = item.lines.map(l => l.text || '').filter(Boolean).join('\n');
-    
-    // Handle different encode types
-    if (bc.encodeType === 'vcard') {
-      const lineTexts = item.lines.map(l => l.text || '');
-      textToEncode = generateVCard(lineTexts);
-    } else if (bc.encodeType === 'url' && !textToEncode.startsWith('http')) {
-      textToEncode = 'https://' + textToEncode;
+
+    // Build text to encode — fixedData bypasses text-line derivation (used by external integrations like Shir Glassworks)
+    let textToEncode;
+    if (bc.fixedData) {
+      textToEncode = bc.fixedData;
+    } else {
+      textToEncode = item.lines.map(l => l.text || '').filter(Boolean).join('\n');
+
+      // Handle different encode types
+      if (bc.encodeType === 'vcard') {
+        const lineTexts = item.lines.map(l => l.text || '');
+        textToEncode = generateVCard(lineTexts);
+      } else if (bc.encodeType === 'url' && !textToEncode.startsWith('http')) {
+        textToEncode = 'https://' + textToEncode;
+      }
     }
     
     // Calculate QR size based on label height (roughly 80% of label height)
@@ -21153,12 +21167,42 @@ function buildSheetPrintHtml(sh, manifest) {
           html += '<div class="print-text-zone">' + linesHtml + '</div>';
           html += '</div>';
         }
+      } else if (hasQR && hasGfx) {
+        // Combined graphics + QR layout (e.g., product card: image + text + QR)
+        const qrDataURL = getQRDataURL(item, spec);
+        const qrPosition = bc.position || 'right';
+        const qrSize = (spec.labelH * 0.85).toFixed(3);
+        const usableW = spec.labelW - 0.24;
+        let innerHtml = '';
+
+        // Left side
+        if (qrPosition === 'left') {
+          innerHtml += '<div class="print-qr" style="width:' + qrSize + 'in;height:' + qrSize + 'in;"><img src="' + qrDataURL + '"></div>';
+        }
+        if (gfx.left && gfx.left.data) {
+          const leftW = (usableW * (gfx.left.widthPct || 20) / 100).toFixed(3);
+          innerHtml += '<div class="print-graphic" style="width:' + leftW + 'in;"><img src="' + gfx.left.data + '"></div>';
+        }
+
+        // Center: text
+        innerHtml += '<div class="print-text-zone" style="justify-content:' + getFlexAlign(item.alignV) + ';padding:0 0.06in;">' + linesHtml + '</div>';
+
+        // Right side
+        if (gfx.right && gfx.right.data) {
+          const rightW = (usableW * (gfx.right.widthPct || 20) / 100).toFixed(3);
+          innerHtml += '<div class="print-graphic" style="width:' + rightW + 'in;"><img src="' + gfx.right.data + '"></div>';
+        }
+        if (qrPosition !== 'left') {
+          innerHtml += '<div class="print-qr" style="width:' + qrSize + 'in;height:' + qrSize + 'in;"><img src="' + qrDataURL + '"></div>';
+        }
+
+        html += '<div class="print-label print-label-gfx" style="top:' + top + 'in;left:' + left + 'in;width:' + spec.labelW + 'in;height:' + labelH + 'in;padding:0.08in 0.12in;flex-direction:row;align-items:stretch;">' + innerHtml + '</div>';
       } else if (hasQR) {
         // QR code layout
         const qrDataURL = getQRDataURL(item, spec);
         const qrPosition = bc.position || 'right';
         const qrSize = (spec.labelH * 0.85).toFixed(3); // QR is ~85% of label height
-        
+
         if (qrPosition === 'only') {
           // QR code only, no text
           html += '<div class="print-label" style="top:' + top + 'in;left:' + left + 'in;width:' + spec.labelW + 'in;height:' + labelH + 'in;padding:0.05in;justify-content:center;align-items:center;">';
@@ -24498,24 +24542,29 @@ function wf1GeneratePreviewQR() {
   if (!wf1FeSnapshot || !wf1FeSnapshot.barcode || !wf1FeSnapshot.barcode.enabled || wf1FeSnapshot.barcode.type !== 'qr') {
     return null;
   }
-  
-  // Get text from wizard inputs
-  const textLines = [];
-  for (let i = 1; i <= 4; i++) {
-    const input = document.getElementById('wf1Line' + i);
-    if (input && input.value.trim()) {
-      textLines.push(input.value.trim());
+
+  let textToEncode;
+  if (wf1FeSnapshot.barcode.fixedData) {
+    textToEncode = wf1FeSnapshot.barcode.fixedData;
+  } else {
+    // Get text from wizard inputs
+    const textLines = [];
+    for (let i = 1; i <= 4; i++) {
+      const input = document.getElementById('wf1Line' + i);
+      if (input && input.value.trim()) {
+        textLines.push(input.value.trim());
+      }
     }
-  }
-  if (textLines.length === 0) return null;
-  
-  let textToEncode = textLines.join('\n');
-  
-  // Handle encode type
-  if (wf1FeSnapshot.barcode.encodeType === 'vcard') {
-    textToEncode = generateVCard(textLines);
-  } else if (wf1FeSnapshot.barcode.encodeType === 'url' && !textToEncode.startsWith('http')) {
-    textToEncode = 'https://' + textToEncode;
+    if (textLines.length === 0) return null;
+
+    textToEncode = textLines.join('\n');
+
+    // Handle encode type
+    if (wf1FeSnapshot.barcode.encodeType === 'vcard') {
+      textToEncode = generateVCard(textLines);
+    } else if (wf1FeSnapshot.barcode.encodeType === 'url' && !textToEncode.startsWith('http')) {
+      textToEncode = 'https://' + textToEncode;
+    }
   }
   
   try {
@@ -25748,16 +25797,20 @@ function wf1RenderPreview() {
     alignV = wf1FeSnapshot.alignV || 'center';
     
     // Generate QR data if barcode is enabled (barcode object doesn't store data, it's generated at render time)
-    if (barcode && barcode.enabled && barcode.type === 'qr' && wf1ContentLines.length > 0) {
-      const textLines = wf1ContentLines.map(l => l.text || '').filter(Boolean);
-      if (textLines.length > 0) {
-        let textToEncode = textLines.join('\n');
-        if (barcode.encodeType === 'vcard') {
-          textToEncode = generateVCard(textLines);
-        } else if (barcode.encodeType === 'url' && !textToEncode.startsWith('http')) {
-          textToEncode = 'https://' + textToEncode;
+    if (barcode && barcode.enabled && barcode.type === 'qr') {
+      if (barcode.fixedData) {
+        barcode.data = barcode.fixedData;
+      } else if (wf1ContentLines.length > 0) {
+        const textLines = wf1ContentLines.map(l => l.text || '').filter(Boolean);
+        if (textLines.length > 0) {
+          let textToEncode = textLines.join('\n');
+          if (barcode.encodeType === 'vcard') {
+            textToEncode = generateVCard(textLines);
+          } else if (barcode.encodeType === 'url' && !textToEncode.startsWith('http')) {
+            textToEncode = 'https://' + textToEncode;
+          }
+          barcode.data = textToEncode;
         }
-        barcode.data = textToEncode;
       }
     }
   }
@@ -26167,7 +26220,7 @@ function wf1ExecuteIndividualPrint() {
   
   // Use the canonical buildSheetPrintHtml (same as sheets tab print button)
   const printHtml = buildSheetPrintHtml(sh, printManifest);
-  
+
   // Print via iframe
   const iframe = document.createElement('iframe');
   iframe.style.cssText = 'position:fixed;top:0;left:0;width:0;height:0;border:none;visibility:hidden;';
@@ -26176,10 +26229,40 @@ function wf1ExecuteIndividualPrint() {
   iframeDoc.open();
   iframeDoc.write(printHtml);
   iframeDoc.close();
-  iframe.contentWindow.focus();
-  iframe.contentWindow.print();
-  setTimeout(function() { document.body.removeChild(iframe); }, 1000);
-  
+
+  // Wait for images to load before printing (remote URLs like Firebase Storage need time to fetch)
+  function triggerWf1Print() {
+    iframe.contentWindow.focus();
+    iframe.contentWindow.print();
+    setTimeout(function() { document.body.removeChild(iframe); }, 1000);
+  }
+  var iframeImages = iframeDoc.querySelectorAll('img');
+  var pendingImages = Array.from(iframeImages).filter(function(img) { return !img.complete; });
+  if (pendingImages.length > 0) {
+    var imgLoaded = 0;
+    var printFired = false;
+    var onImgReady = function() {
+      imgLoaded++;
+      if (imgLoaded >= pendingImages.length && !printFired) {
+        printFired = true;
+        triggerWf1Print();
+      }
+    };
+    pendingImages.forEach(function(img) {
+      img.addEventListener('load', onImgReady);
+      img.addEventListener('error', onImgReady);
+    });
+    // Fallback: don't wait more than 3 seconds for images
+    setTimeout(function() {
+      if (!printFired) {
+        printFired = true;
+        triggerWf1Print();
+      }
+    }, 3000);
+  } else {
+    triggerWf1Print();
+  }
+
   // Store for post-print
   wf1PrintResult = { sheetId, positions, isNewSheet, totalLabels: positions.length };
   
@@ -30297,6 +30380,79 @@ function handleUrlDeepLink(params) {
     return;
   }
   
+  // Handle printCard deep link (from Shir Glassworks admin — product card with image + QR)
+  if (params.action === 'printCard') {
+    const payloadStr = localStorage.getItem('lk_printCard');
+    if (!payloadStr) {
+      showToast('No product card data found. Try again from the admin.', 'warning');
+      return;
+    }
+
+    let payload;
+    try {
+      payload = JSON.parse(payloadStr);
+    } catch (e) {
+      showToast('Invalid product card data.', 'error');
+      localStorage.removeItem('lk_printCard');
+      return;
+    }
+
+    // Clear the payload immediately (one-time use)
+    localStorage.removeItem('lk_printCard');
+
+    // Set label type to business card
+    settings.lastLabelType = '5371';
+    saveSettings();
+
+    // Start WF1 to reset state and show the wizard container
+    wf1Start();
+
+    // Skip all wizard steps — jump directly to print preview (Step 7)
+    setTimeout(function() {
+      // Build card content lines
+      var cardLines = [
+        { text: payload.productName || '', align: 'center', fontSize: 14, fontFamily: 'elegant', bold: true, italic: false, underline: false, strikethrough: false, color: '', fillColor: '', borders: '' },
+        { text: 'Shir Glassworks', align: 'center', fontSize: 10, fontFamily: 'default', bold: false, italic: false, underline: false, strikethrough: false, color: '#666666', fillColor: '', borders: '' },
+        { text: '', align: 'left', fontSize: 11, fontFamily: 'default', bold: false, italic: false, underline: false, strikethrough: false, color: '', fillColor: '', borders: '' },
+        { text: '', align: 'left', fontSize: 11, fontFamily: 'default', bold: false, italic: false, underline: false, strikethrough: false, color: '', fillColor: '', borders: '' }
+      ];
+
+      // Set all WF1 state for direct jump to preview
+      wf1LabelType = '5371';
+      wf1JobType = 'individual';
+      wf1Quantity = 1;
+      wf1SelectedSheet = { isNew: true };
+      wf1Orientation = 'next';
+      wf1ContentLines = cardLines;
+
+      wf1FeSnapshot = {
+        lines: cardLines,
+        graphics: {
+          left: payload.productImage ? { data: payload.productImage, size: 'M' } : null,
+          right: null
+        },
+        alignV: 'center',
+        border: { top: false, bottom: false, left: false, right: false, color: '#000000' },
+        barcode: {
+          enabled: true,
+          type: 'qr',
+          position: 'right',
+          encodeType: 'url',
+          fixedData: payload.storyUrl
+        }
+      };
+
+      // Jump to Step 7 (Preview & Print)
+      wf1Step = 7;
+      wf1RenderPreview();
+      wf1ShowStep('wf1Step7');
+
+      showToast('Product card ready — "' + (payload.productName || 'Unknown') + '"', 'success');
+    }, 300);
+
+    return;
+  }
+
   // Handle print deep link — route through WF1
   // Set label type if provided
   if (params.type) {
