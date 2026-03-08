@@ -9008,10 +9008,11 @@ Examples:
 
 <div class="print-sheet" id="printSheet"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
 <script>
 // ============================================================================
-// QR CODE GENERATOR (Compact implementation)
-// Based on qrcode-generator by Kazuhiko Arase - MIT License
+// QR CODE GENERATOR — Wrapper around qrcode-generator CDN library
+// Uses the same library as Shir Glassworks (proven scannable)
 // ============================================================================
 const QRCode = (function() {
   const PAD0 = 0xEC, PAD1 = 0x11;
@@ -9339,11 +9340,20 @@ const QRCode = (function() {
     return data;
   };
 
-  // Public API
+  // Public API — delegates to qrcode-generator CDN library (same lib Shir Glassworks uses)
+  // Falls back to custom implementation if CDN fails to load
   return {
     create: function(text, errorLevel) {
       errorLevel = errorLevel || 0; // 0=L, 1=M, 2=Q, 3=H
-      // Auto-detect type number (size)
+      // Use CDN library if available (proven to produce scannable QR codes)
+      if (typeof qrcode === 'function') {
+        const ecLevels = ['L', 'M', 'Q', 'H'];
+        const qr = qrcode(0, ecLevels[errorLevel]); // 0 = auto type number
+        qr.addData(text);
+        qr.make();
+        return qr;
+      }
+      // Fallback to custom implementation
       for (let typeNumber = 1; typeNumber <= 10; typeNumber++) {
         try {
           const qr = new QRCodeModel(typeNumber, errorLevel);
@@ -9361,20 +9371,22 @@ const QRCode = (function() {
       const dark = options.dark || '#000000';
       const light = options.light || '#ffffff';
       const errorLevel = options.errorLevel || 0;
-      
+
       const qr = this.create(text, errorLevel);
       const moduleCount = qr.getModuleCount();
       const cellSize = Math.floor(size / (moduleCount + margin * 2));
       const actualSize = cellSize * (moduleCount + margin * 2);
-      
+
+      if (cellSize < 1 || actualSize < 1) return null;
+
       const canvas = document.createElement('canvas');
       canvas.width = actualSize;
       canvas.height = actualSize;
       const ctx = canvas.getContext('2d');
-      
+
       ctx.fillStyle = light;
       ctx.fillRect(0, 0, actualSize, actualSize);
-      
+
       ctx.fillStyle = dark;
       for (let row = 0; row < moduleCount; row++) {
         for (let col = 0; col < moduleCount; col++) {
