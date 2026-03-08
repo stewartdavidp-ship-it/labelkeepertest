@@ -12924,44 +12924,46 @@ function renderUnifiedLabelPreview(config, options = {}) {
   const hasRightContent = hasRightGfx || qrPosition === 'right';
   const hasSideContent = hasLeftContent || hasRightContent;
   
+  // Calculate preview-appropriate graphic sizes based on label preview height
+  const previewGfxSize = Math.max(Math.floor(height * 0.7), 40);
+  const previewQRSize = Math.max(Math.floor(height * 0.55), 32);
+
   if (hasSideContent) {
     html += '<div style="display:flex;align-items:center;width:100%;height:100%;gap:6px;">';
-    
+
     // Left side
     if (qrPosition === 'left' && barcode.data) {
-      const qrDataURL = generateQRDataURL(barcode.data, 48);
+      const qrDataURL = generateQRDataURL(barcode.data, previewQRSize);
       if (qrDataURL) {
-        html += '<div style="flex-shrink:0;"><img src="' + qrDataURL + '" style="width:40px;height:40px;"></div>';
+        html += '<div style="flex-shrink:0;"><img src="' + qrDataURL + '" style="width:' + previewQRSize + 'px;height:' + previewQRSize + 'px;"></div>';
       }
     } else if (hasLeftGfx) {
       const gfx = graphics.left;
-      const size = gfx.size === 'S' ? 24 : gfx.size === 'L' ? 48 : 36;
-      html += '<div style="flex-shrink:0;"><img src="' + gfx.data + '" style="width:' + size + 'px;height:' + size + 'px;object-fit:contain;"></div>';
+      html += '<div style="flex-shrink:0;"><img src="' + gfx.data + '" style="width:' + previewGfxSize + 'px;height:' + previewGfxSize + 'px;object-fit:contain;"></div>';
     }
-    
+
     html += '<div style="flex:1;min-width:0;">';
   }
-  
+
   // Render lines
   for (const line of nonEmptyLines) {
     html += renderPreviewLineHtml(line);
   }
-  
+
   if (hasSideContent) {
     html += '</div>';
-    
+
     // Right side
     if (qrPosition === 'right' && barcode.data) {
-      const qrDataURL = generateQRDataURL(barcode.data, 48);
+      const qrDataURL = generateQRDataURL(barcode.data, previewQRSize);
       if (qrDataURL) {
-        html += '<div style="flex-shrink:0;"><img src="' + qrDataURL + '" style="width:40px;height:40px;"></div>';
+        html += '<div style="flex-shrink:0;"><img src="' + qrDataURL + '" style="width:' + previewQRSize + 'px;height:' + previewQRSize + 'px;"></div>';
       }
     } else if (hasRightGfx) {
       const gfx = graphics.right;
-      const size = gfx.size === 'S' ? 24 : gfx.size === 'L' ? 48 : 36;
-      html += '<div style="flex-shrink:0;"><img src="' + gfx.data + '" style="width:' + size + 'px;height:' + size + 'px;object-fit:contain;"></div>';
+      html += '<div style="flex-shrink:0;"><img src="' + gfx.data + '" style="width:' + previewGfxSize + 'px;height:' + previewGfxSize + 'px;object-fit:contain;"></div>';
     }
-    
+
     html += '</div>';
   }
   
@@ -21169,10 +21171,15 @@ function buildSheetPrintHtml(sh, manifest) {
         }
       } else if (hasQR && hasGfx) {
         // Combined graphics + QR layout (e.g., product card: image + text + QR)
+        // Maximize both graphic and QR sizes while leaving room for text
         const qrDataURL = getQRDataURL(item, spec);
         const qrPosition = bc.position || 'right';
-        const qrSize = (spec.labelH * 0.85).toFixed(3);
-        const usableW = spec.labelW - 0.24;
+        const availH = spec.labelH - 0.16; // usable height minus vertical padding
+        // Graphic: fill available height, cap width at 35% of label width
+        const maxGfxW = spec.labelW * 0.35;
+        const gfxW = Math.min(availH, maxGfxW).toFixed(3);
+        // QR: 60% of label height (compact but scannable when sharing space with graphics)
+        const qrSize = (spec.labelH * 0.6).toFixed(3);
         let innerHtml = '';
 
         // Left side
@@ -21180,8 +21187,7 @@ function buildSheetPrintHtml(sh, manifest) {
           innerHtml += '<div class="print-qr" style="width:' + qrSize + 'in;height:' + qrSize + 'in;"><img src="' + qrDataURL + '"></div>';
         }
         if (gfx.left && gfx.left.data) {
-          const leftW = (usableW * (gfx.left.widthPct || 20) / 100).toFixed(3);
-          innerHtml += '<div class="print-graphic" style="width:' + leftW + 'in;"><img src="' + gfx.left.data + '"></div>';
+          innerHtml += '<div class="print-graphic" style="width:' + gfxW + 'in;"><img src="' + gfx.left.data + '"></div>';
         }
 
         // Center: text
@@ -21189,8 +21195,7 @@ function buildSheetPrintHtml(sh, manifest) {
 
         // Right side
         if (gfx.right && gfx.right.data) {
-          const rightW = (usableW * (gfx.right.widthPct || 20) / 100).toFixed(3);
-          innerHtml += '<div class="print-graphic" style="width:' + rightW + 'in;"><img src="' + gfx.right.data + '"></div>';
+          innerHtml += '<div class="print-graphic" style="width:' + gfxW + 'in;"><img src="' + gfx.right.data + '"></div>';
         }
         if (qrPosition !== 'left') {
           innerHtml += '<div class="print-qr" style="width:' + qrSize + 'in;height:' + qrSize + 'in;"><img src="' + qrDataURL + '"></div>';
