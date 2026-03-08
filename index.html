@@ -21201,7 +21201,7 @@ function buildSheetPrintHtml(sh, manifest) {
           innerHtml += '<div class="print-qr" style="width:' + qrSize + 'in;height:' + qrSize + 'in;"><img src="' + qrDataURL + '"></div>';
         }
 
-        html += '<div class="print-label print-label-gfx" style="top:' + top + 'in;left:' + left + 'in;width:' + spec.labelW + 'in;height:' + labelH + 'in;padding:0.08in 0.12in;flex-direction:row;align-items:stretch;">' + innerHtml + '</div>';
+        html += '<div class="print-label" style="top:' + top + 'in;left:' + left + 'in;width:' + spec.labelW + 'in;height:' + labelH + 'in;padding:0.08in 0.12in;flex-direction:row;align-items:center;">' + innerHtml + '</div>';
       } else if (hasQR) {
         // QR code layout
         const qrDataURL = getQRDataURL(item, spec);
@@ -30426,8 +30426,17 @@ function handleUrlDeepLink(params) {
       wf1LabelType = '5371';
       wf1JobType = 'individual';
       wf1Quantity = 1;
-      wf1SelectedSheet = { isNew: true };
       wf1Orientation = 'next';
+
+      // Find the best existing 5371 sheet with available positions (sorted by most recently used)
+      var matchingSheets = Object.values(sheets)
+        .filter(function(s) { return s.labelType === '5371' && !s.retired && getRemainingCount(s) > 0; })
+        .sort(function(a, b) { return (b.lastUsedAt || 0) - (a.lastUsedAt || 0); });
+      if (matchingSheets.length > 0) {
+        wf1SelectedSheet = { isNew: false, id: matchingSheets[0].id };
+      } else {
+        wf1SelectedSheet = { isNew: true };
+      }
       wf1ContentLines = cardLines;
 
       wf1FeSnapshot = {
