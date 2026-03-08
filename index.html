@@ -12978,7 +12978,7 @@ function renderUnifiedLabelPreview(config, options = {}) {
 function generateQRDataURL(data, size) {
   if (!data || typeof QRCode === 'undefined') return null;
   try {
-    return QRCode.toDataURL(data, { size: size || 64, margin: 1 });
+    return QRCode.toDataURL(data, { size: size || 64, margin: 4 });
   } catch (e) {
     return null;
   }
@@ -19936,7 +19936,7 @@ function generatePreviewQR() {
   }
   
   try {
-    return QRCode.toDataURL(textToEncode, { size: 100, margin: 1 });
+    return QRCode.toDataURL(textToEncode, { size: 100, margin: 4 });
   } catch (e) {
     console.error('QR preview generation failed:', e);
     return null;
@@ -21102,7 +21102,7 @@ function buildSheetPrintHtml(sh, manifest) {
     const qrSize = Math.floor(spec.labelH * 300 * 0.8);
     
     try {
-      return QRCode.toDataURL(textToEncode, { size: qrSize, margin: 1 });
+      return QRCode.toDataURL(textToEncode, { size: qrSize, margin: 4 });
     } catch (e) {
       console.error('QR generation failed:', e);
       return null;
@@ -24575,7 +24575,7 @@ function wf1GeneratePreviewQR() {
   }
   
   try {
-    return QRCode.toDataURL(textToEncode, { size: 100, margin: 1 });
+    return QRCode.toDataURL(textToEncode, { size: 100, margin: 4 });
   } catch (e) {
     console.error('WF1 QR preview generation failed:', e);
     return null;
