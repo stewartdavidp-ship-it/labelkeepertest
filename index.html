@@ -9642,6 +9642,12 @@ const lkDb = lkApp.database();
 let lkCurrentUser = null;
 let lkCloudSyncEnabled = false;
 
+// Promise that resolves when Firebase Auth first determines sign-in state
+// (auto-resolves with user if previously signed in, null if not)
+let _lkAuthReadyResolve;
+const lkAuthReady = new Promise(resolve => { _lkAuthReadyResolve = resolve; });
+let lkPendingPrintCardSession = null; // sessionId waiting for post-sign-in processing
+
 // Settings keys that stay device-local (never synced to Firebase)
 const LOCAL_ONLY_SETTINGS = ['storeId', 'deviceRole'];
 
@@ -9714,6 +9720,20 @@ lkAuth.onAuthStateChanged(async (user) => {
     }
   } else {
     console.log('[Auth] Signed out');
+  }
+
+  // Resolve auth ready promise (first call only)
+  if (_lkAuthReadyResolve) {
+    _lkAuthReadyResolve(user);
+    _lkAuthReadyResolve = null;
+  }
+
+  // Process pending print card session after sign-in + cloud load
+  if (user && lkPendingPrintCardSession) {
+    const sessionId = lkPendingPrintCardSession;
+    lkPendingPrintCardSession = null;
+    closePrintCardSignInPrompt();
+    processPrintCardSession(sessionId);
   }
 });
 
@@ -30668,6 +30688,102 @@ function init() {
   console.log('LabelKeeper v3.20.1 initialized', stats);
 }
 
+// ========== PRINT CARD AUTH HELPERS (must be global — called from onAuthStateChanged) ==========
+
+function showPrintCardSignInPrompt() {
+  const overlay = document.createElement('div');
+  overlay.id = 'printCardSignInOverlay';
+  overlay.className = 'modal-overlay visible';
+  overlay.innerHTML =
+    '<div class="modal" style="max-width:380px;">' +
+      '<div class="modal-header">' +
+        '<div class="modal-title">Sign In Required</div>' +
+      '</div>' +
+      '<div class="modal-body" style="text-align:center; padding:24px;">' +
+        '<div style="font-size:40px; margin-bottom:16px;">☁️</div>' +
+        '<div style="color:var(--text); font-size:15px; line-height:1.5; margin-bottom:8px;">' +
+          'Sign in to access your sheets and label data from the cloud.' +
+        '</div>' +
+        '<div style="color:var(--text-muted); font-size:13px; margin-bottom:24px;">' +
+          'This ensures printed labels are tracked across all your devices.' +
+        '</div>' +
+        '<button class="lk-auth-btn" onclick="lkSignIn()" style="font-size:15px; padding:10px 28px;">Sign in with Google</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(overlay);
+}
+
+function closePrintCardSignInPrompt() {
+  const overlay = document.getElementById('printCardSignInOverlay');
+  if (overlay) overlay.remove();
+}
+
+async function processPrintCardSession(sessionId) {
+  try {
+    const resp = await fetch(LK_API_URL + '/sessions/' + sessionId);
+    if (!resp.ok) {
+      showToast('Product card session expired or not found. Try again from the admin.', 'warning');
+      return;
+    }
+    const payload = await resp.json();
+
+    // Same rendering logic as legacy printCard
+    settings.lastLabelType = '5371';
+    settings.showLabelBoundaries = true;
+    saveSettings();
+    wf1Start();
+
+    setTimeout(function() {
+      var cardLines = [
+        { text: payload.productName || '', align: 'center', fontSize: 14, fontFamily: 'elegant', bold: true, italic: false, underline: false, strikethrough: false, color: '', fillColor: '', borders: '' },
+        { text: 'Shir Glassworks', align: 'center', fontSize: 10, fontFamily: 'default', bold: false, italic: false, underline: false, strikethrough: false, color: '#666666', fillColor: '', borders: '' },
+        { text: 'shirglassworks.com', align: 'center', fontSize: 8, fontFamily: 'default', bold: false, italic: false, underline: false, strikethrough: false, color: '#999999', fillColor: '', borders: '' },
+        { text: '', align: 'left', fontSize: 11, fontFamily: 'default', bold: false, italic: false, underline: false, strikethrough: false, color: '', fillColor: '', borders: '' }
+      ];
+
+      wf1LabelType = '5371';
+      wf1JobType = 'individual';
+      wf1Quantity = 1;
+      wf1Orientation = 'next';
+
+      var matchingSheets = Object.values(sheets)
+        .filter(function(s) { return s.labelType === '5371' && !s.retired && getRemainingCount(s) > 0; })
+        .sort(function(a, b) { return (b.lastUsedAt || 0) - (a.lastUsedAt || 0); });
+      if (matchingSheets.length > 0) {
+        wf1SelectedSheet = { isNew: false, id: matchingSheets[0].id };
+      } else {
+        wf1SelectedSheet = { isNew: true };
+      }
+      wf1ContentLines = cardLines;
+
+      wf1FeSnapshot = {
+        lines: cardLines,
+        graphics: {
+          left: payload.productImage ? { data: payload.productImage, size: 'M' } : null,
+          right: null
+        },
+        alignV: 'center',
+        border: { top: false, bottom: false, left: false, right: false, color: '#000000' },
+        barcode: {
+          enabled: true,
+          type: 'qr',
+          position: 'right',
+          encodeType: 'url',
+          fixedData: payload.storyUrl
+        }
+      };
+
+      wf1Step = 7;
+      wf1RenderPreview();
+      wf1ShowStep('wf1Step7');
+      showToast('Product card ready — "' + (payload.productName || 'Unknown') + '"', 'success');
+    }, 300);
+  } catch (e) {
+    console.error('Session fetch error:', e);
+    showToast('Failed to load product card. Try again.', 'error');
+  }
+}
+
 /**
  * Handle URL deep link parameters
  * Opens print wizard with pre-filled data or navigates to a sheet
@@ -30713,69 +30829,18 @@ function handleUrlDeepLink(params) {
   // Handle session-based printCard (new API flow)
   if (params.action === 'printCardSession' && params.sessionId) {
     (async function() {
-      try {
-        const resp = await fetch(LK_API_URL + '/sessions/' + params.sessionId);
-        if (!resp.ok) {
-          showToast('Product card session expired or not found. Try again from the admin.', 'warning');
-          return;
-        }
-        const payload = await resp.json();
+      // Wait for Firebase Auth to resolve (auto-signs in if previously authenticated)
+      const user = await lkAuthReady;
 
-        // Same rendering logic as legacy printCard
-        settings.lastLabelType = '5371';
-        settings.showLabelBoundaries = true;
-        saveSettings();
-        wf1Start();
-
-        setTimeout(function() {
-          var cardLines = [
-            { text: payload.productName || '', align: 'center', fontSize: 14, fontFamily: 'elegant', bold: true, italic: false, underline: false, strikethrough: false, color: '', fillColor: '', borders: '' },
-            { text: 'Shir Glassworks', align: 'center', fontSize: 10, fontFamily: 'default', bold: false, italic: false, underline: false, strikethrough: false, color: '#666666', fillColor: '', borders: '' },
-            { text: 'shirglassworks.com', align: 'center', fontSize: 8, fontFamily: 'default', bold: false, italic: false, underline: false, strikethrough: false, color: '#999999', fillColor: '', borders: '' },
-            { text: '', align: 'left', fontSize: 11, fontFamily: 'default', bold: false, italic: false, underline: false, strikethrough: false, color: '', fillColor: '', borders: '' }
-          ];
-
-          wf1LabelType = '5371';
-          wf1JobType = 'individual';
-          wf1Quantity = 1;
-          wf1Orientation = 'next';
-
-          var matchingSheets = Object.values(sheets)
-            .filter(function(s) { return s.labelType === '5371' && !s.retired && getRemainingCount(s) > 0; })
-            .sort(function(a, b) { return (b.lastUsedAt || 0) - (a.lastUsedAt || 0); });
-          if (matchingSheets.length > 0) {
-            wf1SelectedSheet = { isNew: false, id: matchingSheets[0].id };
-          } else {
-            wf1SelectedSheet = { isNew: true };
-          }
-          wf1ContentLines = cardLines;
-
-          wf1FeSnapshot = {
-            lines: cardLines,
-            graphics: {
-              left: payload.productImage ? { data: payload.productImage, size: 'M' } : null,
-              right: null
-            },
-            alignV: 'center',
-            border: { top: false, bottom: false, left: false, right: false, color: '#000000' },
-            barcode: {
-              enabled: true,
-              type: 'qr',
-              position: 'right',
-              encodeType: 'url',
-              fixedData: payload.storyUrl
-            }
-          };
-
-          wf1Step = 7;
-          wf1RenderPreview();
-          wf1ShowStep('wf1Step7');
-          showToast('Product card ready — "' + (payload.productName || 'Unknown') + '"', 'success');
-        }, 300);
-      } catch (e) {
-        console.error('Session fetch error:', e);
-        showToast('Failed to load product card. Try again.', 'error');
+      if (!user) {
+        // Not signed in — store session and prompt sign-in
+        lkPendingPrintCardSession = params.sessionId;
+        showPrintCardSignInPrompt();
+        return;
       }
+
+      // Signed in and cloud data loaded — proceed
+      processPrintCardSession(params.sessionId);
     })();
     return;
   }
