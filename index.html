@@ -27043,9 +27043,8 @@ function wf1ShowPostPrintOptions() {
     '<div class="wf1-postprint-detail">' + result.totalLabels + ' label' + (result.totalLabels !== 1 ? 's' : '') + ' printed. "' + escapeHtml(sh ? sh.name : '') + '" has ' + remaining + ' spot' + (remaining !== 1 ? 's' : '') + ' remaining.</div>';
   
   // Build checkbox options
-  const sheetAlreadyLinked = sh && sh.texts && Object.keys(sh.texts).length > 0;
-  const hasLinkOption = !result.isBatch && remaining > 0 && !sheetAlreadyLinked;
-  const hasSplitOption = remaining > 0 && remaining < lps && !sheetAlreadyLinked;
+  const hasLinkOption = !result.isBatch && remaining > 0;
+  const hasSplitOption = remaining > 0 && remaining < lps;
   const hasSaveListOption = result.isBatch && wf1BatchContent && wf1BatchContent.length > 0;
   
   if (hasLinkOption || hasSplitOption || hasSaveListOption) {
