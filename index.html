@@ -9755,8 +9755,28 @@ async function loadFromCloud() {
     return;
   }
 
-  // Cloud has data — apply it (cloud wins over local)
-  if (cloudData.sheets) { sheets = cloudData.sheets; localStorage.setItem(SHEETS_KEY, JSON.stringify(sheets)); }
+  // Cloud has data — merge with local
+  // Sheets: merge cloud + local (preserves local sheets that don't exist in cloud yet)
+  if (cloudData.sheets) {
+    const localSheets = sheets || {};
+    const cloudSheets = cloudData.sheets;
+    // Start with cloud sheets, then add any local-only sheets
+    const merged = { ...cloudSheets };
+    let localOnlyCount = 0;
+    for (const [id, sh] of Object.entries(localSheets)) {
+      if (!merged[id]) {
+        merged[id] = sh;
+        localOnlyCount++;
+      }
+    }
+    sheets = merged;
+    localStorage.setItem(SHEETS_KEY, JSON.stringify(sheets));
+    // Upload merged sheets back to cloud if we found local-only sheets
+    if (localOnlyCount > 0) {
+      console.log('[Cloud] Merged', localOnlyCount, 'local-only sheets into cloud');
+      cloudStore.save('sheets', sheets);
+    }
+  }
   if (cloudData.activeSheet !== undefined) { activeSheetId = cloudData.activeSheet; localStorage.setItem(ACTIVE_KEY, activeSheetId || ''); }
   if (cloudData.texts) { savedTexts = cloudData.texts; localStorage.setItem(TEXTS_KEY, JSON.stringify(savedTexts)); }
   if (cloudData.settings) {
