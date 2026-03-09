@@ -27048,8 +27048,9 @@ function wf1ShowPostPrintOptions() {
   const hasSaveListOption = result.isBatch && wf1BatchContent && wf1BatchContent.length > 0;
   
   if (hasLinkOption || hasSplitOption || hasSaveListOption) {
-    html += '<div class="wf1-postprint-options" style="margin-top:16px;">';
-    
+    html += '<div class="wf1-postprint-options" style="margin-top:16px;">' +
+      '<div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">Optional items you can select</div>';
+
     // Save list option for batch jobs
     if (hasSaveListOption) {
       html += '<label class="wf1-postprint-checkbox" style="display:flex; align-items:flex-start; gap:10px; padding:10px; background:var(--surface-alt); border:1px solid var(--border); border-radius:var(--radius-sm); cursor:pointer; margin-bottom:8px;">' +
