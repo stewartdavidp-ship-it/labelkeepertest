@@ -21404,12 +21404,52 @@ function renderPrintLineHtml(line) {
 }
 
 // Build print HTML for sheet-based printing
+// Helper to get flex alignment string (used by buildSheetPrintHtml and buildCombinedPrintHtml)
+function getFlexAlign(alignV) {
+  if (alignV === 'top') return 'flex-start';
+  if (alignV === 'bottom') return 'flex-end';
+  if (alignV === 'spread') return 'space-between';
+  return 'center';
+}
+
+// Helper to generate QR code data URL for print (used by buildSheetPrintHtml and buildCombinedPrintHtml)
+function getQRDataURL(item, spec) {
+  const bc = item.barcode;
+  if (!bc || !bc.enabled) return null;
+
+  // Build text to encode — fixedData bypasses text-line derivation (used by external integrations like Shir Glassworks)
+  let textToEncode;
+  if (bc.fixedData) {
+    textToEncode = bc.fixedData;
+  } else {
+    textToEncode = item.lines.map(l => l.text || '').filter(Boolean).join('\n');
+
+    // Handle different encode types
+    if (bc.encodeType === 'vcard') {
+      const lineTexts = item.lines.map(l => l.text || '');
+      textToEncode = generateVCard(lineTexts);
+    } else if (bc.encodeType === 'url' && !textToEncode.startsWith('http')) {
+      textToEncode = 'https://' + textToEncode;
+    }
+  }
+
+  // Generate QR at high resolution for crisp print output (300 DPI)
+  const qrSize = Math.floor(spec.labelH * 300 * 0.8);
+
+  try {
+    return QRCode.toDataURL(textToEncode, { size: qrSize, margin: 4 });
+  } catch (e) {
+    console.error('QR generation failed:', e);
+    return null;
+  }
+}
+
 function buildSheetPrintHtml(sh, manifest) {
   const spec = LABEL_TYPES[sh.labelType];
   const lps = spec.cols * spec.rows;
   const isTentCard = spec.category === 'tent';
   const isRound = spec.category === 'round';
-  
+
   // Build CSS
   let html = '<!DOCTYPE html><html><head><style>';
   html += '@page { size: letter; margin: 0; }';
@@ -21466,46 +21506,6 @@ function buildSheetPrintHtml(sh, manifest) {
     if (!pages[pageNum]) pages[pageNum] = [];
     pages[pageNum].push(item);
   });
-  
-  // Helper to get flex alignment string
-  function getFlexAlign(alignV) {
-    if (alignV === 'top') return 'flex-start';
-    if (alignV === 'bottom') return 'flex-end';
-    if (alignV === 'spread') return 'space-between';
-    return 'center';
-  }
-  
-  // Helper to generate QR code data URL
-  function getQRDataURL(item, spec) {
-    const bc = item.barcode;
-    if (!bc || !bc.enabled) return null;
-
-    // Build text to encode — fixedData bypasses text-line derivation (used by external integrations like Shir Glassworks)
-    let textToEncode;
-    if (bc.fixedData) {
-      textToEncode = bc.fixedData;
-    } else {
-      textToEncode = item.lines.map(l => l.text || '').filter(Boolean).join('\n');
-
-      // Handle different encode types
-      if (bc.encodeType === 'vcard') {
-        const lineTexts = item.lines.map(l => l.text || '');
-        textToEncode = generateVCard(lineTexts);
-      } else if (bc.encodeType === 'url' && !textToEncode.startsWith('http')) {
-        textToEncode = 'https://' + textToEncode;
-      }
-    }
-    
-    // Generate QR at high resolution for crisp print output (300 DPI)
-    const qrSize = Math.floor(spec.labelH * 300 * 0.8);
-    
-    try {
-      return QRCode.toDataURL(textToEncode, { size: qrSize, margin: 4 });
-    } catch (e) {
-      console.error('QR generation failed:', e);
-      return null;
-    }
-  }
   
   // Render each page
   Object.keys(pages).sort((a, b) => parseInt(a) - parseInt(b)).forEach((pageNum, pi, arr) => {
