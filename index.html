@@ -9777,7 +9777,15 @@ async function loadFromCloud() {
   if (cloudData.printHistory) { printHistory = cloudData.printHistory; localStorage.setItem(PRINT_HISTORY_KEY, JSON.stringify(printHistory)); }
   if (cloudData.customTokens) { customTokens = cloudData.customTokens; localStorage.setItem(CUSTOM_TOKENS_KEY, JSON.stringify(customTokens)); }
   if (cloudData.savedLists) { window.savedLists = cloudData.savedLists; localStorage.setItem('lk_savedLists', JSON.stringify(cloudData.savedLists)); }
-  if (cloudData.learningData) { learningData = cloudData.learningData; localStorage.setItem(LEARNING_KEY, JSON.stringify(learningData)); }
+  if (cloudData.learningData) {
+    learningData = cloudData.learningData;
+    // Ensure structure matches expected shape (Firebase may omit empty sub-objects)
+    if (!learningData.corrections) learningData.corrections = {};
+    if (!learningData.acceptances) learningData.acceptances = {};
+    if (!learningData.preferences) learningData.preferences = {};
+    if (!learningData.stats) learningData.stats = { totalCorrections: 0, totalAcceptances: 0, lastUpdated: Date.now() };
+    localStorage.setItem(LEARNING_KEY, JSON.stringify(learningData));
+  }
 
   // Re-apply theme and re-render
   applyTheme();
@@ -12155,10 +12163,12 @@ function updatePreferences(element) {
  */
 function getCorrectionRate(element, value) {
   if (!learningData) loadLearningData();
-  
+  if (!learningData.corrections) learningData.corrections = {};
+  if (!learningData.acceptances) learningData.acceptances = {};
+
   let corrections = 0;
   let acceptances = 0;
-  
+
   // Count corrections where this value was inferred
   if (learningData.corrections[element]) {
     for (const [key, data] of Object.entries(learningData.corrections[element])) {
