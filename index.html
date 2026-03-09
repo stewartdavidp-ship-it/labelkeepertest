@@ -26495,6 +26495,7 @@ function buildCombinedPrintHtml(sh, manifest, sheetId) {
     if (hasQR && hasGraphics) {
       // Combined graphics + QR layout (matches buildSheetPrintHtml)
       const qrDataURL = getQRDataURL(item, spec);
+      console.log('[CombinedPrint] hasQR:', hasQR, 'hasGraphics:', hasGraphics, 'qrPosition:', bc.position, 'qrDataURL:', qrDataURL ? qrDataURL.substring(0, 80) + '...' : 'NULL', 'fixedData:', bc.fixedData, 'enabled:', bc.enabled);
       const qrPosition = bc.position || 'right';
       const availH = spec.labelH - 0.16;
       const maxGfxW = spec.labelW * 0.25;
