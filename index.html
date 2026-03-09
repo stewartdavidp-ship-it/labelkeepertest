@@ -26192,7 +26192,7 @@ function wf1RenderPreview() {
   }
   
   // Option to print ID label on back first (only for single sheets without one, not multi-sheet)
-  if (!sheetHasBackLabel && !isMultiSheet && wf1SelectedSheet && !wf1SelectedSheet.isNew) {
+  if (!sheetHasBackLabel && !isMultiSheet && wf1SelectedSheet && wf1SelectedSheet.isNew) {
     html += '<div class="wf1-preview-option" style="margin-top:16px; padding:12px; background:var(--surface-alt); border:1px solid var(--border); border-radius:var(--radius-sm);">' +
       '<label style="display:flex; align-items:flex-start; gap:10px; cursor:pointer;">' +
         '<input type="checkbox" id="wf1PrintBackFirst" style="margin-top:3px;">' +
