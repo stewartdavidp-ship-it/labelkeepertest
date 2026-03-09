@@ -26393,13 +26393,42 @@ function wf1ExecuteCombinedPrint(sheetId, isNewSheet) {
   iframeDoc.open();
   iframeDoc.write(printHtml);
   iframeDoc.close();
-  iframe.contentWindow.focus();
-  iframe.contentWindow.print();
-  setTimeout(function() { document.body.removeChild(iframe); }, 1000);
-  
+
+  // Wait for images to load before printing (QR data URLs and product images need to decode)
+  function triggerCombinedPrint() {
+    iframe.contentWindow.focus();
+    iframe.contentWindow.print();
+    setTimeout(function() { document.body.removeChild(iframe); }, 1000);
+  }
+  var combImages = iframeDoc.querySelectorAll('img');
+  var combPending = Array.from(combImages).filter(function(img) { return !img.complete; });
+  if (combPending.length > 0) {
+    var combLoaded = 0;
+    var combFired = false;
+    var onCombImgReady = function() {
+      combLoaded++;
+      if (combLoaded >= combPending.length && !combFired) {
+        combFired = true;
+        triggerCombinedPrint();
+      }
+    };
+    combPending.forEach(function(img) {
+      img.addEventListener('load', onCombImgReady);
+      img.addEventListener('error', onCombImgReady);
+    });
+    setTimeout(function() {
+      if (!combFired) {
+        combFired = true;
+        triggerCombinedPrint();
+      }
+    }, 3000);
+  } else {
+    triggerCombinedPrint();
+  }
+
   // Store for post-print
   wf1PrintResult = { sheetId, positions, isNewSheet, totalLabels: positions.length };
-  
+
   // Move to post-print confirmation
   wf1Step = 8;
   wf1RenderPostPrint();
@@ -26495,7 +26524,6 @@ function buildCombinedPrintHtml(sh, manifest, sheetId) {
     if (hasQR && hasGraphics) {
       // Combined graphics + QR layout (matches buildSheetPrintHtml)
       const qrDataURL = getQRDataURL(item, spec);
-      console.log('[CombinedPrint] hasQR:', hasQR, 'hasGraphics:', hasGraphics, 'qrPosition:', bc.position, 'qrDataURL:', qrDataURL ? qrDataURL.substring(0, 80) + '...' : 'NULL', 'fixedData:', bc.fixedData, 'enabled:', bc.enabled);
       const qrPosition = bc.position || 'right';
       const availH = spec.labelH - 0.16;
       const maxGfxW = spec.labelW * 0.25;
