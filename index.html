@@ -151,6 +151,58 @@ body {
   color: var(--accent);
 }
 
+/* ===== AUTH UI ===== */
+.lk-auth-btn {
+  padding: 6px 14px;
+  border: 2px solid var(--accent);
+  background: transparent;
+  color: var(--accent);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.lk-auth-btn:hover {
+  background: var(--accent);
+  color: white;
+}
+.lk-auth-user {
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+.lk-auth-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+}
+.lk-auth-initial {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+}
+.lk-sync-dot {
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #22c55e;
+  border: 2px solid var(--bg);
+}
+
 /* ===== WORKFLOW HUB ===== */
 .workflow-hub {
   display: flex;
@@ -7360,6 +7412,7 @@ body.dark-mode .wf1-narrowed-option.suggested::after {
       <span class="version">v3.27.7</span>
     </div>
     <div class="header-actions">
+      <div id="lkAuthUI"></div>
       <button class="icon-btn" onclick="openSettings()" title="Settings">⚙️</button>
     </div>
   </header>
@@ -7498,10 +7551,17 @@ body.dark-mode .wf1-narrowed-option.suggested::after {
         </div>
       </div>
       
+      <!-- ===== CLOUD ACCOUNT ===== -->
+      <div class="settings-divider"></div>
+      <div class="settings-section-title">Cloud Account</div>
+      <div id="cloudAccountSection">
+        <!-- Populated by updateCloudSettingsUI() -->
+      </div>
+
       <!-- ===== DATA MANAGEMENT ===== -->
       <div class="settings-divider"></div>
       <div class="settings-section-title">Data &amp; Sync</div>
-      
+
       <div class="settings-data-stats" id="settingsDataStats">
         <!-- Populated by JS -->
       </div>
@@ -9009,6 +9069,9 @@ Examples:
 <div class="print-sheet" id="printSheet"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <script>
 // ============================================================================
 // QR CODE GENERATOR — Wrapper around qrcode-generator CDN library
@@ -9368,10 +9431,23 @@ const QRCode = (function() {
       options = options || {};
       const size = options.size || 100;
       const margin = options.margin !== undefined ? options.margin : 2;
-      const dark = options.dark || '#000000';
-      const light = options.light || '#ffffff';
       const errorLevel = options.errorLevel || 0;
 
+      // Use CDN library's built-in createDataURL (same renderer Shir Glassworks uses)
+      if (typeof qrcode === 'function') {
+        const ecLevels = ['L', 'M', 'Q', 'H'];
+        const qr = qrcode(0, ecLevels[errorLevel]);
+        qr.addData(text);
+        qr.make();
+        const moduleCount = qr.getModuleCount();
+        const cellSize = Math.max(Math.floor(size / (moduleCount + margin * 2)), 1);
+        // Library's createDataURL(cellSize, margin) — margin is in pixels
+        return qr.createDataURL(cellSize, margin * cellSize);
+      }
+
+      // Fallback: custom canvas rendering
+      const dark = options.dark || '#000000';
+      const light = options.light || '#ffffff';
       const qr = this.create(text, errorLevel);
       const moduleCount = qr.getModuleCount();
       const cellSize = Math.floor(size / (moduleCount + margin * 2));
@@ -9548,6 +9624,232 @@ const PRINT_HISTORY_KEY = 'lk_print_history';
 const FIRST_RUN_KEY = 'lk_first_run';
 const SATELLITE_PENDING_KEY = 'lk_satellite_pending';
 const INVENTORY_HISTORY_KEY = 'lk_inventory_history';
+
+// ========== FIREBASE AUTH + CLOUD DATA ==========
+const LK_FIREBASE_CONFIG = {
+  apiKey: 'AIzaSyA-8aIh_CtaEbR-Bm3zask-PCdRH18Go6U',
+  authDomain: 'labelkeeper-e8a79.firebaseapp.com',
+  databaseURL: 'https://labelkeeper-e8a79-default-rtdb.firebaseio.com',
+  projectId: 'labelkeeper-e8a79'
+};
+
+// Initialize Firebase (named instance to avoid conflicts with device sync REST calls)
+const lkApp = firebase.initializeApp(LK_FIREBASE_CONFIG, 'labelkeeper');
+const lkAuth = lkApp.auth();
+const lkDb = lkApp.database();
+
+// Current user state
+let lkCurrentUser = null;
+let lkCloudSyncEnabled = false;
+
+// Settings keys that stay device-local (never synced to Firebase)
+const LOCAL_ONLY_SETTINGS = ['storeId', 'deviceRole'];
+
+// Firebase helper — write-through to cloud
+const cloudStore = {
+  _ref(childKey) {
+    if (!lkCurrentUser) return null;
+    return lkDb.ref('labelkeeper/' + lkCurrentUser.uid + '/' + childKey);
+  },
+
+  save(childKey, data) {
+    const ref = this._ref(childKey);
+    if (!ref) return;
+    // Special handling for settings — strip device-local fields
+    if (childKey === 'settings' && data && typeof data === 'object') {
+      const cloudSettings = { ...data };
+      LOCAL_ONLY_SETTINGS.forEach(k => delete cloudSettings[k]);
+      ref.set(cloudSettings).catch(e => console.warn('[Cloud] save failed:', childKey, e.message));
+      return;
+    }
+    ref.set(data === undefined ? null : data)
+      .catch(e => console.warn('[Cloud] save failed:', childKey, e.message));
+  },
+
+  async loadAll() {
+    if (!lkCurrentUser) return null;
+    const ref = lkDb.ref('labelkeeper/' + lkCurrentUser.uid);
+    const snap = await ref.once('value');
+    return snap.val();
+  },
+
+  async clear() {
+    if (!lkCurrentUser) return;
+    await lkDb.ref('labelkeeper/' + lkCurrentUser.uid).set(null);
+  }
+};
+
+// ========== AUTH ==========
+async function lkSignIn() {
+  try {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    await lkAuth.signInWithPopup(provider);
+    // onAuthStateChanged handles the rest
+  } catch (e) {
+    if (e.code !== 'auth/popup-closed-by-user') {
+      console.error('[Auth] Sign-in failed:', e);
+      showToast('Sign-in failed: ' + e.message, 'error');
+    }
+  }
+}
+
+function lkSignOut() {
+  lkAuth.signOut();
+  // onAuthStateChanged handles cleanup
+}
+
+// Auth state listener — runs on page load + login/logout
+lkAuth.onAuthStateChanged(async (user) => {
+  lkCurrentUser = user;
+  lkCloudSyncEnabled = !!user;
+  updateAuthUI();
+
+  if (user) {
+    console.log('[Auth] Signed in:', user.email);
+    try {
+      await loadFromCloud();
+      showToast('Synced from cloud', 'success');
+    } catch (e) {
+      console.warn('[Auth] Cloud load failed, using local data:', e.message);
+    }
+  } else {
+    console.log('[Auth] Signed out');
+  }
+});
+
+async function loadFromCloud() {
+  const cloudData = await cloudStore.loadAll();
+
+  if (!cloudData) {
+    // First login — upload localStorage to Firebase
+    console.log('[Cloud] No cloud data found. Uploading local data...');
+    await uploadAllToCloud();
+    return;
+  }
+
+  // Cloud has data — apply it (cloud wins over local)
+  if (cloudData.sheets) { sheets = cloudData.sheets; localStorage.setItem(SHEETS_KEY, JSON.stringify(sheets)); }
+  if (cloudData.activeSheet !== undefined) { activeSheetId = cloudData.activeSheet; localStorage.setItem(ACTIVE_KEY, activeSheetId || ''); }
+  if (cloudData.texts) { savedTexts = cloudData.texts; localStorage.setItem(TEXTS_KEY, JSON.stringify(savedTexts)); }
+  if (cloudData.settings) {
+    // Merge cloud settings but preserve device-local fields
+    const localOnly = {};
+    LOCAL_ONLY_SETTINGS.forEach(k => { localOnly[k] = settings[k]; });
+    settings = { ...settings, ...cloudData.settings, ...localOnly };
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  }
+  if (cloudData.inventory) { inventory = cloudData.inventory; localStorage.setItem(INVENTORY_KEY, JSON.stringify(inventory)); }
+  if (cloudData.inventoryHistory) { inventoryHistory = cloudData.inventoryHistory; localStorage.setItem(INVENTORY_HISTORY_KEY, JSON.stringify(inventoryHistory)); }
+  if (cloudData.activeJob !== undefined) {
+    activeJob = cloudData.activeJob;
+    if (activeJob) localStorage.setItem(ACTIVE_JOB_KEY, JSON.stringify(activeJob));
+    else localStorage.removeItem(ACTIVE_JOB_KEY);
+  }
+  if (cloudData.jobHistory) { jobHistory = cloudData.jobHistory; localStorage.setItem(JOB_HISTORY_KEY, JSON.stringify(jobHistory)); }
+  if (cloudData.printHistory) { printHistory = cloudData.printHistory; localStorage.setItem(PRINT_HISTORY_KEY, JSON.stringify(printHistory)); }
+  if (cloudData.customTokens) { customTokens = cloudData.customTokens; localStorage.setItem(CUSTOM_TOKENS_KEY, JSON.stringify(customTokens)); }
+  if (cloudData.savedLists) { window.savedLists = cloudData.savedLists; localStorage.setItem('lk_savedLists', JSON.stringify(cloudData.savedLists)); }
+  if (cloudData.learningData) { learningData = cloudData.learningData; localStorage.setItem(LEARNING_KEY, JSON.stringify(learningData)); }
+
+  // Re-apply theme and re-render
+  applyTheme();
+  renderCurrentTab();
+}
+
+async function uploadAllToCloud() {
+  const uploads = {};
+  try { const v = localStorage.getItem(SHEETS_KEY); if (v) uploads.sheets = JSON.parse(v); } catch(e) {}
+  try { const v = localStorage.getItem(ACTIVE_KEY); if (v) uploads.activeSheet = v; } catch(e) {}
+  try { const v = localStorage.getItem(TEXTS_KEY); if (v) uploads.texts = JSON.parse(v); } catch(e) {}
+  try {
+    const v = localStorage.getItem(SETTINGS_KEY);
+    if (v) {
+      const s = JSON.parse(v);
+      const cloudSettings = { ...s };
+      LOCAL_ONLY_SETTINGS.forEach(k => delete cloudSettings[k]);
+      uploads.settings = cloudSettings;
+    }
+  } catch(e) {}
+  try { const v = localStorage.getItem(INVENTORY_KEY); if (v) uploads.inventory = JSON.parse(v); } catch(e) {}
+  try { const v = localStorage.getItem(INVENTORY_HISTORY_KEY); if (v) uploads.inventoryHistory = JSON.parse(v); } catch(e) {}
+  try { const v = localStorage.getItem(ACTIVE_JOB_KEY); if (v) uploads.activeJob = JSON.parse(v); } catch(e) {}
+  try { const v = localStorage.getItem(JOB_HISTORY_KEY); if (v) uploads.jobHistory = JSON.parse(v); } catch(e) {}
+  try { const v = localStorage.getItem(PRINT_HISTORY_KEY); if (v) uploads.printHistory = JSON.parse(v); } catch(e) {}
+  try { const v = localStorage.getItem(CUSTOM_TOKENS_KEY); if (v) uploads.customTokens = JSON.parse(v); } catch(e) {}
+  try { const v = localStorage.getItem('lk_savedLists'); if (v) uploads.savedLists = JSON.parse(v); } catch(e) {}
+  try { const v = localStorage.getItem(LEARNING_KEY); if (v) uploads.learningData = JSON.parse(v); } catch(e) {}
+
+  if (Object.keys(uploads).length > 0) {
+    await lkDb.ref('labelkeeper/' + lkCurrentUser.uid).set(uploads);
+    console.log('[Cloud] Uploaded', Object.keys(uploads).length, 'data keys');
+  }
+}
+
+function updateAuthUI() {
+  const container = document.getElementById('lkAuthUI');
+  if (!container) return;
+  if (lkCurrentUser) {
+    const initial = (lkCurrentUser.displayName || lkCurrentUser.email || '?')[0].toUpperCase();
+    const photo = lkCurrentUser.photoURL;
+    container.innerHTML =
+      '<div class="lk-auth-user" onclick="showCloudAccountMenu()" title="' + (lkCurrentUser.email || '') + '">' +
+        (photo ? '<img src="' + photo + '" class="lk-auth-avatar" referrerpolicy="no-referrer" alt="">' : '<span class="lk-auth-initial">' + initial + '</span>') +
+        '<span class="lk-sync-dot"></span>' +
+      '</div>';
+  } else {
+    container.innerHTML = '<button class="lk-auth-btn" onclick="lkSignIn()">Sign In</button>';
+  }
+
+  // Update settings modal cloud section if visible
+  updateCloudSettingsUI();
+}
+
+function showCloudAccountMenu() {
+  openSettings();
+  // Scroll to cloud section (it's at the top of Data & Sync)
+}
+
+function updateCloudSettingsUI() {
+  const el = document.getElementById('cloudAccountSection');
+  if (!el) return;
+  if (lkCurrentUser) {
+    el.innerHTML =
+      '<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">' +
+        (lkCurrentUser.photoURL ? '<img src="' + lkCurrentUser.photoURL + '" referrerpolicy="no-referrer" style="width: 32px; height: 32px; border-radius: 50%;">' : '') +
+        '<div>' +
+          '<div style="font-weight: 600; color: var(--text); font-size: 14px;">' + (lkCurrentUser.displayName || 'Signed In') + '</div>' +
+          '<div style="color: var(--text-muted); font-size: 12px;">' + (lkCurrentUser.email || '') + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="settings-btn-row">' +
+        '<button class="settings-action-btn secondary" onclick="forceCloudResync()">' +
+          '<span>🔄</span> Re-sync from Cloud' +
+        '</button>' +
+        '<button class="settings-action-btn secondary" onclick="lkSignOut()">' +
+          '<span>🚪</span> Sign Out' +
+        '</button>' +
+      '</div>';
+  } else {
+    el.innerHTML =
+      '<div style="color: var(--text-muted); font-size: 13px; margin-bottom: 12px;">Sign in to sync your data across devices.</div>' +
+      '<button class="settings-action-btn" onclick="lkSignIn()" style="width: 100%;">' +
+        '<span>☁️</span> Sign in with Google' +
+      '</button>';
+  }
+}
+
+async function forceCloudResync() {
+  if (!lkCurrentUser) {
+    showToast('Not signed in', 'warning');
+    return;
+  }
+  try {
+    await loadFromCloud();
+    showToast('Re-synced from cloud', 'success');
+  } catch (e) {
+    showToast('Re-sync failed: ' + e.message, 'error');
+  }
+}
 
 // ========== APP STATE ==========
 let settings = {
@@ -11684,6 +11986,7 @@ function saveLearningData() {
     if (!learningData) learningData = createLearningData();
     learningData.stats.lastUpdated = Date.now();
     localStorage.setItem(LEARNING_KEY, JSON.stringify(learningData));
+    cloudStore.save('learningData', learningData);
   } catch (e) {
     console.warn('[Phase 4] Failed to save learning data:', e);
   }
@@ -12941,7 +13244,7 @@ function renderUnifiedLabelPreview(config, options = {}) {
   const previewQRSize = Math.max(Math.floor(height * 0.35), 28);
 
   if (hasSideContent) {
-    html += '<div style="display:flex;align-items:center;width:100%;gap:6px;">';
+    html += '<div style="display:flex;align-items:center;width:100%;gap:10px;">';
 
     // Left side
     if (qrPosition === 'left' && barcode.data) {
@@ -13226,7 +13529,12 @@ function parseUrlParams() {
     };
   }
 
-  // Check for printCard deep link (from Shir Glassworks admin)
+  // Check for session-based printCard (new API flow)
+  if (params.has('session')) {
+    return { hasParams: true, action: 'printCardSession', sessionId: params.get('session') };
+  }
+
+  // Check for printCard deep link (legacy localStorage flow)
   if (params.get('action') === 'printCard') {
     return { hasParams: true, action: 'printCard' };
   }
@@ -13331,6 +13639,7 @@ function saveSettings() {
   try {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
     localStorage.setItem(THEME_KEY, settings.darkMode ? 'dark' : 'light');
+    cloudStore.save('settings', settings);
   } catch(e) {}
 }
 
@@ -13380,6 +13689,8 @@ function saveSheets() {
   try {
     localStorage.setItem(SHEETS_KEY, JSON.stringify(sheets));
     localStorage.setItem(ACTIVE_KEY, activeSheetId || '');
+    cloudStore.save('sheets', sheets);
+    cloudStore.save('activeSheet', activeSheetId || '');
   } catch(e) {}
 }
 
@@ -13394,6 +13705,7 @@ function loadSavedTexts() {
 function saveSavedTexts() {
   try {
     localStorage.setItem(TEXTS_KEY, JSON.stringify(savedTexts));
+    cloudStore.save('texts', savedTexts);
   } catch(e) {}
 }
 
@@ -13408,6 +13720,7 @@ function loadInventory() {
 function saveInventory() {
   try {
     localStorage.setItem(INVENTORY_KEY, JSON.stringify(inventory));
+    cloudStore.save('inventory', inventory);
   } catch(e) {}
 }
 
@@ -13422,6 +13735,7 @@ function loadInventoryHistory() {
 function saveInventoryHistory() {
   try {
     localStorage.setItem(INVENTORY_HISTORY_KEY, JSON.stringify(inventoryHistory));
+    cloudStore.save('inventoryHistory', inventoryHistory);
   } catch(e) {}
 }
 
@@ -13540,6 +13854,7 @@ function saveActiveJob() {
     } else {
       localStorage.removeItem(ACTIVE_JOB_KEY);
     }
+    cloudStore.save('activeJob', activeJob);
   } catch(e) {}
 }
 
@@ -13561,6 +13876,7 @@ function loadJobHistory() {
 function saveJobHistory() {
   try {
     localStorage.setItem(JOB_HISTORY_KEY, JSON.stringify(jobHistory));
+    cloudStore.save('jobHistory', jobHistory);
   } catch(e) {}
 }
 
@@ -13575,6 +13891,7 @@ function loadPrintHistory() {
 function savePrintHistory() {
   try {
     localStorage.setItem(PRINT_HISTORY_KEY, JSON.stringify(printHistory));
+    cloudStore.save('printHistory', printHistory);
   } catch(e) {}
 }
 
@@ -13602,6 +13919,7 @@ function loadCustomTokens() {
 function saveCustomTokens() {
   try {
     localStorage.setItem(CUSTOM_TOKENS_KEY, JSON.stringify(customTokens));
+    cloudStore.save('customTokens', customTokens);
   } catch(e) {}
 }
 
@@ -14063,7 +14381,10 @@ function openSettings() {
   
   // Update backup status
   updateBackupStatus();
-  
+
+  // Update cloud account section
+  updateCloudSettingsUI();
+
   document.getElementById('settingsModal').classList.add('visible');
 }
 
@@ -21189,11 +21510,11 @@ function buildSheetPrintHtml(sh, manifest) {
         const qrDataURL = getQRDataURL(item, spec);
         const qrPosition = bc.position || 'right';
         const availH = spec.labelH - 0.16; // usable height minus vertical padding
-        // Graphic: fill available height, cap width at 35% of label width
-        const maxGfxW = spec.labelW * 0.35;
+        // Graphic: fill available height, cap width at 25% of label width
+        const maxGfxW = spec.labelW * 0.25;
         const gfxW = Math.min(availH, maxGfxW).toFixed(3);
-        // QR: 35% of label height (compact but scannable when sharing space with graphics)
-        const qrSize = (spec.labelH * 0.35).toFixed(3);
+        // QR: 30% of label height (compact but scannable when sharing space with graphics)
+        const qrSize = (spec.labelH * 0.30).toFixed(3);
         let innerHtml = '';
 
         // Left side
@@ -21205,7 +21526,7 @@ function buildSheetPrintHtml(sh, manifest) {
         }
 
         // Center: text
-        innerHtml += '<div class="print-text-zone" style="justify-content:' + getFlexAlign(item.alignV) + ';padding:0 0.06in;">' + linesHtml + '</div>';
+        innerHtml += '<div class="print-text-zone" style="justify-content:' + getFlexAlign(item.alignV) + ';">' + linesHtml + '</div>';
 
         // Right side
         if (gfx.right && gfx.right.data) {
@@ -21215,7 +21536,7 @@ function buildSheetPrintHtml(sh, manifest) {
           innerHtml += '<div class="print-qr" style="width:' + qrSize + 'in;height:' + qrSize + 'in;"><img src="' + qrDataURL + '"></div>';
         }
 
-        html += '<div class="print-label" style="top:' + top + 'in;left:' + left + 'in;width:' + spec.labelW + 'in;height:' + labelH + 'in;padding:0.08in 0.12in;flex-direction:row;align-items:center;">' + innerHtml + '</div>';
+        html += '<div class="print-label" style="top:' + top + 'in;left:' + left + 'in;width:' + spec.labelW + 'in;height:' + labelH + 'in;padding:0.1in 0.15in;flex-direction:row;align-items:center;gap:0.12in;">' + innerHtml + '</div>';
       } else if (hasQR) {
         // QR code layout
         const qrDataURL = getQRDataURL(item, spec);
@@ -22866,6 +23187,7 @@ function loadSavedLists() {
 function saveSavedLists() {
   try {
     localStorage.setItem('lk_savedLists', JSON.stringify(savedLists));
+    cloudStore.save('savedLists', savedLists);
   } catch (e) {
     console.error('Failed to save lists:', e);
   }
@@ -29174,6 +29496,7 @@ function performImport(data) {
 // ============================================================================
 
 const FIREBASE_SYNC_URL = 'https://labelkeeper-e8a79-default-rtdb.firebaseio.com/labelkeeper_sync';
+const LK_API_URL = 'https://labelkeeper-api-1075204398975.us-central1.run.app';
 const SYNC_CODE_LENGTH = 6;
 const SYNC_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes
 
@@ -29185,6 +29508,77 @@ function generateSyncCode() {
     code += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   return code;
+}
+
+// ── Label Keeper API wrappers (with Firebase REST fallback) ──
+
+// Share sync data via API, returns { code }
+async function lkApiSyncShare(data) {
+  try {
+    const resp = await fetch(LK_API_URL + '/sync/share', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data })
+    });
+    if (!resp.ok) throw new Error('API error ' + resp.status);
+    return await resp.json();
+  } catch (e) {
+    console.warn('LK API unavailable, falling back to direct Firebase:', e.message);
+    const code = generateSyncCode();
+    data.expiresAt = Date.now() + SYNC_EXPIRY_MS;
+    const fbResp = await fetch(FIREBASE_SYNC_URL + '/' + code + '.json', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (!fbResp.ok) throw new Error('Failed to upload sync data');
+    return { code };
+  }
+}
+
+// Receive sync data by code via API, returns raw data object
+async function lkApiSyncReceive(code) {
+  try {
+    const resp = await fetch(LK_API_URL + '/sync/receive', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code })
+    });
+    if (resp.status === 404) throw new Error('Invalid or expired code');
+    if (resp.status === 410) throw new Error('This code has expired');
+    if (!resp.ok) throw new Error('API error ' + resp.status);
+    const result = await resp.json();
+    return result.data;
+  } catch (e) {
+    if (e.message === 'Invalid or expired code' || e.message === 'This code has expired') throw e;
+    console.warn('LK API unavailable, falling back to direct Firebase:', e.message);
+    const resp = await fetch(FIREBASE_SYNC_URL + '/' + code + '.json');
+    if (!resp.ok) throw new Error('Network error');
+    const data = await resp.json();
+    if (!data) throw new Error('Invalid or expired code');
+    if (data.expiresAt && Date.now() > data.expiresAt) {
+      lkApiSyncCleanup(code);
+      throw new Error('This code has expired');
+    }
+    return data;
+  }
+}
+
+// Cleanup sync code via API
+async function lkApiSyncCleanup(code) {
+  try {
+    await fetch(LK_API_URL + '/sync/cleanup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code })
+    });
+  } catch (e) {
+    try {
+      await fetch(FIREBASE_SYNC_URL + '/' + code + '.json', { method: 'DELETE' });
+    } catch (err) {
+      console.log('Cleanup failed (may already be deleted):', err);
+    }
+  }
 }
 
 // Show sync modal
@@ -29200,8 +29594,6 @@ function closeSyncModal() {
 
 // Start sharing data to another device
 async function startSyncShare() {
-  const code = generateSyncCode();
-  
   // Show loading state
   showSyncModal('Share to Another Device', `
     <div style="text-align: center; padding: 20px;">
@@ -29209,12 +29601,11 @@ async function startSyncShare() {
       <div>Preparing sync code...</div>
     </div>
   `);
-  
+
   // Prepare data
   const data = {
     version: '3.27.7',
     exportedAt: new Date().toISOString(),
-    expiresAt: Date.now() + SYNC_EXPIRY_MS,
     sheets: sheets,
     activeSheetId: activeSheetId,
     savedTexts: savedTexts,
@@ -29222,18 +29613,10 @@ async function startSyncShare() {
     inventoryHistory: inventoryHistory,
     customTokens: customTokens
   };
-  
+
   try {
-    // Upload to Firebase
-    const response = await fetch(FIREBASE_SYNC_URL + '/' + code + '.json', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to upload sync data');
-    }
+    const result = await lkApiSyncShare(data);
+    const code = result.code;
     
     // Show the code
     showSyncModal('Share to Another Device', `
@@ -29277,15 +29660,9 @@ async function startSyncShare() {
   }
 }
 
-// Cleanup sync code from Firebase
+// Cleanup sync code (delegates to API wrapper)
 async function cleanupSyncCode(code) {
-  try {
-    await fetch(FIREBASE_SYNC_URL + '/' + code + '.json', {
-      method: 'DELETE'
-    });
-  } catch (err) {
-    console.log('Cleanup failed (may already be deleted):', err);
-  }
+  await lkApiSyncCleanup(code);
 }
 
 // Start receiving data from another device
@@ -29342,31 +29719,13 @@ async function receiveSyncData() {
   `);
   
   try {
-    // Fetch from Firebase
-    const response = await fetch(FIREBASE_SYNC_URL + '/' + code + '.json');
-    
-    if (!response.ok) {
-      throw new Error('Network error');
-    }
-    
-    const data = await response.json();
-    
-    if (!data) {
-      throw new Error('Invalid or expired code');
-    }
-    
-    // Check expiry
-    if (data.expiresAt && Date.now() > data.expiresAt) {
-      // Clean up expired data
-      cleanupSyncCode(code);
-      throw new Error('This code has expired');
-    }
-    
+    const data = await lkApiSyncReceive(code);
+
     // Validate data structure
     if (!data.version || !data.exportedAt) {
       throw new Error('Invalid sync data');
     }
-    
+
     // Show confirmation with stats
     const sheetCount = data.sheets ? Object.keys(data.sheets).length : 0;
     const textCount = data.savedTexts ? data.savedTexts.length : 0;
@@ -29580,14 +29939,12 @@ function updateWorkflowsForRole() {
 // SATELLITE: Share pending content to primary
 async function satelliteShareToPrimary() {
   const pending = getSatellitePending();
-  
+
   if (pending.length === 0) {
     showToast('No pending items to share', 'info');
     return;
   }
-  
-  const code = generateSyncCode();
-  
+
   // Show loading state
   showSyncModal('Share to Primary', `
     <div style="text-align: center; padding: 20px;">
@@ -29595,31 +29952,22 @@ async function satelliteShareToPrimary() {
       <div>Preparing sync code...</div>
     </div>
   `);
-  
+
   // Prepare data - only pending items
   const pendingTexts = savedTexts.filter(t => pending.includes(t.id));
-  
+
   const data = {
     version: '3.27.7',
     type: 'satellite_contribution',
     storeId: getOrCreateStoreId(),
     exportedAt: new Date().toISOString(),
-    expiresAt: Date.now() + SYNC_EXPIRY_MS,
     savedTexts: pendingTexts,
     pendingIds: pending
   };
-  
+
   try {
-    // Upload to Firebase
-    const response = await fetch(FIREBASE_SYNC_URL + '/' + code + '.json', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to upload sync data');
-    }
+    const result = await lkApiSyncShare(data);
+    const code = result.code;
     
     // Show the code
     showSyncModal('Share to Primary', `
@@ -29720,32 +30068,16 @@ async function receivePrimaryData() {
   `);
   
   try {
-    const response = await fetch(FIREBASE_SYNC_URL + '/' + code + '.json');
-    
-    if (!response.ok) {
-      throw new Error('Network error');
-    }
-    
-    const data = await response.json();
-    
-    if (!data) {
-      throw new Error('Invalid or expired code');
-    }
-    
-    // Check expiry
-    if (data.expiresAt && Date.now() > data.expiresAt) {
-      cleanupSyncCode(code);
-      throw new Error('This code has expired');
-    }
-    
+    const data = await lkApiSyncReceive(code);
+
     // Validate - should be primary share or transfer data
     if (data.type === 'satellite_contribution') {
       throw new Error('This is satellite data. Use "Receive from Satellite" on your primary device.');
     }
-    
+
     // Check if this is a primary transfer
     const isTransfer = data.type === 'primary_transfer';
-    
+
     // Check if this device has existing data that will be overwritten
     const localSheetCount = Object.keys(sheets).length;
     const localTextCount = savedTexts.length;
@@ -29940,23 +30272,8 @@ async function receiveSatelliteData() {
   `);
   
   try {
-    const response = await fetch(FIREBASE_SYNC_URL + '/' + code + '.json');
-    
-    if (!response.ok) {
-      throw new Error('Network error');
-    }
-    
-    const data = await response.json();
-    
-    if (!data) {
-      throw new Error('Invalid or expired code');
-    }
-    
-    if (data.expiresAt && Date.now() > data.expiresAt) {
-      cleanupSyncCode(code);
-      throw new Error('This code has expired');
-    }
-    
+    const data = await lkApiSyncReceive(code);
+
     // Validate - should be satellite contribution
     if (data.type !== 'satellite_contribution') {
       throw new Error('This is not satellite data. Make sure your satellite device used "Share to Primary".');
@@ -30035,21 +30352,18 @@ function confirmPrimaryReceive() {
 
 // PRIMARY: Share full state to satellite
 async function primaryShareToSatellite() {
-  const code = generateSyncCode();
-  
   showSyncModal('Share to Satellite', `
     <div style="text-align: center; padding: 20px;">
       <div style="font-size: 24px; margin-bottom: 12px;">⏳</div>
       <div>Preparing sync code...</div>
     </div>
   `);
-  
+
   // Prepare full state data
   const data = {
     version: '3.27.7',
     type: 'primary_share',
     exportedAt: new Date().toISOString(),
-    expiresAt: Date.now() + SYNC_EXPIRY_MS,
     sheets: sheets,
     activeSheetId: activeSheetId,
     savedTexts: savedTexts,
@@ -30057,17 +30371,10 @@ async function primaryShareToSatellite() {
     inventoryHistory: inventoryHistory,
     customTokens: customTokens
   };
-  
+
   try {
-    const response = await fetch(FIREBASE_SYNC_URL + '/' + code + '.json', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to upload sync data');
-    }
+    const result = await lkApiSyncShare(data);
+    const code = result.code;
     
     const sheetCount = Object.keys(sheets).length;
     const textCount = savedTexts.length;
@@ -30129,21 +30436,18 @@ async function primaryTransferRole() {
     async (confirmed) => {
       if (!confirmed) return;
       
-      const code = generateSyncCode();
-      
       showSyncModal('Transfer Primary Role', `
         <div style="text-align: center; padding: 20px;">
           <div style="font-size: 24px; margin-bottom: 12px;">⏳</div>
           <div>Preparing transfer code...</div>
         </div>
       `);
-      
+
       // Prepare transfer data - includes full state + transfer flag
       const data = {
         version: '3.27.7',
         type: 'primary_transfer',
         exportedAt: new Date().toISOString(),
-        expiresAt: Date.now() + SYNC_EXPIRY_MS,
         sheets: sheets,
         activeSheetId: activeSheetId,
         savedTexts: savedTexts,
@@ -30151,17 +30455,10 @@ async function primaryTransferRole() {
         customTokens: customTokens,
         printHistory: printHistory
       };
-      
+
       try {
-        const response = await fetch(FIREBASE_SYNC_URL + '/' + code + '.json', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
-        
-        if (!response.ok) {
-          throw new Error('Failed to upload transfer data');
-        }
+        const result = await lkApiSyncShare(data);
+        const code = result.code;
         
         const sheetCount = Object.keys(sheets).length;
         const textCount = savedTexts.length;
@@ -30254,7 +30551,12 @@ function clearAllData() {
         printHistory = [];
         customTokens = [];
         if (typeof clearLearningData === 'function') clearLearningData();  // Phase 4
-        
+
+        // Clear cloud data too
+        if (lkCloudSyncEnabled) {
+          cloudStore.clear().catch(e => console.warn('[Cloud] clear failed:', e.message));
+        }
+
         showToast('All data cleared', 'success');
         renderCurrentTab();
       }
@@ -30401,7 +30703,77 @@ function handleUrlDeepLink(params) {
     return;
   }
   
-  // Handle printCard deep link (from Shir Glassworks admin — product card with image + QR)
+  // Handle session-based printCard (new API flow)
+  if (params.action === 'printCardSession' && params.sessionId) {
+    (async function() {
+      try {
+        const resp = await fetch(LK_API_URL + '/sessions/' + params.sessionId);
+        if (!resp.ok) {
+          showToast('Product card session expired or not found. Try again from the admin.', 'warning');
+          return;
+        }
+        const payload = await resp.json();
+
+        // Same rendering logic as legacy printCard
+        settings.lastLabelType = '5371';
+        settings.showLabelBoundaries = true;
+        saveSettings();
+        wf1Start();
+
+        setTimeout(function() {
+          var cardLines = [
+            { text: payload.productName || '', align: 'center', fontSize: 14, fontFamily: 'elegant', bold: true, italic: false, underline: false, strikethrough: false, color: '', fillColor: '', borders: '' },
+            { text: 'Shir Glassworks', align: 'center', fontSize: 10, fontFamily: 'default', bold: false, italic: false, underline: false, strikethrough: false, color: '#666666', fillColor: '', borders: '' },
+            { text: 'shirglassworks.com', align: 'center', fontSize: 8, fontFamily: 'default', bold: false, italic: false, underline: false, strikethrough: false, color: '#999999', fillColor: '', borders: '' },
+            { text: '', align: 'left', fontSize: 11, fontFamily: 'default', bold: false, italic: false, underline: false, strikethrough: false, color: '', fillColor: '', borders: '' }
+          ];
+
+          wf1LabelType = '5371';
+          wf1JobType = 'individual';
+          wf1Quantity = 1;
+          wf1Orientation = 'next';
+
+          var matchingSheets = Object.values(sheets)
+            .filter(function(s) { return s.labelType === '5371' && !s.retired && getRemainingCount(s) > 0; })
+            .sort(function(a, b) { return (b.lastUsedAt || 0) - (a.lastUsedAt || 0); });
+          if (matchingSheets.length > 0) {
+            wf1SelectedSheet = { isNew: false, id: matchingSheets[0].id };
+          } else {
+            wf1SelectedSheet = { isNew: true };
+          }
+          wf1ContentLines = cardLines;
+
+          wf1FeSnapshot = {
+            lines: cardLines,
+            graphics: {
+              left: payload.productImage ? { data: payload.productImage, size: 'M' } : null,
+              right: null
+            },
+            alignV: 'center',
+            border: { top: false, bottom: false, left: false, right: false, color: '#000000' },
+            barcode: {
+              enabled: true,
+              type: 'qr',
+              position: 'right',
+              encodeType: 'url',
+              fixedData: payload.storyUrl
+            }
+          };
+
+          wf1Step = 7;
+          wf1RenderPreview();
+          wf1ShowStep('wf1Step7');
+          showToast('Product card ready — "' + (payload.productName || 'Unknown') + '"', 'success');
+        }, 300);
+      } catch (e) {
+        console.error('Session fetch error:', e);
+        showToast('Failed to load product card. Try again.', 'error');
+      }
+    })();
+    return;
+  }
+
+  // Handle printCard deep link (legacy localStorage flow)
   if (params.action === 'printCard') {
     const payloadStr = localStorage.getItem('lk_printCard');
     if (!payloadStr) {
@@ -30421,8 +30793,9 @@ function handleUrlDeepLink(params) {
     // Clear the payload immediately (one-time use)
     localStorage.removeItem('lk_printCard');
 
-    // Set label type to business card
+    // Set label type to business card + enable boundaries for design review
     settings.lastLabelType = '5371';
+    settings.showLabelBoundaries = true;
     saveSettings();
 
     // Start WF1 to reset state and show the wizard container
