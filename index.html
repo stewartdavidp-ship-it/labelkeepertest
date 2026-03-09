@@ -26477,56 +26477,89 @@ function buildCombinedPrintHtml(sh, manifest, sheetId) {
     const left = spec.leftMargin + col * (spec.labelW + spec.hGutter);
     
     const hasGraphics = item.graphics && (item.graphics.left || item.graphics.right);
+    const bc = item.barcode;
+    const hasQR = bc && bc.enabled && bc.type === 'qr';
     const alignV = item.alignV || 'center';
     const flexAlign = alignV === 'top' ? 'flex-start' : alignV === 'bottom' ? 'flex-end' : alignV === 'spread' ? 'space-between' : 'center';
-    
+    const linesHtml = item.lines.map(l => renderPrintLineHtml(l)).join('');
+
     let borderStyle = '';
     if (item.border) {
-      const bc = item.border.color || '#000';
-      if (item.border.top) borderStyle += 'border-top:2px solid ' + bc + ';';
-      if (item.border.bottom) borderStyle += 'border-bottom:2px solid ' + bc + ';';
-      if (item.border.left) borderStyle += 'border-left:2px solid ' + bc + ';';
-      if (item.border.right) borderStyle += 'border-right:2px solid ' + bc + ';';
+      const brc = item.border.color || '#000';
+      if (item.border.top) borderStyle += 'border-top:2px solid ' + brc + ';';
+      if (item.border.bottom) borderStyle += 'border-bottom:2px solid ' + brc + ';';
+      if (item.border.left) borderStyle += 'border-left:2px solid ' + brc + ';';
+      if (item.border.right) borderStyle += 'border-right:2px solid ' + brc + ';';
     }
-    
-    // Determine label class
-    let labelClass = 'print-label';
-    if (isRound) labelClass += ' round-label';
-    else if (hasGraphics) labelClass += ' print-label-gfx';
-    
-    html += '<div class="' + labelClass + '" style="top:' + top + 'in;left:' + left + 'in;width:' + spec.labelW + 'in;height:' + spec.labelH + 'in;padding:0.05in;justify-content:' + flexAlign + ';' + borderStyle + '">';
-    
-    if (hasGraphics && item.graphics.left) {
-      const size = item.graphics.left.size === 'S' ? 0.3 : item.graphics.left.size === 'L' ? 0.6 : 0.45;
-      html += '<div class="print-graphic" style="width:' + size + 'in;height:' + size + 'in;margin-right:0.05in;"><img src="' + item.graphics.left.data + '"></div>';
-    }
-    
-    html += '<div class="print-text-zone" style="justify-content:' + flexAlign + ';">';
-    for (const line of item.lines) {
-      if (!line.text) continue;
-      const parsed = parseLine(line.text);
-      let style = 'font-size:' + (line.fontSize || 11) + 'px;';
-      if (line.bold) style += 'font-weight:bold;';
-      if (line.italic) style += 'font-style:italic;';
-      if (line.underline) style += 'text-decoration:underline;';
-      if (line.color) style += 'color:' + line.color + ';';
-      
-      if (parsed.type === 'fill') {
-        html += '<div class="print-line fill-line" style="' + style + '"><span class="fill-label">' + escapeHtml(parsed.label) + '</span><span class="fill-rule"></span></div>';
-      } else if (parsed.type === 'split') {
-        html += '<div class="print-line align-split" style="' + style + '"><span>' + escapeHtml(parsed.left) + '</span><span>' + escapeHtml(parsed.right) + '</span></div>';
-      } else {
-        html += '<div class="print-line align-' + (line.align || 'left') + '" style="' + style + '">' + escapeHtml(line.text) + '</div>';
+
+    if (hasQR && hasGraphics) {
+      // Combined graphics + QR layout (matches buildSheetPrintHtml)
+      const qrDataURL = getQRDataURL(item, spec);
+      const qrPosition = bc.position || 'right';
+      const availH = spec.labelH - 0.16;
+      const maxGfxW = spec.labelW * 0.25;
+      const gfxW = Math.min(availH, maxGfxW).toFixed(3);
+      const qrSize = (spec.labelH * 0.30).toFixed(3);
+      let innerHtml = '';
+
+      if (qrPosition === 'left' && qrDataURL) {
+        innerHtml += '<div class="print-qr" style="width:' + qrSize + 'in;height:' + qrSize + 'in;"><img src="' + qrDataURL + '"></div>';
       }
+      if (item.graphics.left && item.graphics.left.data) {
+        innerHtml += '<div class="print-graphic" style="width:' + gfxW + 'in;"><img src="' + item.graphics.left.data + '"></div>';
+      }
+      innerHtml += '<div class="print-text-zone" style="justify-content:' + flexAlign + ';">' + linesHtml + '</div>';
+      if (item.graphics.right && item.graphics.right.data) {
+        innerHtml += '<div class="print-graphic" style="width:' + gfxW + 'in;"><img src="' + item.graphics.right.data + '"></div>';
+      }
+      if (qrPosition !== 'left' && qrDataURL) {
+        innerHtml += '<div class="print-qr" style="width:' + qrSize + 'in;height:' + qrSize + 'in;"><img src="' + qrDataURL + '"></div>';
+      }
+
+      html += '<div class="print-label" style="top:' + top + 'in;left:' + left + 'in;width:' + spec.labelW + 'in;height:' + spec.labelH + 'in;padding:0.1in 0.15in;flex-direction:row;align-items:center;gap:0.12in;' + borderStyle + '">' + innerHtml + '</div>';
+    } else if (hasQR) {
+      // QR code layout (no graphics)
+      const qrDataURL = getQRDataURL(item, spec);
+      const qrPosition = bc.position || 'right';
+      const qrSize = (spec.labelH * 0.85).toFixed(3);
+
+      if (qrPosition === 'only') {
+        html += '<div class="print-label" style="top:' + top + 'in;left:' + left + 'in;width:' + spec.labelW + 'in;height:' + spec.labelH + 'in;padding:0.05in;justify-content:center;align-items:center;' + borderStyle + '">';
+        if (qrDataURL) html += '<div class="print-qr" style="width:' + qrSize + 'in;height:' + qrSize + 'in;"><img src="' + qrDataURL + '"></div>';
+        html += '</div>';
+      } else {
+        let innerHtml = '';
+        if (qrPosition === 'left') {
+          if (qrDataURL) innerHtml += '<div class="print-qr" style="width:' + qrSize + 'in;height:' + qrSize + 'in;"><img src="' + qrDataURL + '"></div>';
+          innerHtml += '<div class="print-text-zone" style="justify-content:' + flexAlign + ';padding-left:0.08in;">' + linesHtml + '</div>';
+        } else {
+          innerHtml += '<div class="print-text-zone" style="justify-content:' + flexAlign + ';padding-right:0.08in;">' + linesHtml + '</div>';
+          if (qrDataURL) innerHtml += '<div class="print-qr" style="width:' + qrSize + 'in;height:' + qrSize + 'in;"><img src="' + qrDataURL + '"></div>';
+        }
+        html += '<div class="print-label print-label-qr" style="top:' + top + 'in;left:' + left + 'in;width:' + spec.labelW + 'in;height:' + spec.labelH + 'in;padding:0.08in 0.12in;flex-direction:row;align-items:stretch;' + borderStyle + '">' + innerHtml + '</div>';
+      }
+    } else {
+      // No QR — original graphics + text layout
+      let labelClass = 'print-label';
+      if (isRound) labelClass += ' round-label';
+      else if (hasGraphics) labelClass += ' print-label-gfx';
+
+      html += '<div class="' + labelClass + '" style="top:' + top + 'in;left:' + left + 'in;width:' + spec.labelW + 'in;height:' + spec.labelH + 'in;padding:0.05in;justify-content:' + flexAlign + ';' + borderStyle + '">';
+
+      if (hasGraphics && item.graphics.left) {
+        const size = item.graphics.left.size === 'S' ? 0.3 : item.graphics.left.size === 'L' ? 0.6 : 0.45;
+        html += '<div class="print-graphic" style="width:' + size + 'in;height:' + size + 'in;margin-right:0.05in;"><img src="' + item.graphics.left.data + '"></div>';
+      }
+
+      html += '<div class="print-text-zone" style="justify-content:' + flexAlign + ';">' + linesHtml + '</div>';
+
+      if (hasGraphics && item.graphics.right) {
+        const size = item.graphics.right.size === 'S' ? 0.3 : item.graphics.right.size === 'L' ? 0.6 : 0.45;
+        html += '<div class="print-graphic" style="width:' + size + 'in;height:' + size + 'in;margin-left:0.05in;"><img src="' + item.graphics.right.data + '"></div>';
+      }
+
+      html += '</div>';
     }
-    html += '</div>';
-    
-    if (hasGraphics && item.graphics.right) {
-      const size = item.graphics.right.size === 'S' ? 0.3 : item.graphics.right.size === 'L' ? 0.6 : 0.45;
-      html += '<div class="print-graphic" style="width:' + size + 'in;height:' + size + 'in;margin-left:0.05in;"><img src="' + item.graphics.right.data + '"></div>';
-    }
-    
-    html += '</div>';
   });
   
   html += '</div>';
