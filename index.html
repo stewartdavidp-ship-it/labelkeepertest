@@ -9754,6 +9754,13 @@ async function loadFromCloud() {
   // Re-apply theme and re-render
   applyTheme();
   renderCurrentTab();
+
+  // Mark first-run done and dismiss welcome modal (cloud data = not a new user)
+  localStorage.setItem(FIRST_RUN_KEY, 'done');
+  const welcomeModal = document.getElementById('welcomeModal');
+  if (welcomeModal && welcomeModal.classList.contains('visible')) {
+    welcomeModal.classList.remove('visible');
+  }
 }
 
 async function uploadAllToCloud() {
