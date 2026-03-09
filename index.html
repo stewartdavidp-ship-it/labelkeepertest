@@ -9687,15 +9687,21 @@ const cloudStore = {
 
 // ========== AUTH ==========
 async function lkSignIn() {
+  const provider = new firebase.auth.GoogleAuthProvider();
   try {
-    const provider = new firebase.auth.GoogleAuthProvider();
     await lkAuth.signInWithPopup(provider);
     // onAuthStateChanged handles the rest
   } catch (e) {
-    if (e.code !== 'auth/popup-closed-by-user') {
-      console.error('[Auth] Sign-in failed:', e);
-      showToast('Sign-in failed: ' + e.message, 'error');
+    if (e.code === 'auth/popup-blocked' || e.code === 'auth/popup-closed-by-user') {
+      // Popup blocked or closed — fall back to redirect on mobile
+      if (e.code === 'auth/popup-blocked') {
+        console.log('[Auth] Popup blocked, falling back to redirect');
+        lkAuth.signInWithRedirect(provider);
+      }
+      return;
     }
+    console.error('[Auth] Sign-in failed:', e);
+    showToast('Sign-in failed: ' + e.message, 'error');
   }
 }
 
@@ -9729,11 +9735,13 @@ lkAuth.onAuthStateChanged(async (user) => {
   }
 
   // Process pending print card session after sign-in + cloud load
-  if (user && lkPendingPrintCardSession) {
-    const sessionId = lkPendingPrintCardSession;
+  // Check both in-memory variable AND sessionStorage (survives page redirect during auth)
+  const pendingSession = lkPendingPrintCardSession || sessionStorage.getItem('lk_pendingPrintCardSession');
+  if (user && pendingSession) {
     lkPendingPrintCardSession = null;
+    sessionStorage.removeItem('lk_pendingPrintCardSession');
     closePrintCardSignInPrompt();
-    processPrintCardSession(sessionId);
+    processPrintCardSession(pendingSession);
   }
 });
 
@@ -30833,8 +30841,9 @@ function handleUrlDeepLink(params) {
       const user = await lkAuthReady;
 
       if (!user) {
-        // Not signed in — store session and prompt sign-in
+        // Not signed in — store session in memory + sessionStorage (survives auth redirect)
         lkPendingPrintCardSession = params.sessionId;
+        sessionStorage.setItem('lk_pendingPrintCardSession', params.sessionId);
         showPrintCardSignInPrompt();
         return;
       }
