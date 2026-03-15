@@ -14232,8 +14232,8 @@ function cloneSavedText(id, newName) {
   addToSatellitePending(clone.id);
   
   showToast('Cloned: ' + clone.name, 'success');
-  renderAll();
-  
+  renderCurrentTab();
+
   // Open the Full Editor with the new clone for immediate editing
   openFullEditor(clone.id, clone.type === 'template');
   
@@ -19117,14 +19117,20 @@ function saveFromFullEditor() {
     return;
   }
   
+  // Sync latest input values into feLines before saving
+  for (let i = 1; i <= 4; i++) {
+    const input = document.getElementById('feLine' + i);
+    if (input) feLines[i - 1].text = input.value;
+  }
+
   // Get lines from state
   const lines = feLines.filter(l => l.text.trim());
-  
+
   if (lines.length === 0) {
     showToast('Enter some text first', 'warning');
     return;
   }
-  
+
   // Serialize lines
   const serialized = serializeLines(feLines.filter(l => l.text.trim()));
   
